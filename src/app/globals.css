@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-white text-charcoal-800 antialiased font-sans selection:bg-brand-100 selection:text-brand-900;
+  }
+}
+
+/* Custom Print Styles for High-Speed Physical Slips */
+@media print {
+  body {
+    background: transparent !important;
+    color: black !important;
+  }
+  header, footer, nav, .no-print, button {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .page-break {
+    page-break-after: always;
+  }
+}

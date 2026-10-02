@@ -1,0 +1,337 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id              String                 @id @default(cuid())
+  name            String
+  slug            String                 @unique
+  description     String?
+  image           String?
+  banner          String?
+  parentId        String?
+  order           Int                    @default(0)
+  isActive        Boolean                @default(true)
+  showInMenu      Boolean                @default(true)
+  seoTitle        String?
+  metaDescription String?
+  wooId           Int?                   @unique
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  parent          Category?              @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children        Category[]             @relation("CategoryHierarchy")
+  products        CategoriesOnProducts[]
+}
+
+model Brand {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  logo            String?
+  description     String?
+  seoTitle        String?
+  metaDescription String?
+  wooId           Int?      @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  products        Product[]
+}
+
+model Product {
+  id               String                 @id @default(cuid())
+  title            String
+  slug             String                 @unique
+  sku              String                 @unique
+  barcode          String?
+  description      String?
+  shortDescription String?
+  price            Float
+  compareAtPrice   Float?
+  taxRate          Float                  @default(10.0)
+  stock            Int                    @default(0)
+  minStockAlert    Int                    @default(5)
+  stockStatus      String                 @default("IN_STOCK")
+  weight           Float?                 @default(0.3)
+  isFeatured       Boolean                @default(false)
+  isActive         Boolean                @default(true)
+  images           String                 @default("[]")
+  brandId          String?
+  brand            Brand?                 @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  seoTitle         String?
+  metaDescription  String?
+  wooId            Int?                   @unique
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  categories       CategoriesOnProducts[]
+  variations       ProductVariation[]
+  reviews          Review[]
+  orderItems       OrderItem[]
+  stockAlerts      StockAlert[]
+  stockMovements   StockMovement[]
+}
+
+model CategoriesOnProducts {
+  productId  String
+  categoryId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+}
+
+model ProductVariation {
+  id             String          @id @default(cuid())
+  productId      String
+  product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku            String          @unique
+  barcode        String?
+  price          Float
+  compareAtPrice Float?
+  stock          Int             @default(0)
+  image          String?
+  weight         Float?
+  isActive       Boolean         @default(true)
+  attributes     String          @default("{}")
+  wooVariationId Int?            @unique
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  orderItems     OrderItem[]
+  stockMovements StockMovement[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerId      String?
+  customer        Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  guestEmail      String?
+  guestName       String?
+  guestPhone      String?
+  shippingAddress String
+  billingAddress  String?
+  status          String      @default("NEW")
+  paymentMethod   String
+  paymentStatus   String      @default("PENDING")
+  subtotal        Float
+  shippingFee     Float       @default(0.0)
+  discountAmount  Float       @default(0.0)
+  codFee          Float       @default(0.0)
+  totalAmount     Float
+  customerNote    String?
+  internalNote    String?
+  trackingCompany String?
+  trackingNumber  String?
+  isPrinted       Boolean     @default(false)
+  printedAt       DateTime?
+  couponCode      String?
+  wooOrderId      Int?        @unique
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  items           OrderItem[]
+}
+
+model OrderItem {
+  id             String            @id @default(cuid())
+  orderId        String
+  order          Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String?
+  product        Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variationId    String?
+  variation      ProductVariation? @relation(fields: [variationId], references: [id], onDelete: SetNull)
+  title          String
+  sku            String?
+  barcode        String?
+  variationName  String?
+  price          Float
+  quantity       Int
+  total          Float
+  image          String?
+}
+
+model Customer {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  passwordHash  String?
+  role          String    @default("CUSTOMER")
+  emailVerified Boolean   @default(false)
+  resetToken    String?
+  resetTokenExpiry DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  addresses     Address[]
+  orders        Order[]
+}
+
+model Address {
+  id            String   @id @default(cuid())
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title         String   @default("Ev")
+  fullName      String
+  phone         String
+  city          String
+  district      String
+  addressDetail String
+  postalCode    String?
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Coupon {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  discountType  String    @default("PERCENT")
+  discountValue Float
+  minSpend      Float?
+  maxSpend      Float?
+  usageLimit    Int?
+  usageCount    Int       @default(0)
+  userLimit     Int       @default(1)
+  startDate     DateTime?
+  endDate       DateTime?
+  freeShipping  Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Review {
+  id                 String   @id @default(cuid())
+  productId          String
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerName       String
+  email              String
+  rating             Int      @default(5)
+  comment            String
+  images             String   @default("[]")
+  isApproved         Boolean  @default(false)
+  isVerifiedPurchase Boolean  @default(false)
+  createdAt          DateTime @default(now())
+}
+
+model StockAlert {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variationId String?
+  email       String
+  isNotified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model StockMovement {
+  id            String            @id @default(cuid())
+  productId     String
+  product       Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variationId   String?
+  variation     ProductVariation? @relation(fields: [variationId], references: [id], onDelete: SetNull)
+  change        Int
+  previousStock Int
+  newStock      Int
+  reason        String
+  referenceId   String?
+  createdAt     DateTime          @default(now())
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  group     String   @default("GENERAL")
+  updatedAt DateTime @updatedAt
+}
+
+model Redirect {
+  id         String   @id @default(cuid())
+  sourceUrl  String   @unique
+  targetUrl  String
+  statusCode Int      @default(301)
+  hitCount   Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  action      String
+  entity      String
+  entityId    String?
+  performedBy String   @default("Sistem")
+  details     String?
+  createdAt   DateTime @default(now())
+}
+
+model Page {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  content         String
+  isPublished     Boolean  @default(true)
+  seoTitle        String?
+  metaDescription String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model BlogPost {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  summary         String?
+  content         String
+  image           String?
+  author          String   @default("Esla Kids")
+  isPublished     Boolean  @default(true)
+  seoTitle        String?
+  metaDescription String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model HomepageSection {
+  id        String   @id @default(cuid())
+  type      String
+  title     String?
+  subtitle  String?
+  content   String
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Menu {
+  id        String   @id @default(cuid())
+  title     String
+  location  String   @default("HEADER")
+  items     String
+  updatedAt DateTime @updatedAt
+}
+
+model Banner {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  badge       String?
+  buttonText  String?  @default("Hemen Keşfet")
+  buttonLink  String?  @default("/kategori/erkek-cocuk-takim")
+  image       String
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
