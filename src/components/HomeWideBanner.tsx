@@ -75,17 +75,15 @@ export function HomeWideBanner({ banners }: Props) {
               <img
                 src={banner.image}
                 alt={banner.title}
-                className="w-full h-full object-cover object-center transform scale-100 transition-transform duration-7000 ease-out"
-                style={{ transform: isActive ? 'scale(1.04)' : 'scale(1)' }}
+                className="w-full h-full object-cover object-right sm:object-center transform scale-100 transition-transform duration-7000 ease-out"
+                style={{ transform: isActive ? 'scale(1.03)' : 'scale(1)' }}
               />
 
               {/* Gradient Overlays for High Legibility */}
-              {/* Left-to-right dark gradient for text */}
-              <div className="absolute inset-0 bg-gradient-to-r from-charcoal-950/90 via-charcoal-900/60 to-transparent lg:w-2/3" />
-              {/* Subtle overall dark overlay for mobile */}
-              <div className="absolute inset-0 bg-charcoal-950/30 lg:hidden" />
-              {/* Bottom gradient fade */}
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-charcoal-950/60 to-transparent" />
+              {/* Responsive gradient: bottom-to-top on mobile, left-to-right on larger screens */}
+              <div className="absolute inset-0 bg-gradient-to-t from-charcoal-950/95 via-charcoal-950/60 to-transparent sm:bg-gradient-to-r sm:from-charcoal-950/90 sm:via-charcoal-900/50 sm:to-transparent lg:w-2/3" />
+              {/* Extra soft vignette */}
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-charcoal-950/70 to-transparent" />
 
               {/* Content Overlay */}
               <div className="absolute inset-0 flex items-center">
