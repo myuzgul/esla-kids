@@ -12,6 +12,7 @@ export interface BannerItem {
   buttonText?: string | null;
   buttonLink?: string | null;
   image: string;
+  mobileImage?: string | null;
   order: number;
   isActive: boolean;
 }
@@ -59,10 +60,11 @@ export function HomeWideBanner({ banners }: Props) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Banner Slides Container */}
-      <div className="relative w-full h-[400px] sm:h-[480px] md:h-[540px] lg:h-[580px]">
+      {/* Banner Slides Container - Natural 800/480 ratio on phone, fixed heights on tablet/desktop */}
+      <div className="relative w-full aspect-[800/480] sm:aspect-auto sm:h-[460px] md:h-[520px] lg:h-[560px]">
         {activeBanners.map((banner, index) => {
           const isActive = index === current;
+          const hasMobileImage = Boolean(banner.mobileImage);
 
           return (
             <div
@@ -71,24 +73,48 @@ export function HomeWideBanner({ banners }: Props) {
                 isActive ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
               }`}
             >
-              {/* Background Image */}
-              <img
-                src={banner.image}
-                alt={banner.title}
-                className="w-full h-full object-cover object-right sm:object-center transform scale-100 transition-transform duration-7000 ease-out"
-                style={{ transform: isActive ? 'scale(1.03)' : 'scale(1)' }}
-              />
+              {/* On mobile with dedicated mobileImage: entire banner is clickable link */}
+              {banner.buttonLink ? (
+                <Link 
+                  href={banner.buttonLink} 
+                  className="sm:pointer-events-none block w-full h-full relative cursor-pointer"
+                  tabIndex={isActive ? 0 : -1}
+                >
+                  {/* Responsive Picture: loads mobileImage on phones, desktop image on larger screens */}
+                  <picture className="w-full h-full block">
+                    {banner.mobileImage && (
+                      <source media="(max-width: 639px)" srcSet={banner.mobileImage} />
+                    )}
+                    <img
+                      src={banner.image}
+                      alt={banner.title}
+                      className="w-full h-full object-cover object-center transform scale-100 transition-transform duration-7000 ease-out"
+                      style={{ transform: isActive ? 'scale(1.02)' : 'scale(1)' }}
+                    />
+                  </picture>
+                </Link>
+              ) : (
+                <picture className="w-full h-full block">
+                  {banner.mobileImage && (
+                    <source media="(max-width: 639px)" srcSet={banner.mobileImage} />
+                  )}
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    className="w-full h-full object-cover object-center transform scale-100 transition-transform duration-7000 ease-out"
+                    style={{ transform: isActive ? 'scale(1.02)' : 'scale(1)' }}
+                  />
+                </picture>
+              )}
 
-              {/* Gradient Overlays for High Legibility */}
-              {/* Responsive gradient: bottom-to-top on mobile, left-to-right on larger screens */}
-              <div className="absolute inset-0 bg-gradient-to-t from-charcoal-950/95 via-charcoal-950/60 to-transparent sm:bg-gradient-to-r sm:from-charcoal-950/90 sm:via-charcoal-900/50 sm:to-transparent lg:w-2/3" />
-              {/* Extra soft vignette */}
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-charcoal-950/70 to-transparent" />
+              {/* Gradient Overlays for High Legibility on Desktop */}
+              <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-charcoal-950/90 via-charcoal-900/50 to-transparent lg:w-2/3 pointer-events-none" />
+              <div className="hidden sm:block absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-charcoal-950/70 to-transparent pointer-events-none" />
 
-              {/* Content Overlay */}
-              <div className="absolute inset-0 flex items-center">
+              {/* Content Overlay - Only on desktop (sm:) when mobileImage handles mobile display, OR on all screens if no mobileImage */}
+              <div className={`${hasMobileImage ? 'hidden sm:flex' : 'flex'} absolute inset-0 items-center pointer-events-none`}>
                 <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 w-full">
-                  <div className="max-w-2xl space-y-4 sm:space-y-6">
+                  <div className="max-w-2xl space-y-4 sm:space-y-6 pointer-events-auto">
                     {/* Badge */}
                     {banner.badge && (
                       <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/20 backdrop-blur-md border border-brand-400/40 text-brand-300 text-xs font-black tracking-wider uppercase animate-in fade-in slide-in-from-bottom-2 duration-300">

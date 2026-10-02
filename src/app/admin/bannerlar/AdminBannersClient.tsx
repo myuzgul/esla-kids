@@ -15,6 +15,7 @@ interface Banner {
   buttonText?: string | null;
   buttonLink?: string | null;
   image: string;
+  mobileImage?: string | null;
   order: number;
   isActive: boolean;
 }
@@ -40,6 +41,7 @@ export function AdminBannersClient({ initialBanners }: Props) {
   const [buttonText, setButtonText] = useState('Koleksiyonu Keşfet');
   const [buttonLink, setButtonLink] = useState('/kategori/erkek-cocuk-takim');
   const [image, setImage] = useState('');
+  const [mobileImage, setMobileImage] = useState('');
   const [order, setOrder] = useState('0');
   const [isActive, setIsActive] = useState(true);
 
@@ -53,6 +55,7 @@ export function AdminBannersClient({ initialBanners }: Props) {
     setButtonText('Koleksiyonu Keşfet');
     setButtonLink('/kategori/erkek-cocuk-takim');
     setImage('');
+    setMobileImage('');
     setOrder(String(banners.length));
     setIsActive(true);
     setEditingBanner(null);
@@ -72,6 +75,7 @@ export function AdminBannersClient({ initialBanners }: Props) {
     setButtonText(b.buttonText || 'Koleksiyonu Keşfet');
     setButtonLink(b.buttonLink || '/kategori/erkek-cocuk-takim');
     setImage(b.image);
+    setMobileImage(b.mobileImage || '');
     setOrder(String(b.order));
     setIsActive(b.isActive);
     setErrorMsg('');
@@ -131,6 +135,7 @@ export function AdminBannersClient({ initialBanners }: Props) {
             buttonText,
             buttonLink,
             image,
+            mobileImage,
             order: parseInt(order) || 0,
             isActive,
           }),
@@ -155,6 +160,7 @@ export function AdminBannersClient({ initialBanners }: Props) {
             buttonText,
             buttonLink,
             image,
+            mobileImage,
             order: parseInt(order) || 0,
             isActive,
           }),
@@ -453,10 +459,24 @@ export function AdminBannersClient({ initialBanners }: Props) {
                 {/* Direct URL alternative */}
                 <div className="mt-2">
                   <input
-                    type="url"
+                    type="text"
                     value={image}
                     onChange={(e) => setImage(e.target.value)}
-                    placeholder="VEYA doğrudan görsel URL'si yapıştırın (https://...)"
+                    placeholder="VEYA doğrudan masaüstü görsel URL'si (/banners/... veya https://...)"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500"
+                  />
+                </div>
+
+                {/* Mobil Banner Görseli */}
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Mobil Banner Görseli <span className="text-slate-400 font-normal">(İsteğe bağlı - telefonlarda bu görsel gösterilir)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={mobileImage}
+                    onChange={(e) => setMobileImage(e.target.value)}
+                    placeholder="Örn: /banners/esla-kids-hero-banner-mobile.webp"
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500"
                   />
                 </div>

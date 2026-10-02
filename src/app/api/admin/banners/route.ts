@@ -20,7 +20,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { title, subtitle, badge, buttonText, buttonLink, image, order = 0, isActive = true } = body;
+    const { title, subtitle, badge, buttonText, buttonLink, image, mobileImage, order = 0, isActive = true } = body;
 
     if (!title || !image) {
       return NextResponse.json({ error: 'Başlık ve görsel zorunludur.' }, { status: 400 });
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
         buttonText: buttonText || 'Hemen Keşfet',
         buttonLink: buttonLink || '/kategori/erkek-cocuk-takim',
         image,
+        mobileImage: mobileImage || null,
         order: Number(order) || 0,
         isActive: Boolean(isActive),
       },

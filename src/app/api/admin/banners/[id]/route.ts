@@ -8,7 +8,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   try {
     const { id } = params;
     const body = await req.json();
-    const { title, subtitle, badge, buttonText, buttonLink, image, order, isActive } = body;
+    const { title, subtitle, badge, buttonText, buttonLink, image, mobileImage, order, isActive } = body;
 
     const banner = await prisma.banner.update({
       where: { id },
@@ -19,6 +19,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         ...(buttonText !== undefined && { buttonText }),
         ...(buttonLink !== undefined && { buttonLink }),
         ...(image !== undefined && { image }),
+        ...(mobileImage !== undefined && { mobileImage }),
         ...(order !== undefined && { order: Number(order) }),
         ...(isActive !== undefined && { isActive: Boolean(isActive) }),
       },

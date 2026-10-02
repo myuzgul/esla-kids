@@ -329,6 +329,7 @@ model Banner {
   buttonText  String?  @default("Hemen Keşfet")
   buttonLink  String?  @default("/kategori/erkek-cocuk-takim")
   image       String
+  mobileImage String?
   order       Int      @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
