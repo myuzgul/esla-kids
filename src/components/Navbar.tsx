@@ -467,16 +467,6 @@ export function Navbar() {
                 )}
               </li>
             ))}
-
-            <li>
-              <Link
-                href="/kategori/firsat-urunleri"
-                className="inline-flex items-center gap-1.5 py-2.5 px-3 text-rose-600 font-bold hover:text-rose-700 transition-colors"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Fırsat Ürünleri</span>
-              </Link>
-            </li>
           </ul>
 
           <div className="flex items-center space-x-4 text-xs font-semibold text-charcoal-600">
@@ -608,14 +598,6 @@ export function Navbar() {
                   )}
                 </div>
               ))}
-
-              <Link
-                href="/kategori/firsat-urunleri"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block py-2.5 px-3 font-bold text-rose-600 rounded-lg hover:bg-rose-50"
-              >
-                Fırsat Ürünleri
-              </Link>
 
               <Link
                 href="/siparis-takip"

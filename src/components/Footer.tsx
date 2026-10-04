@@ -94,7 +94,6 @@ export function Footer() {
               <li><Link href="/kategori/kiz-bebek-takim" className="hover:text-brand-600">Kız Bebek Takım</Link></li>
               <li><Link href="/kategori/erkek-bebek-takim" className="hover:text-brand-600">Erkek Bebek Takım</Link></li>
               <li><Link href="/kategori/kiz-cocuk-pijama-takimi" className="hover:text-brand-600">Kız Çocuk Pijama</Link></li>
-              <li><Link href="/kategori/firsat-urunleri" className="text-rose-600 font-bold hover:underline">Fırsat Ürünleri</Link></li>
             </ul>
           </div>
 
