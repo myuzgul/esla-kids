@@ -90,7 +90,8 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
     }
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://eslakids.com';
+  // Customer-facing printouts must point to the public domain so phone cameras open the live store
+  const baseUrl = (process.env.NEXT_PUBLIC_STORE_URL || 'https://eslakids.com').replace(/\/$/, '');
 
   const ordersWithQRs = await Promise.all(
     orders.map(async (ord) => {
@@ -101,8 +102,33 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
 
       const itemsWithQr = await Promise.all(
         ord.items.map(async (it: any) => {
-          const productSlug = it.product?.slug || 'erkek-cocuk-2-ip-fermuarli-sweatshirt-esofman-takim';
-          const productUrl = `${baseUrl}/urun/${productSlug}`;
+          let productSlug = it.product?.slug;
+
+          // If product relation was null, look up product dynamically
+          if (!productSlug) {
+            const baseTitle = it.title ? it.title.split(' - ')[0].trim() : '';
+            const matched = await prisma.product.findFirst({
+              where: {
+                OR: [
+                  ...(it.productId ? [{ id: it.productId }] : []),
+                  ...(it.sku ? [{ sku: it.sku }, { sku: it.sku.split('-VAR-')[0] }] : []),
+                  ...(baseTitle ? [{ title: baseTitle }, { title: { contains: baseTitle } }] : []),
+                ],
+              },
+              select: { slug: true },
+            });
+            if (matched?.slug) {
+              productSlug = matched.slug;
+            }
+          }
+
+          // Clean slug of any % encoding
+          const cleanSlug = (productSlug || '')
+            .replace(/%25100/g, '100')
+            .replace(/%100/g, '100')
+            .replace(/%/g, '');
+
+          const productUrl = cleanSlug ? `${baseUrl}/urun/${cleanSlug}` : `${baseUrl}`;
           const qrDataUrl = await generateQrDataUrl(productUrl);
 
           return {
@@ -272,15 +298,23 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
                       <td className="py-3 text-center">
                         <div className="flex flex-col items-center">
                           {it.qrDataUrl && (
-                            <img
-                              src={it.qrDataUrl}
-                              alt="Ürün QR"
-                              className="w-14 h-14 border border-slate-200 p-0.5 rounded bg-white"
-                            />
+                            <a
+                              href={it.productUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Ürünü İncele (Yeni sekmede aç)"
+                              className="group flex flex-col items-center"
+                            >
+                              <img
+                                src={it.qrDataUrl}
+                                alt="Ürün QR Kodu"
+                                className="w-16 h-16 border border-slate-300 p-1 rounded bg-white shadow-xs group-hover:border-brand-500 transition-colors"
+                              />
+                              <span className="text-[9px] text-slate-600 font-semibold mt-1 group-hover:text-brand-600 group-hover:underline transition-colors flex items-center gap-0.5">
+                                Sitede İncele
+                              </span>
+                            </a>
                           )}
-                          <span className="text-[9px] text-slate-500 font-medium mt-0.5">
-                            Sitede İncele
-                          </span>
                         </div>
                       </td>
                     </tr>

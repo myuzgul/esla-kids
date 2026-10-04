@@ -13,8 +13,20 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const product = await prisma.product.findUnique({
-    where: { slug: params.slug },
+  const decoded = decodeURIComponent(params.slug || '');
+  const cleanSlug = decoded.replace(/%25100/g, '100').replace(/%100/g, '100').replace(/%/g, '');
+
+  const product = await prisma.product.findFirst({
+    where: {
+      OR: [
+        { slug: params.slug },
+        { slug: decoded },
+        { slug: cleanSlug },
+        { sku: decoded },
+        { id: decoded },
+      ],
+    },
+    select: { title: true, shortDescription: true, description: true, images: true },
   });
 
   if (!product) return { title: 'Ürün Bulunamadı | Esla Kids' };
@@ -35,9 +47,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = params;
+  const decoded = decodeURIComponent(slug || '');
+  const cleanSlug = decoded.replace(/%25100/g, '100').replace(/%100/g, '100').replace(/%/g, '');
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
+  const product = await prisma.product.findFirst({
+    where: {
+      OR: [
+        { slug },
+        { slug: decoded },
+        { slug: cleanSlug },
+        { sku: decoded },
+        { id: decoded },
+      ],
+    },
     include: {
       brand: true,
       categories: {

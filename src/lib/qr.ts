@@ -3,10 +3,10 @@ import QRCode from 'qrcode';
 export async function generateQrDataUrl(text: string): Promise<string> {
   try {
     return await QRCode.toDataURL(text, {
-      width: 160,
+      width: 200,
       margin: 1,
       color: {
-        dark: '#2D3142',
+        dark: '#000000',
         light: '#FFFFFF',
       },
       errorCorrectionLevel: 'M',
@@ -22,9 +22,9 @@ export async function generateQrSvg(text: string): Promise<string> {
     return await QRCode.toString(text, {
       type: 'svg',
       margin: 1,
-      width: 140,
+      width: 160,
       color: {
-        dark: '#2D3142',
+        dark: '#000000',
         light: '#FFFFFF',
       },
     });
