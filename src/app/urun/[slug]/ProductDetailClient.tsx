@@ -264,38 +264,45 @@ export function ProductDetailClient({ product }: Props) {
           </h1>
 
           {/* Price Box */}
-          <div className="mt-4 p-4 rounded-2xl bg-cream-50 border border-cream-200/80 flex items-center justify-between">
-            <div>
-              <div className="flex items-baseline gap-2.5">
-                <span className="font-heading font-black text-3xl text-brand-600">
+          <div className="mt-4 p-3.5 sm:p-4 rounded-2xl bg-cream-50/90 border border-cream-200/90 shadow-2xs space-y-2.5">
+            {/* Top Row: Price + Badges + Stock */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5">
+              <div className="flex items-center flex-wrap gap-2 sm:gap-2.5">
+                <span className="font-heading font-black text-2xl sm:text-3xl text-brand-600 tracking-tight">
                   {formatPrice(price)}
                 </span>
-                <span className="text-xs font-bold text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2 py-0.5 rounded-md">
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/80 border border-emerald-200 px-2 py-0.5 rounded-md whitespace-nowrap">
                   KDV Dahil
                 </span>
                 {compareAtPrice && compareAtPrice > price && (
-                  <span className="text-base text-charcoal-400 line-through">
+                  <span className="text-sm sm:text-base text-charcoal-400 line-through">
                     {formatPrice(compareAtPrice)}
                   </span>
                 )}
               </div>
-              <div className="text-[11px] text-charcoal-500 mt-1 font-medium flex items-center gap-1.5">
-                <span>KDV Hariç: <strong className="text-charcoal-700">{formatPrice(rawPrice)}</strong></span>
-                <span>•</span>
-                <span>%{taxRate} KDV: <strong className="text-charcoal-700">{formatPrice(taxAmount)}</strong></span>
+
+              {/* Stock Status Pill */}
+              <div>
+                {isOutOfStock ? (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 whitespace-nowrap">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                    Stokta Yok
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50/90 px-2.5 py-1 rounded-full border border-emerald-200 whitespace-nowrap">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                    <span>Stokta Var</span>
+                    <span className="text-emerald-600/75 font-semibold">({currentStock} Adet)</span>
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="text-right">
-              {isOutOfStock ? (
-                <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200">
-                  Stokta Yok
-                </span>
-              ) : (
-                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" /> Stokta Var ({currentStock} Adet)
-                </span>
-              )}
+            {/* Bottom Row: KDV Breakdown */}
+            <div className="pt-2 border-t border-cream-200/60 flex items-center flex-wrap gap-1.5 text-[11px] text-charcoal-500 font-medium">
+              <span>KDV Hariç: <strong className="text-charcoal-800 font-semibold">{formatPrice(rawPrice)}</strong></span>
+              <span className="text-charcoal-300">•</span>
+              <span>%{taxRate} KDV: <strong className="text-charcoal-800 font-semibold">{formatPrice(taxAmount)}</strong></span>
             </div>
           </div>
         </div>
