@@ -66,11 +66,20 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{ stat
       body,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     });
-    const data = await res.json();
-    if (data.status === 'success') {
+
+    const rawText = await res.text();
+    let data: any = null;
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseErr) {
+      console.error('PayTR response was not JSON:', rawText);
+      return { status: 'failed', reason: rawText || 'PayTR sunucusundan geçersiz yanıt alındı.' };
+    }
+
+    if (data && data.status === 'success') {
       return { status: 'success', token: data.token };
     }
-    return { status: 'failed', reason: data.reason || 'PayTR token oluşturulamadı.' };
+    return { status: 'failed', reason: data?.reason || 'PayTR token oluşturulamadı.' };
   } catch (err: any) {
     return { status: 'failed', reason: err.message };
   }
