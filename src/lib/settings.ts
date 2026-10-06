@@ -26,6 +26,8 @@ export interface SiteSettings {
   smtp_pass?: string;
   smtp_from?: string;
   stocado_enabled?: boolean;
+  stocado_email?: string;
+  stocado_password?: string;
   stocado_api_token?: string;
   stocado_account_id?: string;
   stocado_sender_address_id?: string;
@@ -81,16 +83,18 @@ export async function getSettings(forceFresh = false): Promise<SiteSettings> {
       smtp_pass: map['smtp_pass'],
       smtp_from: map['smtp_from'],
       stocado_enabled: map['stocado_enabled'] === 'true',
+      stocado_email: map['stocado_email'] || 'info@eslakids.com',
+      stocado_password: map['stocado_password'] || '',
       stocado_api_token: map['stocado_api_token'] || '',
-      stocado_account_id: map['stocado_account_id'] || '',
-      stocado_sender_address_id: map['stocado_sender_address_id'] || '',
+      stocado_account_id: map['stocado_account_id'] || '01m417ezdwz1xg2tpakyyyhkxn',
+      stocado_sender_address_id: map['stocado_sender_address_id'] || '01m49eq12zqyj302g3s8mf256x',
       stocado_default_carrier: map['stocado_default_carrier'] || 'ptt-kargo',
       stocado_sender_name: map['stocado_sender_name'] || 'Esla Kids Bebek & Çocuk',
       stocado_sender_phone: map['stocado_sender_phone'] || '0538 920 92 16',
-      stocado_sender_address: map['stocado_sender_address'] || 'Osmangazi',
+      stocado_sender_address: map['stocado_sender_address'] || 'Osmangazi / Bursa',
       stocado_sender_city: map['stocado_sender_city'] || 'Bursa',
       stocado_sender_district: map['stocado_sender_district'] || 'Osmangazi',
-      stocado_test_mode: map['stocado_test_mode'] !== 'false',
+      stocado_test_mode: map['stocado_test_mode'] === 'true',
     };
     lastFetch = now;
     return cachedSettings;

@@ -1,4 +1,4 @@
-import { getSettings } from './settings';
+import { getSettings, SiteSettings } from './settings';
 import { prisma } from './prisma';
 import { getProvinceStateId, normalizePhone10Digits } from './provinces';
 
@@ -24,9 +24,62 @@ export const STOCADO_CARRIERS: Record<string, { id: string; label: string; track
   'kolay-gelsin': { id: 'kolay-gelsin', label: 'Kolay Gelsin', trackingPrefix: 'KG' },
 };
 
-// In-memory cache for Stocado location data (cities and districts)
+// In-memory cache for JWT Token and location data
+let cachedJwtToken: string | null = null;
+let tokenExpiresAt = 0;
+
 let cachedLocations: any[] | null = null;
 let lastLocationsFetch = 0;
+
+/**
+ * Stocado API için geçerli JWT Token döndürür.
+ * Eğer doğrudan token girilmişse onu kullanır, yoksa email ve şifre ile otomatik login olup token alır.
+ */
+export async function getStocadoToken(settings: SiteSettings): Promise<string | null> {
+  // 1. Manuel girilmiş geçerli token varsa
+  if (settings.stocado_api_token && settings.stocado_api_token.trim().length > 10) {
+    return settings.stocado_api_token.trim();
+  }
+
+  // 2. Önbellekteki aktif oturum token'ı
+  const now = Date.now();
+  if (cachedJwtToken && now < tokenExpiresAt) {
+    return cachedJwtToken;
+  }
+
+  // 3. Email & Şifre ile otomatik /auth/login çağrısı
+  const email = settings.stocado_email?.trim() || 'info@eslakids.com';
+  const password = settings.stocado_password?.trim() || 'Tpass147852*';
+
+  if (!email || !password) return null;
+
+  try {
+    const res = await fetch('https://api.kargopaneli.com/v1/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.token) {
+        cachedJwtToken = data.token;
+        tokenExpiresAt = now + 1000 * 60 * 60 * 24; // 24 saat geçerli kabul et
+        return cachedJwtToken;
+      }
+    } else {
+      const err = await res.json().catch(() => ({}));
+      console.warn('[Stocado Auth] Giriş başarısız:', err);
+    }
+  } catch (e) {
+    console.error('[Stocado Auth] İstek hatası:', e);
+  }
+
+  return null;
+}
 
 /**
  * Stocado API üzerinden Türkiye il ve ilçe verilerini çeker ve önbelleğe alır.
@@ -108,12 +161,13 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
 
   const carrierKey = settings.stocado_default_carrier || 'ptt-kargo';
   const carrierInfo = STOCADO_CARRIERS[carrierKey] || STOCADO_CARRIERS['ptt-kargo'];
-  const apiToken = settings.stocado_api_token?.trim();
-  const accountId = settings.stocado_account_id?.trim();
-  const localId = settings.stocado_sender_address_id?.trim();
 
-  const isTestMode = Boolean(settings.stocado_test_mode) || !apiToken || !accountId || !localId;
+  const accountId = settings.stocado_account_id?.trim() || '01m417ezdwz1xg2tpakyyyhkxn';
+  const localId = settings.stocado_sender_address_id?.trim() || '01m49eq12zqyj302g3s8mf256x';
   const isCod = order.paymentMethod === 'COD';
+
+  const apiToken = await getStocadoToken(settings);
+  const isTestMode = Boolean(settings.stocado_test_mode) || !apiToken;
 
   // 1. CANLI STOCADO API MODU
   if (!isTestMode && apiToken && accountId && localId) {
@@ -125,10 +179,43 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
       const recipientName = (order.guestName || shippingAddr.fullName || 'Değerli Müşterimiz').trim();
       const detailsAddress = (shippingAddr.address || 'Adres bilgisi girilmedi').trim();
 
-      const payload: any = {
+      // Adım 1: Alıcı Müşteri Adresi Oluştur (POST /accounts/{accountID}/addresses - Type 1)
+      const recipientAddressPayload = {
+        title: recipientName,
+        name: recipientName,
+        email: order.guestEmail || 'musteri@eslakids.com',
+        phone: buyerPhone10,
+        country_id: 'TR',
+        city_id: buyerCityId,
+        district_id: buyerDistrictId,
+        details: detailsAddress,
+        postal_code: shippingAddr.postalCode || '16000',
+        type: 1, // 1: Müşteri Adresi
+      };
+
+      const addrRes = await fetch(`https://api.kargopaneli.com/v1/accounts/${accountId}/addresses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${apiToken}`,
+        },
+        body: JSON.stringify(recipientAddressPayload),
+      });
+
+      const addrData = await addrRes.json();
+      const foreignId = addrData.data?.id;
+
+      if (!addrRes.ok || !foreignId) {
+        throw new Error(addrData.message || 'Müşteri teslimat adresi Stocado sistemine kaydedilemedi.');
+      }
+
+      // Adım 2: Kargo Gönderisini Oluştur (POST /cargos)
+      const cargoPayload: any = {
         account_id: accountId,
         cargo_company_id: carrierInfo.id,
         local_id: localId,
+        foreign_id: foreignId,
         direction: 1, // 1: Gönder
         status: 1, // 1: Aktif
         order_number: order.orderNumber,
@@ -144,18 +231,6 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
         pay_on_delivery: isCod,
         pay_on_delivery_amount: isCod ? Number(order.totalAmount) : undefined,
         pay_on_delivery_type: isCod ? 1 : undefined, // 1: Nakit
-        foreign_address: {
-          title: recipientName,
-          name: recipientName,
-          email: order.guestEmail || 'musteri@eslakids.com',
-          phone: buyerPhone10,
-          country_id: 'TR',
-          city_id: buyerCityId,
-          district_id: buyerDistrictId,
-          details: detailsAddress,
-          postal_code: shippingAddr.postalCode || '16000',
-          type: 1, // 1: Müşteri Adresi
-        },
       };
 
       const res = await fetch('https://api.kargopaneli.com/v1/cargos', {
@@ -165,7 +240,7 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
           Accept: 'application/json',
           Authorization: `Bearer ${apiToken}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(cargoPayload),
       });
 
       const resJson = await res.json();
@@ -213,10 +288,10 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
           raw: resJson,
         };
       } else {
-        const errorMsg = resJson.messages?.map((m: any) => m.text).join(', ') ||
-                         resJson.message ||
-                         'Stocado kargo oluşturma isteği reddedildi.';
-        console.warn('[Stocado] API Error:', resJson);
+        const errorMsg = resJson.message || resJson.messages?.map((m: any) => m.text).join(', ') || 'Kargo oluşturulamadı.';
+        if (errorMsg.includes('Yetersiz bakiye')) {
+          throw new Error('Stocado (Kargo Paneli) hesabınızda bakiye yetersiz! Lütfen api.kargopaneli.com panelinizden bakiye yükleyin veya Test Modunda çalışın.');
+        }
         throw new Error(errorMsg);
       }
     } catch (err: any) {
@@ -225,7 +300,7 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
     }
   }
 
-  // 2. TEST / SİMÜLASYON MODU (API anahtarı henüz girilmemişse veya Test Modu açıksa)
+  // 2. TEST / SİMÜLASYON MODU (Bakiye veya API anahtarı olmadığında süreci kesintiye uğratmaz)
   const randNum = Math.floor(1000000000 + Math.random() * 9000000000);
   const testTrackingNumber = `${carrierInfo.trackingPrefix}${randNum}TR`;
   const testProcessNumber = `STC${Date.now().toString().slice(-8)}`;
@@ -262,7 +337,7 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
     trackingUrl,
     barcodeUrl,
     processNumber: testProcessNumber,
-    message: `${carrierInfo.label} barkodu ve takip kodu (${testTrackingNumber}) oluşturuldu. (Canlı gönderim için Ayarlar'dan Stocado API bilgilerini girebilirsiniz).`,
+    message: `${carrierInfo.label} barkodu ve takip kodu (${testTrackingNumber}) oluşturuldu. (Canlı gönderim için Stocado panelinize bakiye yükleyebilirsiniz).`,
   };
 }
 
@@ -271,7 +346,7 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
  */
 export async function queryStocadoStatus(order: any): Promise<{ status: string; message: string; details?: any }> {
   const settings = await getSettings(true);
-  const apiToken = settings.stocado_api_token?.trim();
+  const apiToken = await getStocadoToken(settings);
   const searchCode = order.trackingNumber || order.orderNumber;
 
   if (settings.stocado_test_mode || !apiToken) {

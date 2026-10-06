@@ -304,30 +304,41 @@ export function AdminSettingsClient({ initialSettings }: Props) {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="sm:col-span-2">
+          <div>
             <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Stocado API Anahtarı (Bearer Token / JWT)
+              Stocado Giriş E-Posta
+            </label>
+            <input
+              type="email"
+              name="stocado_email"
+              placeholder="info@eslakids.com"
+              value={form.stocado_email || ''}
+              onChange={handleChange}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-500"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
+              Stocado Giriş Şifresi
             </label>
             <input
               type="password"
-              name="stocado_api_token"
-              placeholder="Bearer Token (Stocado panelinizden kopyalayın)"
-              value={form.stocado_api_token || ''}
+              name="stocado_password"
+              placeholder="••••••••"
+              value={form.stocado_password || ''}
               onChange={handleChange}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-brand-500"
             />
-            <span className="text-[11px] text-slate-400 mt-1 block">
-              Stocado panelinizden temin ettiğiniz API erişim anahtarını (Bearer token) buraya yapıştırın.
-            </span>
           </div>
 
           <div className="bg-amber-50/80 border border-amber-200 text-amber-900 rounded-xl p-3 text-xs leading-relaxed space-y-1">
             <div className="font-bold flex items-center gap-1.5">
               <span>📮</span>
-              <span>PTT Kargo & Kapıda Ödeme Desteği:</span>
+              <span>Otomatik API Girişi:</span>
             </div>
             <p className="text-[11px] text-amber-800">
-              Sistemimiz Stocado PTT Kargo ve Kapıda Nakit Ödeme altyapısıyla tam uyumludur. Sipariş onaylandığında tahsilat tutarı Stocado ve kargo etiketine otomatik aktarılır.
+              E-posta ve şifreniz girildiğinde sistem Stocado API'sine otomatik oturum açar (JWT Bearer Token üretir).
             </p>
           </div>
 
