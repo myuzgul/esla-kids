@@ -22,8 +22,13 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{ stat
   const merchant_key = settings.paytr_merchant_key;
   const merchant_salt = settings.paytr_merchant_salt;
 
-  const user_basket = JSON.stringify(params.userBasket);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  // PayTR requires merchant_oid to be strictly alphanumeric (no dashes, no special characters)
+  const cleanMerchantOid = params.merchantOid.replace(/[^a-zA-Z0-9]/g, '');
+
+  // PayTR requires user_basket to be base64-encoded JSON string
+  const user_basket = Buffer.from(JSON.stringify(params.userBasket)).toString('base64');
+  
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://eslakids.com';
   const merchant_ok_url = siteUrl + '/siparis-tamamlandi/' + params.merchantOid;
   const merchant_fail_url = siteUrl + '/odeme?error=paytr_failed';
   const timeout_limit = '30';
@@ -32,28 +37,20 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{ stat
   const no_installment = '0';
   const max_installment = '12';
 
-  const hashStr = `${merchant_id}${params.userIp}${params.merchantOid}${params.email}${params.paymentAmount}${user_basket}${no_installment}${max_installment}${currency}${test_mode}${merchant_salt}`;
+  const hashStr = `${merchant_id}${params.userIp}${cleanMerchantOid}${params.email}${params.paymentAmount}${user_basket}${no_installment}${max_installment}${currency}${test_mode}${merchant_salt}`;
   const paytr_token = crypto.createHmac('sha256', merchant_key).update(hashStr).digest('base64');
-
-  // In test mode or local simulation without real PayTR merchant credentials
-  if (merchant_id === '381920' || !merchant_id) {
-    return {
-      status: 'success',
-      token: 'mock_paytr_token_' + params.merchantOid + '_' + Date.now(),
-    };
-  }
 
   try {
     const body = new URLSearchParams({
       merchant_id,
       user_ip: params.userIp,
-      merchant_oid: params.merchantOid,
+      merchant_oid: cleanMerchantOid,
       email: params.email,
       payment_amount: params.paymentAmount.toString(),
       paytr_token,
       user_basket,
       user_name: params.userName,
-      user_address: params.userAddress,
+      user_address: params.userAddress || 'Türkiye',
       user_phone: params.userPhone,
       merchant_ok_url,
       merchant_fail_url,

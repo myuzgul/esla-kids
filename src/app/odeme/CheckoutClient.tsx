@@ -9,7 +9,7 @@ import { formatPrice } from '@/lib/utils';
 import { SiteSettings } from '@/lib/settings';
 import { 
   CreditCard, Landmark, Truck, ShieldCheck, CheckCircle2, 
-  AlertCircle, ChevronRight, Lock, Sparkles 
+  AlertCircle, ChevronRight, Lock, Sparkles, X 
 } from 'lucide-react';
 
 const TURKISH_CITIES = [
@@ -97,6 +97,8 @@ export function CheckoutClient({ settings }: Props) {
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [paytrToken, setPaytrToken] = useState<string | null>(null);
+  const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
 
   // Dynamic Calculations using real database settings
   const freeShippingThreshold = Number(settings.free_shipping_limit) || 750;
@@ -149,7 +151,15 @@ export function CheckoutClient({ settings }: Props) {
         throw new Error(data.error || 'Sipariş oluşturulamadı.');
       }
 
-      // Order created successfully!
+      // If payment method is PayTR and a token is returned, show PayTR iframe
+      if (paymentMethod === 'PAYTR' && data.paytrToken) {
+        setCreatedOrderNumber(data.orderNumber);
+        setPaytrToken(data.paytrToken);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // For HAVALE or COD, complete order directly!
       clearCart();
       router.push(`/siparis-tamamlandi/${data.orderNumber}`);
     } catch (err: any) {
@@ -613,6 +623,49 @@ export function CheckoutClient({ settings }: Props) {
           </div>
         </div>
       </form>
+
+      {/* PayTR Secure iFrame Modal */}
+      {paytrToken && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl relative my-auto border border-cream-200">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-cream-200">
+              <div className="flex items-center gap-2">
+                <Lock className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-heading font-black text-base sm:text-lg text-charcoal-900">
+                  PayTR 256-Bit Güvenli Ödeme
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Ödeme adımından çıkmak istediğinize emin misiniz?')) {
+                    setPaytrToken(null);
+                  }
+                }}
+                className="text-charcoal-400 hover:text-charcoal-800 p-1.5 rounded-xl hover:bg-cream-100 transition-colors"
+                title="Kapat"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="w-full bg-cream-50 rounded-2xl overflow-hidden min-h-[550px] relative border border-cream-200">
+              <iframe
+                src={`https://www.paytr.com/odeme/guvenli/${paytrToken}`}
+                id="paytriframe"
+                frameBorder="0"
+                scrolling="no"
+                className="w-full min-h-[550px] rounded-2xl"
+                style={{ width: '100%', minHeight: '550px' }}
+              />
+            </div>
+
+            <p className="text-[11px] text-center text-charcoal-400 mt-3">
+              Kart bilgileriniz 256-bit SSL sertifikası ile şifrelenir ve doğrudan bankanıza iletilir.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

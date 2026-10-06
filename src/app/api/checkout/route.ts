@@ -259,23 +259,36 @@ export async function POST(req: NextRequest) {
     // Handle PayTR payment token if chosen
     let paytrToken: string | undefined = undefined;
     if (paymentMethod === 'PAYTR') {
+      let streetAddress = 'Türkiye';
+      try {
+        const parsed = JSON.parse(result.shippingAddress);
+        streetAddress = `${parsed.address || ''} ${parsed.district || ''} / ${parsed.city || ''}`.trim() || 'Türkiye';
+      } catch (e) {}
+
       const basket: Array<[string, string, number]> = result.items.map((it) => [
         it.title,
         (it.price * 100).toString(),
         it.quantity,
       ]);
+
+      const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+
       const tokenRes = await createPayTRToken({
         merchantOid: result.orderNumber,
         email: result.guestEmail || '',
         paymentAmount: Math.round(result.totalAmount * 100),
         userName: result.guestName || '',
-        userAddress: result.shippingAddress,
+        userAddress: streetAddress,
         userPhone: result.guestPhone || '',
         userBasket: basket,
-        userIp: req.headers.get('x-forwarded-for') || '127.0.0.1',
+        userIp: clientIp,
       });
-      if (tokenRes.status === 'success') {
+
+      if (tokenRes.status === 'success' && tokenRes.token) {
         paytrToken = tokenRes.token;
+      } else {
+        console.error('PayTR Token Error:', tokenRes.reason);
+        throw new Error(`PayTR Ödeme Sistemi Hatası: ${tokenRes.reason || 'Ödeme oturumu açılamadı'}`);
       }
     }
 

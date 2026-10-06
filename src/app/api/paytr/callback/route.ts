@@ -19,9 +19,17 @@ export async function POST(req: NextRequest) {
 
     const { merchant_oid, status } = body;
 
-    const order = await prisma.order.findUnique({
+    // Support both EK1194 and EK-1194 formats
+    let order = await prisma.order.findUnique({
       where: { orderNumber: merchant_oid },
     });
+
+    if (!order && merchant_oid.startsWith('EK') && !merchant_oid.includes('-')) {
+      const withDash = 'EK-' + merchant_oid.substring(2);
+      order = await prisma.order.findUnique({
+        where: { orderNumber: withDash },
+      });
+    }
 
     if (!order) {
       return new Response('Order not found', { status: 404 });
