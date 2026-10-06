@@ -11,10 +11,34 @@ export async function GET(
   try {
     const filename = params.filename;
     const safeFilename = path.basename(filename);
-    const filePath = path.join(process.cwd(), 'public', 'uploads', safeFilename);
+    let filePath = path.join(process.cwd(), 'public', 'uploads', safeFilename);
 
     if (!fs.existsSync(filePath)) {
-      return new NextResponse('File not found', { status: 404 });
+      // Check if file is inside a subfolder under public/uploads
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+      let foundPath: string | null = null;
+      if (fs.existsSync(uploadsDir)) {
+        const findRecursive = (dir: string) => {
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+              findRecursive(full);
+              if (foundPath) return;
+            } else if (entry.name.toLowerCase() === safeFilename.toLowerCase()) {
+              foundPath = full;
+              return;
+            }
+          }
+        };
+        try { findRecursive(uploadsDir); } catch(e) {}
+      }
+
+      if (foundPath) {
+        filePath = foundPath;
+      } else {
+        return new NextResponse('File not found', { status: 404 });
+      }
     }
 
     const ext = path.extname(safeFilename).toLowerCase();

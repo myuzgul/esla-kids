@@ -14,6 +14,10 @@ const nextConfig = {
         has: [{ type: 'query', key: 'wc-api', value: 'wc_gateway_paytrcheckout' }],
         destination: '/api/paytr/callback',
       },
+      {
+        source: '/wp-content/uploads/:path*',
+        destination: '/uploads/:path*',
+      },
     ];
   },
 };
