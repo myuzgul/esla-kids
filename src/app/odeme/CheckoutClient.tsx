@@ -170,18 +170,6 @@ export function CheckoutClient({ settings }: Props) {
     }
   };
 
-  if (items.length === 0) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <h2 className="text-xl font-bold text-charcoal-900 mb-2">Sepetiniz Boş</h2>
-        <p className="text-sm text-charcoal-500 mb-6">Ödeme yapmak için lütfen sepetinize ürün ekleyiniz.</p>
-        <Link href="/" className="bg-brand-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm">
-          Alışverişe Başla
-        </Link>
-      </div>
-    );
-  }
-
   if (paytrToken) {
     return (
       <div className="max-w-3xl mx-auto px-3 sm:px-6 py-6 sm:py-10 space-y-4 sm:space-y-6">
@@ -240,6 +228,18 @@ export function CheckoutClient({ settings }: Props) {
             <span>256-Bit SSL Sertifikası ile tüm ödemeleriniz PayTR ve banka güvencesindedir.</span>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+        <h2 className="text-xl font-bold text-charcoal-900 mb-2">Sepetiniz Boş</h2>
+        <p className="text-sm text-charcoal-500 mb-6">Ödeme yapmak için lütfen sepetinize ürün ekleyiniz.</p>
+        <Link href="/" className="bg-brand-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm">
+          Alışverişe Başla
+        </Link>
       </div>
     );
   }
