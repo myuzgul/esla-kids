@@ -209,9 +209,24 @@ export async function POST(req: NextRequest) {
 
       const totalAmount = Math.max(0, subtotal - discountAmount + shippingFee + codFee);
 
-      // Generate sequential order number
-      const count = await tx.order.count();
-      const orderNumber = `EK-${1000 + count + 1}`;
+      // Generate sequential order number starting above existing orders
+      const lastOrders = await tx.order.findMany({
+        select: { orderNumber: true },
+        orderBy: { id: 'desc' },
+        take: 50,
+      });
+
+      let maxNum = 13000;
+      lastOrders.forEach((o) => {
+        const m = o.orderNumber?.match(/\d+/);
+        if (m) {
+          const n = parseInt(m[0], 10);
+          if (n > maxNum && n < 900000) maxNum = n;
+        }
+      });
+
+      const nextNum = maxNum + 1;
+      const orderNumber = `EK-${nextNum}`;
 
       const shippingAddressObj = {
         fullName: guestName,
