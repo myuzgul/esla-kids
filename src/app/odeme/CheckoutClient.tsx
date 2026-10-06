@@ -180,6 +180,58 @@ export function CheckoutClient({ settings }: Props) {
     );
   }
 
+  if (paytrToken) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+        <div className="flex items-center justify-between bg-white p-5 rounded-2xl border border-cream-200 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="font-heading font-black text-lg sm:text-xl text-charcoal-900">
+                Güvenli Kredi Kartı Ödemesi
+              </h1>
+              <p className="text-xs text-charcoal-500">
+                Sipariş No: <strong className="text-brand-600">{createdOrderNumber}</strong> — Lütfen kart bilgilerinizi giriniz.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm('Ödeme adımından çıkıp bilgilerinizi düzenlemek istiyor musunuz?')) {
+                setPaytrToken(null);
+              }
+            }}
+            className="text-xs text-charcoal-500 hover:text-charcoal-800 bg-cream-100 hover:bg-cream-200 px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span>Bilgileri Düzenle</span>
+          </button>
+        </div>
+
+        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-cream-200 shadow-sm">
+          <div className="w-full bg-cream-50 rounded-2xl overflow-hidden min-h-[600px] border border-cream-200">
+            <iframe
+              src={`https://www.paytr.com/odeme/guvenli/${paytrToken}`}
+              id="paytriframe"
+              frameBorder="0"
+              scrolling="no"
+              className="w-full min-h-[600px] rounded-2xl"
+              style={{ width: '100%', minHeight: '600px' }}
+            />
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-charcoal-500">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>256-Bit SSL Sertifikası ile tüm ödemeleriniz PayTR ve banka güvencesindedir.</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       {/* Breadcrumb */}
@@ -623,49 +675,6 @@ export function CheckoutClient({ settings }: Props) {
           </div>
         </div>
       </form>
-
-      {/* PayTR Secure iFrame Modal */}
-      {paytrToken && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl relative my-auto border border-cream-200">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-cream-200">
-              <div className="flex items-center gap-2">
-                <Lock className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-heading font-black text-base sm:text-lg text-charcoal-900">
-                  PayTR 256-Bit Güvenli Ödeme
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm('Ödeme adımından çıkmak istediğinize emin misiniz?')) {
-                    setPaytrToken(null);
-                  }
-                }}
-                className="text-charcoal-400 hover:text-charcoal-800 p-1.5 rounded-xl hover:bg-cream-100 transition-colors"
-                title="Kapat"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="w-full bg-cream-50 rounded-2xl overflow-hidden min-h-[550px] relative border border-cream-200">
-              <iframe
-                src={`https://www.paytr.com/odeme/guvenli/${paytrToken}`}
-                id="paytriframe"
-                frameBorder="0"
-                scrolling="no"
-                className="w-full min-h-[550px] rounded-2xl"
-                style={{ width: '100%', minHeight: '550px' }}
-              />
-            </div>
-
-            <p className="text-[11px] text-center text-charcoal-400 mt-3">
-              Kart bilgileriniz 256-bit SSL sertifikası ile şifrelenir ve doğrudan bankanıza iletilir.
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
