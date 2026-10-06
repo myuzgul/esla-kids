@@ -8,29 +8,42 @@ import { ArrowRight, Sparkles, Star, ShieldCheck, Heart, Truck, RefreshCw } from
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [products, categories, banners, featuredProducts] = await Promise.all([
-    prisma.product.findMany({
-      where: { isActive: true },
-      take: 12,
-      orderBy: { createdAt: 'desc' },
-      include: { variations: true },
-    }),
-    prisma.category.findMany({
-      where: { isActive: true, parentId: null },
-      take: 4,
-      orderBy: { order: 'asc' },
-    }),
-    prisma.banner.findMany({
-      where: { isActive: true },
-      orderBy: { order: 'asc' },
-    }),
-    prisma.product.findMany({
-      where: { isActive: true, isFeatured: true },
-      take: 8,
-      orderBy: { updatedAt: 'desc' },
-      include: { variations: true },
-    }),
-  ]);
+  let products: any[] = [];
+  let categories: any[] = [];
+  let banners: any[] = [];
+  let featuredProducts: any[] = [];
+
+  try {
+    const res = await Promise.all([
+      prisma.product.findMany({
+        where: { isActive: true },
+        take: 12,
+        orderBy: { createdAt: 'desc' },
+        include: { variations: true },
+      }),
+      prisma.category.findMany({
+        where: { isActive: true, parentId: null },
+        take: 4,
+        orderBy: { order: 'asc' },
+      }),
+      prisma.banner.findMany({
+        where: { isActive: true },
+        orderBy: { order: 'asc' },
+      }),
+      prisma.product.findMany({
+        where: { isActive: true, isFeatured: true },
+        take: 8,
+        orderBy: { updatedAt: 'desc' },
+        include: { variations: true },
+      }),
+    ]);
+    products = res[0] || [];
+    categories = res[1] || [];
+    banners = res[2] || [];
+    featuredProducts = res[3] || [];
+  } catch (err) {
+    console.error('HomePage data fetch error:', err);
+  }
 
   // In-stock first, out-of-stock last helper
   const sortByStock = (list: any[]) => {
