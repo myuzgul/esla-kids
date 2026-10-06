@@ -154,6 +154,7 @@ export function CheckoutClient({ settings }: Props) {
 
       // If payment method is PayTR and a token is returned, show PayTR iframe
       if (paymentMethod === 'PAYTR' && data.paytrToken) {
+        clearCart();
         setCreatedOrderNumber(data.orderNumber);
         setPaytrToken(data.paytrToken);
         setIsSubmitting(false);

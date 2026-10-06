@@ -10,10 +10,18 @@ interface Props {
 }
 
 export default async function OrderSuccessPage({ params }: Props) {
-  const order = await prisma.order.findUnique({
+  let order = await prisma.order.findUnique({
     where: { orderNumber: params.orderNumber },
     include: { items: true },
   });
+
+  if (!order && params.orderNumber.startsWith('EK') && !params.orderNumber.includes('-')) {
+    const withDash = 'EK-' + params.orderNumber.substring(2);
+    order = await prisma.order.findUnique({
+      where: { orderNumber: withDash },
+      include: { items: true },
+    });
+  }
 
   if (!order) {
     notFound();
