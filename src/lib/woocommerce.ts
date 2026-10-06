@@ -504,18 +504,57 @@ export class WooCommerceImporter {
           if (existingItems === 0) {
             for (const item of o.line_items) {
               try {
+                let matchedProduct: any = null;
+                if (item.product_id) {
+                  matchedProduct = await prisma.product.findUnique({ where: { wooId: item.product_id } });
+                }
+                if (!matchedProduct && item.name) {
+                  matchedProduct = await prisma.product.findFirst({ where: { title: item.name } });
+                }
+
+                let matchedVar: any = null;
+                if (item.variation_id) {
+                  matchedVar = await prisma.productVariation.findUnique({ where: { wooVariationId: item.variation_id } });
+                }
+
+                let itemImage: string | null = null;
+                if (matchedVar?.image) {
+                  itemImage = matchedVar.image;
+                } else if (matchedProduct?.images) {
+                  try {
+                    const pImgs = JSON.parse(matchedProduct.images);
+                    if (pImgs.length > 0) itemImage = pImgs[0];
+                  } catch (e) {}
+                }
+
+                let variationLabel: string | null = null;
+                if (item.meta_data && Array.isArray(item.meta_data)) {
+                  const metaParts = item.meta_data
+                    .filter((m: any) => m.key && !m.key.startsWith('_'))
+                    .map((m: any) => `${m.display_key || m.key}: ${m.display_value || m.value}`);
+                  if (metaParts.length > 0) variationLabel = metaParts.join(', ');
+                }
+                if (!variationLabel && item.variation_id) {
+                  variationLabel = 'Varyasyon #' + item.variation_id;
+                }
+
                 await prisma.orderItem.create({
                   data: {
                     orderId: order.id,
+                    productId: matchedProduct?.id || null,
+                    variationId: matchedVar?.id || null,
                     title: item.name,
                     sku: item.sku || null,
-                    variationName: item.variation_id ? 'Varyasyon #' + item.variation_id : null,
+                    variationName: variationLabel,
                     price: parseFloat(item.price || '0'),
                     quantity: item.quantity || 1,
                     total: parseFloat(item.total || '0'),
+                    image: itemImage,
                   },
                 });
-              } catch (itemErr) {}
+              } catch (itemErr) {
+                console.error('Error importing line item:', itemErr);
+              }
             }
           }
         }
