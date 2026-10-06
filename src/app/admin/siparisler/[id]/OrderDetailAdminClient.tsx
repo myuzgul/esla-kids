@@ -26,10 +26,10 @@ export function OrderDetailAdminClient({ order }: Props) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Kargonomi State
+  // Stocado State
   const [isCreatingShipment, setIsCreatingShipment] = useState(false);
-  const [isTrackingKargonomi, setIsTrackingKargonomi] = useState(false);
-  const [kargonomiMsg, setKargonomiMsg] = useState('');
+  const [isTrackingStocado, setIsTrackingStocado] = useState(false);
+  const [stocadoMsg, setStocadoMsg] = useState('');
 
   // 1. Manuel Durum Kaydet
   const handleSave = async (overrideStatus?: string, overridePrinted?: boolean) => {
@@ -97,13 +97,13 @@ export function OrderDetailAdminClient({ order }: Props) {
     await handleSave('PACKED', true);
   };
 
-  // 3. Kargonomi'ye Kargo Bildir / Barkod Al
-  const handleCreateKargonomiShipment = async () => {
+  // 3. Stocado'ya Kargo Bildir / Barkod Al
+  const handleCreateStocadoShipment = async () => {
     setIsCreatingShipment(true);
-    setKargonomiMsg('');
+    setStocadoMsg('');
 
     try {
-      const res = await fetch('/api/admin/kargonomi', {
+      const res = await fetch('/api/admin/stocado', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -120,22 +120,22 @@ export function OrderDetailAdminClient({ order }: Props) {
       setCarrier(data.trackingCompany);
       setTrackingNumber(data.trackingNumber);
       setStatus('SHIPPED');
-      setKargonomiMsg(data.message || 'Kargo başarıyla oluşturuldu ve kargolandı durumuna alındı!');
+      setStocadoMsg(data.message || 'Kargo başarıyla oluşturuldu ve kargolandı durumuna alındı!');
       router.refresh();
     } catch (err: any) {
-      alert('Kargonomi Hatası: ' + err.message);
+      alert('Stocado Hatası: ' + err.message);
     } finally {
       setIsCreatingShipment(false);
     }
   };
 
-  // 4. Kargonomi'den Durum Sorgula
-  const handleTrackKargonomi = async () => {
-    setIsTrackingKargonomi(true);
-    setKargonomiMsg('');
+  // 4. Stocado'dan Durum Sorgula
+  const handleTrackStocado = async () => {
+    setIsTrackingStocado(true);
+    setStocadoMsg('');
 
     try {
-      const res = await fetch('/api/admin/kargonomi', {
+      const res = await fetch('/api/admin/stocado', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -152,12 +152,12 @@ export function OrderDetailAdminClient({ order }: Props) {
       if (data.status) {
         setStatus(data.status);
       }
-      setKargonomiMsg(data.message || 'Kargonomi kargo durumu güncellendi.');
+      setStocadoMsg(data.message || 'Stocado kargo durumu güncellendi.');
       router.refresh();
     } catch (err: any) {
       alert('Sorgulama hatası: ' + err.message);
     } finally {
-      setIsTrackingKargonomi(false);
+      setIsTrackingStocado(false);
     }
   };
 
@@ -185,13 +185,13 @@ export function OrderDetailAdminClient({ order }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Kargonomi Entegrasyon Kartı */}
+      {/* Stocado Entegrasyon Kartı */}
       <div className="bg-gradient-to-br from-indigo-50/80 via-white to-brand-50/80 rounded-2xl border-2 border-indigo-200/90 shadow-sm p-5 space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-indigo-100">
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-indigo-600" />
             <h3 className="font-heading font-black text-sm text-slate-900">
-              Kargonomi Entegrasyonu
+              Stocado (Kargo Paneli)
             </h3>
           </div>
           <span className="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-2.5 py-0.5 rounded-full">
@@ -199,10 +199,10 @@ export function OrderDetailAdminClient({ order }: Props) {
           </span>
         </div>
 
-        {kargonomiMsg && (
+        {stocadoMsg && (
           <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2 font-medium">
             <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            <span>{kargonomiMsg}</span>
+            <span>{stocadoMsg}</span>
           </div>
         )}
 
@@ -211,14 +211,14 @@ export function OrderDetailAdminClient({ order }: Props) {
             <div className="bg-white p-3.5 rounded-xl border border-indigo-100 space-y-1">
               <div className="text-[11px] text-slate-400 font-bold uppercase">Kargo Bilgileri</div>
               <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                <span>{carrier || order.trackingCompany || 'Yurtiçi Kargo'}</span>
+                <span>{carrier || order.trackingCompany || 'PTT Kargo'}</span>
                 <span className="font-mono text-indigo-700 font-black">{trackingNumber || order.trackingNumber}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <a
-                href={`/api/admin/kargonomi/barcode?orderNumber=${encodeURIComponent(order.orderNumber)}&autoprint=true`}
+                href={`/api/admin/stocado/barcode?orderNumber=${encodeURIComponent(order.orderNumber)}&autoprint=true`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all"
@@ -229,24 +229,24 @@ export function OrderDetailAdminClient({ order }: Props) {
 
               <button
                 type="button"
-                disabled={isTrackingKargonomi}
-                onClick={handleTrackKargonomi}
+                disabled={isTrackingStocado}
+                onClick={handleTrackStocado}
                 className="py-2.5 px-3 bg-white hover:bg-slate-50 border border-indigo-200 text-indigo-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isTrackingKargonomi ? 'animate-spin' : ''}`} />
-                <span>{isTrackingKargonomi ? 'Sorgulanıyor...' : 'Durum Sorgula'}</span>
+                <RefreshCw className={`w-3.5 h-3.5 ${isTrackingStocado ? 'animate-spin' : ''}`} />
+                <span>{isTrackingStocado ? 'Sorgulanıyor...' : 'Durum Sorgula'}</span>
               </button>
             </div>
           </div>
         ) : (
           <div className="space-y-2">
             <p className="text-xs text-slate-600 leading-relaxed">
-              Müşteri adresi ve kapıda ödeme tutarı Kargonomi'ye otomatik aktarılır ve kargo barkodu oluşturulur.
+              Müşteri adresi ve kapıda ödeme tutarı Stocado üzerinden PTT Kargo'ya aktarılır ve kargo barkodu oluşturulur.
             </p>
             <button
               type="button"
               disabled={isCreatingShipment}
-              onClick={handleCreateKargonomiShipment}
+              onClick={handleCreateStocadoShipment}
               className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
             >
               {isCreatingShipment ? (
@@ -257,7 +257,7 @@ export function OrderDetailAdminClient({ order }: Props) {
               ) : (
                 <>
                   <Zap className="w-4 h-4" />
-                  <span>Kargonomi'ye Gönder & Kargo Oluştur</span>
+                  <span>Stocado'ya Gönder & Kargo Oluştur</span>
                 </>
               )}
             </button>

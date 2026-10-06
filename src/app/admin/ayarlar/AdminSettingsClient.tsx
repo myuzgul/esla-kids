@@ -280,44 +280,44 @@ export function AdminSettingsClient({ initialSettings }: Props) {
         </div>
       </div>
 
-      {/* 4. Kargonomi Kargo Entegrasyonu */}
+      {/* 4. Stocado Kargo Paneli Entegrasyonu */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
             <Zap className="w-4 h-4 text-brand-600" />
-            <span>4. Kargonomi Kargo Entegrasyonu</span>
+            <span>4. Stocado (Kargo Paneli) Entegrasyonu</span>
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              name="kargonomi_enabled"
-              checked={Boolean(form.kargonomi_enabled)}
+              name="stocado_enabled"
+              checked={Boolean(form.stocado_enabled)}
               onChange={handleChange}
               className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-slate-300"
             />
-            <span className="text-xs font-bold text-slate-700">Kargonomi'yi Aktif Et</span>
+            <span className="text-xs font-bold text-slate-700">Stocado'yu Aktif Et</span>
           </label>
         </div>
 
         <p className="text-xs text-slate-500">
-          Kargonomi hesabınız üzerinden Yurtiçi, Aras, MNG, Sürat ve PTT kargolarına tek tıkla kargo fişi oluşturabilir, barkod yazdırabilir ve kargo durumunu anlık takip edebilirsiniz.
+          Stocado (api.kargopaneli.com) hesabınız üzerinden PTT Kargo, Yurtiçi, Sürat ve HepsiJET kargolarına tek tıkla kargo fişi oluşturabilir, barkod yazdırabilir ve kargo durumunu anlık takip edebilirsiniz.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="sm:col-span-2">
             <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Kargonomi API Anahtarı (Token)
+              Stocado API Anahtarı (Bearer Token / JWT)
             </label>
             <input
               type="password"
-              name="kargonomi_api_token"
-              placeholder="Bearer Token (Kargonomi panelinizden kopyalayın)"
-              value={form.kargonomi_api_token || ''}
+              name="stocado_api_token"
+              placeholder="Bearer Token (Stocado panelinizden kopyalayın)"
+              value={form.stocado_api_token || ''}
               onChange={handleChange}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-brand-500"
             />
             <span className="text-[11px] text-slate-400 mt-1 block">
-              Kargonomi panelinizde <em>Ayarlar &gt; API Entegrasyonu</em> sayfasından Oku/Yaz yetkili Token oluşturabilirsiniz.
+              Stocado panelinizden temin ettiğiniz API erişim anahtarını (Bearer token) buraya yapıştırın.
             </span>
           </div>
 
@@ -327,55 +327,71 @@ export function AdminSettingsClient({ initialSettings }: Props) {
               <span>PTT Kargo & Kapıda Ödeme Desteği:</span>
             </div>
             <p className="text-[11px] text-amber-800">
-              Sistemimiz PTT Kargo entegrasyonuyla tam uyumludur. Kapıda ödemeli siparişlerde tahsil edilecek tutar hem PTT etiketine hem de hazırlama fişine otomatik olarak yansıtılır.
+              Sistemimiz Stocado PTT Kargo ve Kapıda Nakit Ödeme altyapısıyla tam uyumludur. Sipariş onaylandığında tahsilat tutarı Stocado ve kargo etiketine otomatik aktarılır.
             </p>
           </div>
 
           <div>
             <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Varsayılan Kargo Şirketi
+              Stocado Hesap ID (Account ID - ULID)
+            </label>
+            <input
+              type="text"
+              name="stocado_account_id"
+              placeholder="Örn: 01JTKX1J501BSD8DAG1A6ZPBPM"
+              value={form.stocado_account_id || ''}
+              onChange={handleChange}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Stocado profil veya hesap ayarlarınızda görünen hesap kimliğiniz.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
+              Gönderici / Depo Adres ID (Local ID - ULID)
+            </label>
+            <input
+              type="text"
+              name="stocado_sender_address_id"
+              placeholder="Örn: 01JTKX24X2GCVNHST3HJGJC8JP"
+              value={form.stocado_sender_address_id || ''}
+              onChange={handleChange}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Stocado adres defterinizde kayıtlı depo veya çıkış adresinizin ULID tanımlayıcısı.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
+              Varsayılan Kargo Taşıyıcısı
             </label>
             <select
-              name="kargonomi_default_carrier"
-              value={form.kargonomi_default_carrier || 'PTT Kargo'}
+              name="stocado_default_carrier"
+              value={form.stocado_default_carrier || 'ptt-kargo'}
               onChange={handleChange}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-500"
             >
-              <option value="PTT Kargo">PTT Kargo (Aktif Kullanılan)</option>
-              <option value="Yurtiçi Kargo">Yurtiçi Kargo</option>
-              <option value="Aras Kargo">Aras Kargo</option>
-              <option value="Sürat Kargo">Sürat Kargo</option>
-              <option value="MNG Kargo">MNG Kargo</option>
-              <option value="HepsiJET">HepsiJET</option>
-              <option value="Sendeo">Sendeo</option>
+              <option value="ptt-kargo">PTT Kargo (Aktif / Önerilen)</option>
+              <option value="yurtici-kargo">Yurtiçi Kargo</option>
+              <option value="surat-kargo">Sürat Kargo</option>
+              <option value="hepsijet">HepsiJET</option>
+              <option value="ups">UPS Kargo</option>
+              <option value="kolay-gelsin">Kolay Gelsin</option>
             </select>
           </div>
 
           <div>
             <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Kargonomi Depo ID (warehouse_id - İsteğe Bağlı)
+              Gönderici / Mağaza Adı
             </label>
             <input
               type="text"
-              name="kargonomi_warehouse_id"
-              placeholder="Örn: 12707 (Kargonomi panelinizdeki Depo ID)"
-              value={form.kargonomi_warehouse_id || ''}
-              onChange={handleChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium"
-            />
-            <p className="text-[11px] text-slate-400 mt-1">
-              Kargonomi panelinizde kayıtlı deponuz varsa ID'sini girerek gönderici adres bilgilerini doğrudan panelden çektirebilirsiniz.
-            </p>
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Gönderici / Depo Firma Adı
-            </label>
-            <input
-              type="text"
-              name="kargonomi_sender_name"
-              value={form.kargonomi_sender_name || 'Esla Kids Bebek & Çocuk'}
+              name="stocado_sender_name"
+              value={form.stocado_sender_name || 'Esla Kids Bebek & Çocuk'}
               onChange={handleChange}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium"
             />
@@ -387,8 +403,8 @@ export function AdminSettingsClient({ initialSettings }: Props) {
             </label>
             <input
               type="text"
-              name="kargonomi_sender_phone"
-              value={form.kargonomi_sender_phone || '0538 920 92 16'}
+              name="stocado_sender_phone"
+              value={form.stocado_sender_phone || '0538 920 92 16'}
               onChange={handleChange}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium"
             />
@@ -402,16 +418,16 @@ export function AdminSettingsClient({ initialSettings }: Props) {
               <input
                 type="text"
                 placeholder="İl (Örn: Bursa)"
-                name="kargonomi_sender_city"
-                value={form.kargonomi_sender_city || 'Bursa'}
+                name="stocado_sender_city"
+                value={form.stocado_sender_city || 'Bursa'}
                 onChange={handleChange}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs"
               />
               <input
                 type="text"
                 placeholder="İlçe (Örn: Osmangazi)"
-                name="kargonomi_sender_district"
-                value={form.kargonomi_sender_district || 'Osmangazi'}
+                name="stocado_sender_district"
+                value={form.stocado_sender_district || 'Osmangazi'}
                 onChange={handleChange}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs"
               />
@@ -424,8 +440,8 @@ export function AdminSettingsClient({ initialSettings }: Props) {
             </label>
             <input
               type="text"
-              name="kargonomi_sender_address"
-              value={form.kargonomi_sender_address || 'Osmangazi / Bursa'}
+              name="stocado_sender_address"
+              value={form.stocado_sender_address || 'Osmangazi / Bursa'}
               onChange={handleChange}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs"
             />
@@ -435,14 +451,14 @@ export function AdminSettingsClient({ initialSettings }: Props) {
             <label className="flex items-center gap-2 cursor-pointer bg-slate-50 p-2.5 rounded-xl border border-slate-200 w-full">
               <input
                 type="checkbox"
-                name="kargonomi_test_mode"
-                checked={Boolean(form.kargonomi_test_mode)}
+                name="stocado_test_mode"
+                checked={Boolean(form.stocado_test_mode)}
                 onChange={handleChange}
                 className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300"
               />
               <div>
                 <span className="text-xs font-bold text-slate-800 block">Test / Simülasyon Modu</span>
-                <span className="text-[10px] text-slate-400">API anahtarı girilene kadar test barkodu üretir</span>
+                <span className="text-[10px] text-slate-400">Canlı API anahtarı girilene kadar test kargo barkodu üretir</span>
               </div>
             </label>
           </div>

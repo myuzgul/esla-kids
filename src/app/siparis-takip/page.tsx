@@ -192,14 +192,22 @@ export default function OrderTrackingPage() {
               <div>
                 <div className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
                   <Truck className="w-4 h-4 text-emerald-600" />
-                  <span>Kargo Bilgileri (Kargonomi)</span>
+                  <span>Kargo Bilgileri ({order.trackingCompany || 'PTT Kargo'})</span>
                 </div>
                 <div className="text-base font-bold text-charcoal-900 mt-1">
-                  {order.trackingCompany || 'Yurtiçi Kargo'}: <span className="font-mono text-emerald-700 font-extrabold">{order.trackingNumber}</span>
+                  {order.trackingCompany || 'PTT Kargo'}: <span className="font-mono text-emerald-700 font-extrabold">{order.trackingNumber}</span>
                 </div>
               </div>
               <a
-                href={`https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula?code=${encodeURIComponent(order.trackingNumber)}`}
+                href={
+                  (order.trackingCompany?.toLowerCase().includes('yurtiçi') || order.trackingCompany?.toLowerCase().includes('yurtici'))
+                    ? `https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula?code=${encodeURIComponent(order.trackingNumber)}`
+                    : (order.trackingCompany?.toLowerCase().includes('sürat') || order.trackingCompany?.toLowerCase().includes('surat'))
+                    ? `https://suratkargo.com.tr/KargoTakip/?kargotakipno=${encodeURIComponent(order.trackingNumber)}`
+                    : (order.trackingCompany?.toLowerCase().includes('hepsijet'))
+                    ? `https://hepsijet.com/gonderi-takibi/${encodeURIComponent(order.trackingNumber)}`
+                    : `https://gonderitakip.ptt.gov.tr/Track/Verify?q=${encodeURIComponent(order.trackingNumber)}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-colors"

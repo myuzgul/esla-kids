@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { createKargonomiShipment, queryKargonomiStatus } from '@/lib/kargonomi';
+import { createStocadoShipment, queryStocadoStatus } from '@/lib/stocado';
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,18 +21,21 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'create_shipment') {
-      const result = await createKargonomiShipment(order);
+      const result = await createStocadoShipment(order);
       return NextResponse.json(result);
     }
 
     if (action === 'track_shipment') {
-      const result = await queryKargonomiStatus(order);
+      const result = await queryStocadoStatus(order);
       return NextResponse.json({ success: true, ...result });
     }
 
     return NextResponse.json({ error: 'Geçersiz işlem.' }, { status: 400 });
   } catch (err: any) {
-    console.error('Kargonomi API error:', err);
-    return NextResponse.json({ error: err.message || 'Kargo işlemi gerçekleştirilemedi.' }, { status: 500 });
+    console.error('[Stocado Route] API error:', err);
+    return NextResponse.json(
+      { error: err.message || 'Stocado kargo işlemi gerçekleştirilemedi.' },
+      { status: 500 }
+    );
   }
 }

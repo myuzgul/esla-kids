@@ -25,16 +25,17 @@ export interface SiteSettings {
   smtp_user?: string;
   smtp_pass?: string;
   smtp_from?: string;
-  kargonomi_enabled?: boolean;
-  kargonomi_api_token?: string;
-  kargonomi_warehouse_id?: string;
-  kargonomi_default_carrier?: string;
-  kargonomi_sender_name?: string;
-  kargonomi_sender_phone?: string;
-  kargonomi_sender_address?: string;
-  kargonomi_sender_city?: string;
-  kargonomi_sender_district?: string;
-  kargonomi_test_mode?: boolean;
+  stocado_enabled?: boolean;
+  stocado_api_token?: string;
+  stocado_account_id?: string;
+  stocado_sender_address_id?: string;
+  stocado_default_carrier?: string;
+  stocado_sender_name?: string;
+  stocado_sender_phone?: string;
+  stocado_sender_address?: string;
+  stocado_sender_city?: string;
+  stocado_sender_district?: string;
+  stocado_test_mode?: boolean;
 }
 
 let cachedSettings: SiteSettings | null = null;
@@ -79,16 +80,17 @@ export async function getSettings(forceFresh = false): Promise<SiteSettings> {
       smtp_user: map['smtp_user'],
       smtp_pass: map['smtp_pass'],
       smtp_from: map['smtp_from'],
-      kargonomi_enabled: map['kargonomi_enabled'] === 'true',
-      kargonomi_api_token: map['kargonomi_api_token'] || '',
-      kargonomi_warehouse_id: map['kargonomi_warehouse_id'] || '',
-      kargonomi_default_carrier: map['kargonomi_default_carrier'] || 'PTT Kargo',
-      kargonomi_sender_name: map['kargonomi_sender_name'] || 'Esla Kids Bebek & Çocuk',
-      kargonomi_sender_phone: map['kargonomi_sender_phone'] || '0538 920 92 16',
-      kargonomi_sender_address: map['kargonomi_sender_address'] || 'Osmangazi',
-      kargonomi_sender_city: map['kargonomi_sender_city'] || 'Bursa',
-      kargonomi_sender_district: map['kargonomi_sender_district'] || 'Osmangazi',
-      kargonomi_test_mode: map['kargonomi_test_mode'] !== 'false',
+      stocado_enabled: map['stocado_enabled'] === 'true',
+      stocado_api_token: map['stocado_api_token'] || '',
+      stocado_account_id: map['stocado_account_id'] || '',
+      stocado_sender_address_id: map['stocado_sender_address_id'] || '',
+      stocado_default_carrier: map['stocado_default_carrier'] || 'ptt-kargo',
+      stocado_sender_name: map['stocado_sender_name'] || 'Esla Kids Bebek & Çocuk',
+      stocado_sender_phone: map['stocado_sender_phone'] || '0538 920 92 16',
+      stocado_sender_address: map['stocado_sender_address'] || 'Osmangazi',
+      stocado_sender_city: map['stocado_sender_city'] || 'Bursa',
+      stocado_sender_district: map['stocado_sender_district'] || 'Osmangazi',
+      stocado_test_mode: map['stocado_test_mode'] !== 'false',
     };
     lastFetch = now;
     return cachedSettings;
