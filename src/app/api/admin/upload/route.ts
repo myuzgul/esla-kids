@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { saveFileToDb } from '@/lib/media';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +19,9 @@ export async function POST(req: NextRequest) {
     }
 
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    await mkdir(uploadDir, { recursive: true });
+    try {
+      await mkdir(uploadDir, { recursive: true });
+    } catch (e) {}
 
     const uploadedUrls: string[] = [];
 
@@ -34,7 +37,25 @@ export async function POST(req: NextRequest) {
       const cleanFileName = `esla-${Date.now()}-${Math.random().toString(36).substring(2, 8)}${safeExt}`;
       const filePath = path.join(uploadDir, cleanFileName);
 
-      await writeFile(filePath, buffer);
+      // 1. Write to local disk cache
+      try {
+        await writeFile(filePath, buffer);
+      } catch (e) {
+        console.warn('Could not write to local disk (ephemeral):', e);
+      }
+
+      // 2. Persist permanently to Neon PostgreSQL
+      const mimeTypes: Record<string, string> = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.webp': 'image/webp',
+        '.gif': 'image/gif',
+        '.svg': 'image/svg+xml',
+      };
+      const mimeType = mimeTypes[safeExt] || file.type || 'image/jpeg';
+      await saveFileToDb(cleanFileName, buffer, mimeType);
+
       uploadedUrls.push(`/uploads/${cleanFileName}`);
     }
 

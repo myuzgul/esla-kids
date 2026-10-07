@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { getFileFromDb } from '@/lib/media';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +38,23 @@ export async function GET(
       if (foundPath) {
         filePath = foundPath;
       } else {
+        // Fallback to Neon PostgreSQL!
+        const dbFile = await getFileFromDb(safeFilename);
+        if (dbFile && dbFile.buffer) {
+          try {
+            if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+            fs.writeFileSync(filePath, dbFile.buffer);
+          } catch (e) {}
+
+          return new NextResponse(new Uint8Array(dbFile.buffer), {
+            status: 200,
+            headers: {
+              'Content-Type': dbFile.mimeType,
+              'Cache-Control': 'public, max-age=31536000, immutable',
+            },
+          });
+        }
+
         return new NextResponse('File not found', { status: 404 });
       }
     }

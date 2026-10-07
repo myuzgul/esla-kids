@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { getFileFromDb } from '@/lib/media';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,16 @@ export async function GET(
     }
 
     if (!fs.existsSync(filePath)) {
+      const dbFile = await getFileFromDb(safeFilename);
+      if (dbFile && dbFile.buffer) {
+        return new NextResponse(new Uint8Array(dbFile.buffer), {
+          status: 200,
+          headers: {
+            'Content-Type': dbFile.mimeType,
+            'Cache-Control': 'public, max-age=31536000, immutable',
+          },
+        });
+      }
       return new NextResponse('File not found', { status: 404 });
     }
 
