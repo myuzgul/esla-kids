@@ -16,6 +16,17 @@ export const metadata: Metadata = {
     locale: 'tr_TR',
     type: 'website',
   },
+  icons: {
+    icon: [
+      { url: '/uploads/eslasiyahlogo.png', type: 'image/png' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/uploads/eslasiyahlogo.png', type: 'image/png' },
+      { url: '/apple-icon.png', type: 'image/png' },
+    ],
+    shortcut: '/uploads/eslasiyahlogo.png',
+  },
   robots: {
     index: true,
     follow: true,
