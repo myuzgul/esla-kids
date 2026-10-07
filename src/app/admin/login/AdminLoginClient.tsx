@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Lock, Mail, ShieldAlert, ArrowRight, Loader2, KeyRound } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export function AdminLoginClient() {
   const router = useRouter();
+  const { login, refreshUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -18,27 +20,16 @@ export function AdminLoginClient() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await login(email, password);
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setErrorMsg(data.error || 'Giriş yapılamadı.');
+      if (!res.success) {
+        setErrorMsg(res.error || 'E-posta veya şifre hatalı.');
         return;
       }
 
-      const role = data.customer?.role;
-      if (role !== 'SUPER_ADMIN' && role !== 'ADMIN' && role !== 'WAREHOUSE') {
-        setErrorMsg('Bu alana sadece yetkili yöneticiler erişebilir.');
-        return;
-      }
-
-      router.push('/admin');
-      router.refresh();
+      await refreshUser();
+      // Hard redirect to ensure full session state is loaded cleanly
+      window.location.href = '/admin';
     } catch (err: any) {
       setErrorMsg(err.message || 'Bağlantı hatası oluştu.');
     } finally {
