@@ -362,17 +362,22 @@ export function OrdersTableClient({ initialOrders }: Props) {
                       </td>
 
                       <td className="py-3.5 px-3 max-w-[220px]">
-                        {ord.internalNote ? (
-                          <div 
-                            title={ord.internalNote}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-amber-50 text-amber-900 border border-amber-200/80 font-medium max-w-full truncate"
-                          >
-                            <StickyNote className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                            <span className="truncate">{ord.internalNote}</span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-300 text-xs italic">-</span>
-                        )}
+                        {(() => {
+                          const note = ord.internalNote?.trim();
+                          const isAutoLog = note?.startsWith('[Stocado');
+                          if (!note || isAutoLog) {
+                            return <span className="text-slate-300 text-xs italic">-</span>;
+                          }
+                          return (
+                            <div 
+                              title={note}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-amber-50 text-amber-900 border border-amber-200/80 font-medium max-w-full truncate shadow-xs"
+                            >
+                              <StickyNote className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                              <span className="truncate">{note}</span>
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       <td className="py-3.5 px-3 text-right space-x-1.5 whitespace-nowrap">

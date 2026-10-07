@@ -16,7 +16,11 @@ export function OrderDetailAdminClient({ order }: Props) {
   const [status, setStatus] = useState(order.status || 'CONFIRMED');
   const [carrier, setCarrier] = useState(order.trackingCompany || 'Yurtiçi Kargo');
   const [trackingNumber, setTrackingNumber] = useState(order.trackingNumber || '');
-  const [internalNote, setInternalNote] = useState(order.internalNote || '');
+  const rawNote = (order.internalNote || '').trim();
+  const isStocadoLog = rawNote.startsWith('[Stocado');
+  const userNoteInitial = isStocadoLog ? '' : rawNote;
+
+  const [internalNote, setInternalNote] = useState(userNoteInitial);
   const [isPrinted, setIsPrinted] = useState(Boolean(order.isPrinted));
   const [printedAt, setPrintedAt] = useState(order.printedAt);
   const [isUpdatingPrint, setIsUpdatingPrint] = useState(false);

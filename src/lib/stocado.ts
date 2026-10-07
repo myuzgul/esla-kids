@@ -264,7 +264,6 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
             status: 'SHIPPED',
             trackingCompany: carrierInfo.label,
             trackingNumber: finalTrackingNumber,
-            internalNote: `[Stocado] ${carrierInfo.label} ID: ${cargoData.id} | Barkod: ${finalProcessNumber} | Takip: ${finalTrackingNumber} ${isCod ? `| Kapıda Tahsilat: ${codAmount} TL` : ''}`,
           },
         });
 
@@ -317,7 +316,6 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
       status: 'SHIPPED',
       trackingCompany: carrierInfo.label,
       trackingNumber: testTrackingNumber,
-      internalNote: `[Stocado Test] ${carrierInfo.label} | Barkod: ${testProcessNumber} | Takip: ${testTrackingNumber} ${isCod ? `| Kapıda Tahsilat: ${codAmount} TL` : ''}`,
     },
   });
 
