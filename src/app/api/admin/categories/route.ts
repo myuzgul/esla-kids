@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, slug, parentId, order, showInMenu, isActive, description } = body;
+    const { name, slug, parentId, order, showInMenu, isActive, description, image } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: 'Kategori adı zorunludur.' }, { status: 400 });
@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
         showInMenu: showInMenu !== undefined ? Boolean(showInMenu) : true,
         isActive: isActive !== undefined ? Boolean(isActive) : true,
         description: description?.trim() || null,
+        image: image?.trim() || null,
       },
     });
 

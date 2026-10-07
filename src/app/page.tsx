@@ -133,7 +133,7 @@ export default async function HomePage() {
               className="group relative aspect-[3/4] rounded-2xl overflow-hidden border border-cream-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-end p-4 sm:p-6"
             >
               <img
-                src={cat.image || 'https://images.unsplash.com/photo-1522771930-78848d9293e8?w=600&auto=format&fit=crop&q=80'}
+                src={cat.image || '/uploads/takim-mevsimlik1.jpeg'}
                 alt={cat.name}
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />

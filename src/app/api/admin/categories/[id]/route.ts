@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json();
-    const { name, slug, parentId, order, showInMenu, isActive, description } = body;
+    const { name, slug, parentId, order, showInMenu, isActive, description, image } = body;
 
     const existing = await prisma.category.findUnique({ where: { id: params.id } });
     if (!existing) {
@@ -37,6 +37,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         showInMenu: showInMenu !== undefined ? Boolean(showInMenu) : existing.showInMenu,
         isActive: isActive !== undefined ? Boolean(isActive) : existing.isActive,
         description: description !== undefined ? (description ? description.trim() : null) : existing.description,
+        image: image !== undefined ? (image ? image.trim() : null) : existing.image,
       },
     });
 

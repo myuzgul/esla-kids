@@ -17,6 +17,7 @@ interface CategoryItem {
   order: number;
   showInMenu: boolean;
   isActive: boolean;
+  image?: string | null;
   parent?: any;
   children?: any[];
   products?: any[];
@@ -43,6 +44,7 @@ export function AdminCategoriesClient({ initialCategories }: Props) {
     showInMenu: true,
     isActive: true,
     description: '',
+    image: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalError, setModalError] = useState('');
@@ -68,6 +70,7 @@ export function AdminCategoriesClient({ initialCategories }: Props) {
         showInMenu: cat.showInMenu !== false,
         isActive: cat.isActive !== false,
         description: cat.description || '',
+        image: cat.image || '',
       });
     } else {
       setEditingCategory(null);
@@ -79,6 +82,7 @@ export function AdminCategoriesClient({ initialCategories }: Props) {
         showInMenu: true,
         isActive: true,
         description: '',
+        image: '',
       });
     }
     setModalError('');
@@ -260,6 +264,11 @@ export function AdminCategoriesClient({ initialCategories }: Props) {
                     <span className="w-6 h-6 rounded-lg bg-brand-500 text-white font-black text-xs flex items-center justify-center shadow-xs">
                       {root.order}
                     </span>
+                    {root.image && (
+                      <div className="w-9 h-9 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-white shadow-2xs">
+                        <img src={root.image} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    )}
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-sm text-slate-900">{root.name}</span>
@@ -331,6 +340,11 @@ export function AdminCategoriesClient({ initialCategories }: Props) {
                           <span className="w-5 h-5 rounded bg-slate-100 text-slate-600 font-bold text-[10px] flex items-center justify-center">
                             {sub.order}
                           </span>
+                          {sub.image && (
+                            <div className="w-6 h-6 rounded-md overflow-hidden border border-slate-200 shrink-0 bg-white">
+                              <img src={sub.image} alt="" className="w-full h-full object-cover" />
+                            </div>
+                          )}
                           <span className="font-semibold text-slate-900">{sub.name}</span>
                           <span className="text-[10px] font-mono text-slate-400">/{sub.slug}</span>
                           <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full ml-1">
@@ -484,6 +498,34 @@ export function AdminCategoriesClient({ initialCategories }: Props) {
                     <span className="font-bold text-slate-800">Menüde Göster</span>
                   </label>
                 </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Kategori Fotoğrafı (URL / Dosya Yolu)</label>
+                <div className="flex items-center gap-2.5">
+                  {form.image && (
+                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-200 shrink-0 bg-slate-50 flex items-center justify-center">
+                      <img
+                        src={form.image}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    value={form.image}
+                    onChange={(e) => setForm({ ...form, image: e.target.value })}
+                    placeholder="Örn: /uploads/takim-mevsimlik1.jpeg"
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-brand-500"
+                  />
+                </div>
+                <span className="text-[10px] text-slate-400 mt-1 block">
+                  Anasayfadaki popüler kategoriler alanında ve kategori kartlarında sergilenir.
+                </span>
               </div>
 
               <div>
