@@ -160,7 +160,7 @@ export function ProductImageManager({ images, onChange }: Props) {
                   className="w-full h-full object-cover block"
                   style={{ maxWidth: '100%', maxHeight: '100%' }}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&auto=format&fit=crop&q=80';
+                    (e.target as HTMLImageElement).src = '/uploads/eslasiyahlogo.png';
                   }}
                 />
 

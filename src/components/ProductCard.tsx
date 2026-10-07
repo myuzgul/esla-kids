@@ -28,7 +28,7 @@ export function ProductCard({ product }: ProductCardProps) {
   } catch (e) {
     images = [];
   }
-  const mainImage = images[0] || 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&auto=format&fit=crop&q=80';
+  const mainImage = images[0] || '/uploads/eslasiyahlogo.png';
 
   // Extract distinct colors from variations with hex and image
   const variantColors = useMemo(() => {
@@ -82,7 +82,7 @@ export function ProductCard({ product }: ProductCardProps) {
           className="relative z-10 w-full h-full object-contain object-center p-1.5 sm:p-2 group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&auto=format&fit=crop&q=80';
+            (e.target as HTMLImageElement).src = '/uploads/eslasiyahlogo.png';
           }}
         />
 

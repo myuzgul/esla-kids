@@ -214,7 +214,7 @@ export function AdminVitrinClient({ initialProducts }: Props) {
                 filtered.map((prod) => {
                   let imgs: string[] = [];
                   try { imgs = JSON.parse(prod.images); } catch (e) {}
-                  const mainImg = imgs[0] || 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=200&auto=format&fit=crop&q=80';
+                  const mainImg = imgs[0] || '/uploads/eslasiyahlogo.png';
                   const isLoad = isUpdating === prod.id;
 
                   return (

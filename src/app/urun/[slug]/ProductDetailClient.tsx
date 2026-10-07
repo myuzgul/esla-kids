@@ -52,7 +52,7 @@ export function ProductDetailClient({ product }: Props) {
       }
     });
     if (list.length === 0) {
-      list = ['https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=800&auto=format&fit=crop&q=80'];
+      list = ['/uploads/eslasiyahlogo.png'];
     }
     return list;
   }, [product.images, product.variations]);
@@ -213,7 +213,7 @@ export function ProductDetailClient({ product }: Props) {
             onClick={() => setIsLightboxOpen(true)}
             className="relative z-10 w-full h-full object-contain object-center p-2 sm:p-4 transition-transform duration-300 hover:scale-105 cursor-zoom-in"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&auto=format&fit=crop&q=80';
+              (e.target as HTMLImageElement).src = '/uploads/eslasiyahlogo.png';
             }}
           />
 
@@ -251,7 +251,7 @@ export function ProductDetailClient({ product }: Props) {
                   alt="" 
                   className="w-full h-full object-contain" 
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&auto=format&fit=crop&q=80';
+                    (e.target as HTMLImageElement).src = '/uploads/eslasiyahlogo.png';
                   }}
                 />
               </button>
