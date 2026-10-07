@@ -153,11 +153,15 @@ export function ProductImageManager({ images, onChange }: Props) {
               }`}
             >
               {/* Aspect Ratio Image Container */}
-              <div className="aspect-[4/5] bg-slate-100 relative overflow-hidden">
+              <div className="w-full aspect-[4/5] bg-slate-100 relative overflow-hidden flex items-center justify-center">
                 <img 
-                  src={img} 
+                  src={img.startsWith('http') || img.startsWith('/') ? img : '/' + img} 
                   alt="" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover block"
+                  style={{ maxWidth: '100%', maxHeight: '100%' }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&auto=format&fit=crop&q=80';
+                  }}
                 />
 
                 {/* Cover Badge */}

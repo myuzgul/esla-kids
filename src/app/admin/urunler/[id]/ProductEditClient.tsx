@@ -643,7 +643,7 @@ export function ProductEditClient({ product, categories }: Props) {
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
-                        <th className="p-2.5 w-12 text-center">Görsel</th>
+                        <th className="p-2.5 w-14 min-w-[56px] text-center">Görsel</th>
                         <th className="p-2.5">Renk & Palet</th>
                         <th className="p-2.5">Beden</th>
                         <th className="p-2.5">Model Kodu (SKU)</th>
@@ -655,7 +655,7 @@ export function ProductEditClient({ product, categories }: Props) {
                     <tbody className="divide-y divide-slate-100 font-medium">
                       {variations.map((v, idx) => (
                         <tr key={idx} className="hover:bg-slate-50/60">
-                          <td className="p-2 text-center">
+                          <td className="p-2 w-14 min-w-[56px] text-center">
                             <VariationThumbnailButton
                               image={v.image}
                               color={v.color}

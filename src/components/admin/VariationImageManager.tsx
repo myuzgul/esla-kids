@@ -21,6 +21,63 @@ interface ColorCardsProps {
   onRemoveColorImage: (colorName: string) => void;
 }
 
+interface ThumbnailProps {
+  image?: string | null;
+  color: string;
+  onClick: () => void;
+}
+
+export function SafeImage({
+  src,
+  alt,
+  className,
+  style,
+  fallback,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  style?: React.CSSProperties;
+  fallback?: React.ReactNode;
+}) {
+  const [hasError, setHasError] = useState(false);
+
+  const normalizedSrc = React.useMemo(() => {
+    if (!src) return '';
+    let s = src.trim();
+    if (!s.startsWith('http://') && !s.startsWith('https://') && !s.startsWith('/')) {
+      s = '/' + s;
+    }
+    return s;
+  }, [src]);
+
+  // Reset error when src changes
+  React.useEffect(() => {
+    setHasError(false);
+  }, [normalizedSrc]);
+
+  if (hasError || !normalizedSrc) {
+    return (
+      fallback || (
+        <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
+          <ImageIcon className="w-4 h-4 text-slate-400" />
+        </div>
+      )
+    );
+  }
+
+  return (
+    <img
+      src={normalizedSrc}
+      alt={alt}
+      className={className}
+      style={{ maxWidth: '100%', maxHeight: '100%', ...style }}
+      onError={() => setHasError(true)}
+      loading="lazy"
+    />
+  );
+}
+
 export function ColorImageCards({
   colors,
   variations,
@@ -58,22 +115,33 @@ export function ColorImageCards({
           return (
             <div
               key={c.name}
-              className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 ${
+              className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 min-w-0 overflow-hidden ${
                 assignedImage
                   ? 'bg-white border-brand-300 shadow-sm ring-1 ring-brand-500/10'
                   : 'bg-white/80 border-dashed border-slate-300 hover:border-brand-400'
               }`}
             >
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-3 min-w-0 overflow-hidden">
                 <button
                   type="button"
                   onClick={() => onOpenPicker({ colorName: c.name })}
-                  className="w-13 h-13 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden flex-shrink-0 relative cursor-pointer group flex items-center justify-center transition-transform hover:scale-105"
+                  className="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-xl bg-slate-50 border border-slate-200 overflow-hidden shrink-0 relative cursor-pointer group flex items-center justify-center transition-transform hover:scale-105"
+                  style={{ width: '56px', height: '56px', minWidth: '56px', minHeight: '56px', maxWidth: '56px', maxHeight: '56px' }}
                   title="Fotoğrafı Değiştir / Ata"
                 >
                   {assignedImage ? (
                     <>
-                      <img src={assignedImage} alt={c.name} className="w-full h-full object-contain p-1" />
+                      <SafeImage
+                        src={assignedImage}
+                        alt={c.name}
+                        className="w-full h-full object-contain p-1 block"
+                        fallback={
+                          <div className="flex flex-col items-center justify-center text-slate-400 p-0.5">
+                            <ImageIcon className="w-5 h-5 text-amber-500" />
+                            <span className="text-[8px] text-amber-600 font-bold leading-tight mt-0.5">Bulunamadı</span>
+                          </div>
+                        }
+                      />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <RefreshCw className="w-4 h-4 text-white" />
                       </div>
@@ -89,12 +157,12 @@ export function ColorImageCards({
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span
-                      className="w-3.5 h-3.5 rounded-full border border-black/15 shadow-inner flex-shrink-0"
+                      className="w-3.5 h-3.5 rounded-full border border-black/15 shadow-inner shrink-0"
                       style={{ backgroundColor: c.hex || '#1e3a8a' }}
                     />
                     <span className="font-bold text-xs text-slate-900 truncate">{c.name}</span>
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">
+                  <div className="text-[11px] text-slate-400 mt-0.5 truncate">
                     {count > 0 ? `${count} Beden / Varyasyon` : 'Varyasyon yok'}
                   </div>
                   {assignedImage ? (
@@ -109,7 +177,7 @@ export function ColorImageCards({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1 flex-shrink-0">
+              <div className="flex flex-col gap-1 shrink-0">
                 <button
                   type="button"
                   onClick={() => onOpenPicker({ colorName: c.name })}
@@ -139,22 +207,26 @@ export function ColorImageCards({
   );
 }
 
-interface ThumbnailProps {
-  image?: string | null;
-  color: string;
-  onClick: () => void;
-}
-
 export function VariationThumbnailButton({ image, color, onClick }: ThumbnailProps) {
   if (image) {
     return (
       <button
         type="button"
         onClick={onClick}
-        className="w-10 h-10 rounded-xl overflow-hidden border border-brand-300 bg-white hover:ring-2 hover:ring-brand-500/40 relative cursor-pointer group mx-auto p-0.5 block transition-all shadow-2xs"
+        className="w-10 h-10 min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px] rounded-xl overflow-hidden border border-brand-300 bg-white hover:ring-2 hover:ring-brand-500/40 relative cursor-pointer group mx-auto p-0.5 block transition-all shadow-2xs shrink-0"
+        style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px', maxWidth: '40px', maxHeight: '40px' }}
         title="Fotoğrafı Değiştir (Tıkla)"
       >
-        <img src={image} alt={color} className="w-full h-full object-contain" />
+        <SafeImage
+          src={image}
+          alt={color}
+          className="w-full h-full object-contain block"
+          fallback={
+            <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-400">
+              <ImageIcon className="w-4 h-4 text-slate-400" />
+            </div>
+          }
+        />
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <RefreshCw className="w-3.5 h-3.5 text-white" />
         </div>
@@ -166,7 +238,8 @@ export function VariationThumbnailButton({ image, color, onClick }: ThumbnailPro
     <button
       type="button"
       onClick={onClick}
-      className="w-10 h-10 rounded-xl border-2 border-dashed border-brand-300 hover:border-brand-500 bg-brand-50/40 hover:bg-brand-100/60 flex flex-col items-center justify-center text-brand-600 hover:text-brand-800 transition-all cursor-pointer group mx-auto shadow-2xs"
+      className="w-10 h-10 min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px] rounded-xl border-2 border-dashed border-brand-300 hover:border-brand-500 bg-brand-50/40 hover:bg-brand-100/60 flex flex-col items-center justify-center text-brand-600 hover:text-brand-800 transition-all cursor-pointer group mx-auto shadow-2xs shrink-0"
+      style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px', maxWidth: '40px', maxHeight: '40px' }}
       title="Fotoğraf Ekle (Tıkla)"
     >
       <Camera className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -289,9 +362,20 @@ export function VariationImageModal({
                       onSelectImage(img, applyToAll);
                       onClose();
                     }}
-                    className="relative aspect-[4/5] rounded-xl overflow-hidden border-2 border-slate-200 hover:border-brand-500 hover:ring-2 hover:ring-brand-500/20 transition-all p-1 flex items-center justify-center bg-slate-50 cursor-pointer group"
+                    className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border-2 border-slate-200 hover:border-brand-500 hover:ring-2 hover:ring-brand-500/20 transition-all p-1 flex items-center justify-center bg-slate-50 cursor-pointer group shrink-0"
                   >
-                    <img src={img} alt="" className="w-full h-full object-contain" />
+                    <SafeImage
+                      src={img}
+                      alt=""
+                      className="w-full h-full object-contain block"
+                      style={{ maxWidth: '100%', maxHeight: '100%' }}
+                      fallback={
+                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-1">
+                          <ImageIcon className="w-5 h-5 text-slate-300" />
+                          <span className="text-[9px] text-slate-400 mt-0.5">Açılamadı</span>
+                        </div>
+                      }
+                    />
                     <div className="absolute inset-0 bg-brand-600/15 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="bg-white/90 text-brand-700 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
                         Seç
