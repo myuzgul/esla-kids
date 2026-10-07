@@ -466,9 +466,9 @@ export function CheckoutClient({ settings }: Props) {
                       />
                       <div>
                         <div className="text-sm font-bold text-charcoal-900 flex items-center gap-2">
-                          <span>PayTR ile Güvenli Kredi / Banka Kartı</span>
+                          <span>KREDİ KARTI (PAYTR)</span>
                           <span className="text-[11px] bg-slate-100 text-slate-700 font-semibold px-2 py-0.5 rounded">
-                            Taksit İmkanı
+                            Tüm Kartlara Güvenli Ödeme
                           </span>
                         </div>
                         <div className="text-xs text-charcoal-500 mt-0.5">
@@ -499,7 +499,7 @@ export function CheckoutClient({ settings }: Props) {
                     />
                     <div>
                       <div className="text-sm font-bold text-charcoal-900 flex items-center gap-2">
-                        <span>Havale / EFT ile Ödeme</span>
+                        <span>HAVALE / EFT</span>
                         {havaleDiscountPercent > 0 && (
                           <span className="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded flex items-center gap-1">
                             <Sparkles className="w-3 h-3" /> %{havaleDiscountPercent} ANINDA İNDİRİM
@@ -547,7 +547,7 @@ export function CheckoutClient({ settings }: Props) {
                       />
                       <div>
                         <div className="text-sm font-bold text-charcoal-900 flex items-center gap-2">
-                          <span>Kapıda Ödeme (Nakit veya Kredi Kartı)</span>
+                          <span>KAPIDA NAKİT ÖDEME</span>
                           {Number(settings.cod_fee) > 0 && (
                             <span className="text-[11px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded">
                               +{formatPrice(Number(settings.cod_fee))} Hizmet Bedeli
@@ -555,7 +555,7 @@ export function CheckoutClient({ settings }: Props) {
                           )}
                         </div>
                         <div className="text-xs text-charcoal-500 mt-0.5">
-                          Kargo kapınıza geldiğinde nakit veya kartınızla ödeme yapabilirsiniz. ({settings.shipping_company || 'Yurtiçi Kargo'})
+                          Kargonuz kapınıza geldiğinde nakit olarak teslimat anında ödeme yapabilirsiniz. ({settings.shipping_company || 'PTT Kargo'})
                         </div>
                       </div>
                     </div>

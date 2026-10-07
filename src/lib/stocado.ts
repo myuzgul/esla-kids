@@ -164,7 +164,9 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
 
   const accountId = settings.stocado_account_id?.trim() || '01m417ezdwz1xg2tpakyyyhkxn';
   const localId = settings.stocado_sender_address_id?.trim() || '01m49eq12zqyj302g3s8mf256x';
-  const isCod = order.paymentMethod === 'COD';
+  const paymentMethodUpper = (order.paymentMethod || '').toUpperCase();
+  const isCod = paymentMethodUpper === 'COD' || paymentMethodUpper.includes('KAPIDA') || paymentMethodUpper.includes('CASH');
+  const codAmount = Number(order.totalAmount || order.total || 0);
 
   const apiToken = await getStocadoToken(settings);
   const isTestMode = Boolean(settings.stocado_test_mode) || !apiToken;
@@ -229,8 +231,8 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
           height: 5,
         },
         pay_on_delivery: isCod,
-        pay_on_delivery_amount: isCod ? Number(order.totalAmount) : undefined,
-        pay_on_delivery_type: isCod ? 1 : undefined, // 1: Nakit
+        pay_on_delivery_amount: isCod ? codAmount : undefined,
+        pay_on_delivery_type: isCod ? 1 : undefined, // 1: Nakit Tahsilat
       };
 
       const res = await fetch('https://api.kargopaneli.com/v1/cargos', {
@@ -262,7 +264,7 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
             status: 'SHIPPED',
             trackingCompany: carrierInfo.label,
             trackingNumber: finalTrackingNumber,
-            internalNote: `[Stocado] ${carrierInfo.label} ID: ${cargoData.id} | Barkod: ${finalProcessNumber} | Takip: ${finalTrackingNumber} ${isCod ? `| Kapıda Tahsilat: ${order.totalAmount} TL` : ''}`,
+            internalNote: `[Stocado] ${carrierInfo.label} ID: ${cargoData.id} | Barkod: ${finalProcessNumber} | Takip: ${finalTrackingNumber} ${isCod ? `| Kapıda Tahsilat: ${codAmount} TL` : ''}`,
           },
         });
 
@@ -315,7 +317,7 @@ export async function createStocadoShipment(order: any): Promise<StocadoShipment
       status: 'SHIPPED',
       trackingCompany: carrierInfo.label,
       trackingNumber: testTrackingNumber,
-      internalNote: `[Stocado Test] ${carrierInfo.label} | Barkod: ${testProcessNumber} | Takip: ${testTrackingNumber} ${isCod ? `| Kapıda Tahsilat: ${order.totalAmount} TL` : ''}`,
+      internalNote: `[Stocado Test] ${carrierInfo.label} | Barkod: ${testProcessNumber} | Takip: ${testTrackingNumber} ${isCod ? `| Kapıda Tahsilat: ${codAmount} TL` : ''}`,
     },
   });
 

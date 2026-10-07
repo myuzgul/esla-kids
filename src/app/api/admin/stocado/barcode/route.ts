@@ -30,7 +30,9 @@ export async function GET(req: NextRequest) {
 
   const trackingNum = order.trackingNumber || `KP${Math.floor(1000000000 + Math.random() * 9000000000)}TR`;
   const carrier = order.trackingCompany || 'PTT Kargo';
-  const isCod = order.paymentMethod === 'COD';
+  const paymentMethodUpper = (order.paymentMethod || '').toUpperCase();
+  const isCod = paymentMethodUpper === 'COD' || paymentMethodUpper.includes('KAPIDA') || paymentMethodUpper.includes('CASH');
+  const codAmount = Number((order as any).totalAmount || (order as any).total || 0);
 
   const senderName = settings.stocado_sender_name || 'Esla Kids Bebek & Çocuk Giyim';
   const senderPhone = settings.stocado_sender_phone || '0538 920 92 16';
@@ -233,7 +235,7 @@ export async function GET(req: NextRequest) {
 
     ${isCod ? `
       <div class="cod-badge">
-        💰 KAPIDA ÖDEME TAHSİLAT TUTARI: ${order.totalAmount} TL
+        💰 KAPIDA NAKİT ÖDEME TAHSİLAT TUTARI: ${codAmount} TL
       </div>
     ` : `
       <div class="paid-badge">
