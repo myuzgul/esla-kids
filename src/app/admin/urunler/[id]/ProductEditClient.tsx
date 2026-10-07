@@ -88,6 +88,25 @@ export function ProductEditClient({ product, categories }: Props) {
     return existingSizeNames.length > 0 ? (existingSizeNames as string[]) : ['1-2 Yaş', '2-3 Yaş', '3-4 Yaş'];
   });
   const [customSize, setCustomSize] = useState('');
+  const [savedCustomSizes, setSavedCustomSizes] = useState<string[]>([]);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // Load persistent custom sizes on mount
+  React.useEffect(() => {
+    try {
+      const storedSizes = localStorage.getItem('esla_admin_custom_sizes');
+      if (storedSizes) {
+        setSavedCustomSizes(JSON.parse(storedSizes));
+      }
+    } catch (e) {}
+  }, []);
+
+  const saveCustomSizesToStorage = (list: string[]) => {
+    setSavedCustomSizes(list);
+    try {
+      localStorage.setItem('esla_admin_custom_sizes', JSON.stringify(list));
+    } catch (e) {}
+  };
 
   const [bulkStockVal, setBulkStockVal] = useState('5');
   const [bulkPriceVal, setBulkPriceVal] = useState('');
@@ -100,10 +119,25 @@ export function ProductEditClient({ product, categories }: Props) {
   };
 
   const addCustomSize = () => {
-    if (customSize.trim() && !selectedSizes.includes(customSize.trim())) {
-      setSelectedSizes([...selectedSizes, customSize.trim()]);
-      setCustomSize('');
+    const clean = customSize.trim();
+    if (!clean) return;
+
+    if (!savedCustomSizes.includes(clean)) {
+      const updated = [...savedCustomSizes, clean];
+      saveCustomSizesToStorage(updated);
     }
+
+    if (!selectedSizes.includes(clean)) {
+      setSelectedSizes([...selectedSizes, clean]);
+    }
+    setCustomSize('');
+  };
+
+  const deleteSavedCustomSize = (sizeName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = savedCustomSizes.filter((s) => s !== sizeName);
+    saveCustomSizesToStorage(updated);
+    setSelectedSizes((prev) => prev.filter((s) => s !== sizeName));
   };
 
   // Generate Matrix
@@ -197,17 +231,26 @@ export function ProductEditClient({ product, categories }: Props) {
   };
 
   // Submit Handler
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmitClick = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!title.trim() || !price) {
+      setErrorMsg('Lütfen ürün başlığı ve fiyat alanlarını doldurunuz.');
+      return;
+    }
+
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmUpdate = async () => {
+    setShowConfirmModal(false);
     setIsSubmitting(true);
     setErrorMsg('');
     setSuccessMsg('');
 
     try {
-      if (!title.trim() || !price) {
-        throw new Error('Lütfen ürün başlığı ve fiyat alanlarını doldurunuz.');
-      }
-
       const payload = {
         title: title.trim(),
         sku: sku.trim(), // Optional: backend handles generating if empty
@@ -254,8 +297,14 @@ export function ProductEditClient({ product, categories }: Props) {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+      e.preventDefault();
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl mx-auto pb-16">
+    <form onSubmit={handleFormSubmitClick} onKeyDown={handleKeyDown} className="space-y-6 max-w-5xl mx-auto pb-16">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div className="flex items-center gap-3">
@@ -552,6 +601,32 @@ export function ProductEditClient({ product, categories }: Props) {
                     </button>
                   );
                 })}
+
+                {/* User Added Persistent Custom Sizes */}
+                {savedCustomSizes.map((size) => {
+                  const active = selectedSizes.includes(size);
+                  return (
+                    <div
+                      key={size}
+                      onClick={() => toggleSize(size)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                        active
+                          ? 'bg-brand-50 text-brand-800 border-brand-300 font-bold'
+                          : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <span>{size}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => deleteSavedCustomSize(size, e)}
+                        title="Bu bedeni hafızadan sil"
+                        className="ml-1 text-slate-400 hover:text-rose-600 font-bold"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Custom Size */}
@@ -784,6 +859,64 @@ export function ProductEditClient({ product, categories }: Props) {
         onSelectImage={handleSelectVariationImage}
         onAddProductImage={(url) => setImages((prev) => [...prev, url])}
       />
+
+      {/* Confirmation Modal Before Updating */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center flex-shrink-0">
+                <Save className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-heading font-black text-lg text-slate-900">
+                  Değişiklikleri Kaydetmek İstiyor Musunuz?
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Lütfen kontrol edin, ürün güncellenecek ve canlı mağazaya yansıyacaktır.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Ürün Başlığı:</span>
+                <span className="font-bold text-slate-900 truncate max-w-[220px]">{title}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Satış Fiyatı:</span>
+                <span className="font-bold text-brand-600">{formatPrice(parseFloat(price) || 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Varyasyon Sayısı:</span>
+                <span className="font-bold text-slate-900">
+                  {enableVariations ? `${variations.length} Adet Varyant` : 'Tekil Ürün'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                Vazgeç / Düzenlemeye Devam Et
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmUpdate}
+                disabled={isSubmitting}
+                className="px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-black shadow-md shadow-brand-500/20 transition-all flex items-center gap-1.5"
+              >
+                <Check className="w-4 h-4" />
+                <span>Evet, Kaydet</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

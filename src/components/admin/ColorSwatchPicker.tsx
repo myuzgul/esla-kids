@@ -33,6 +33,24 @@ interface Props {
 export function ColorSwatchPicker({ selectedColors, onChange }: Props) {
   const [customName, setCustomName] = useState('');
   const [customHex, setCustomHex] = useState('#2563eb');
+  const [savedCustomColors, setSavedCustomColors] = useState<ColorOption[]>([]);
+
+  // Load custom colors from localStorage on mount
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem('esla_admin_custom_colors');
+      if (stored) {
+        setSavedCustomColors(JSON.parse(stored));
+      }
+    } catch (e) {}
+  }, []);
+
+  const saveCustomColorsToStorage = (list: ColorOption[]) => {
+    setSavedCustomColors(list);
+    try {
+      localStorage.setItem('esla_admin_custom_colors', JSON.stringify(list));
+    } catch (e) {}
+  };
 
   const isSelected = (c: ColorOption) => selectedColors.some((sc) => sc.name === c.name);
 
@@ -47,14 +65,31 @@ export function ColorSwatchPicker({ selectedColors, onChange }: Props) {
   const addCustomColor = () => {
     if (!customName.trim()) return;
     const cleanName = customName.trim();
-    if (!selectedColors.some((c) => c.name.toLowerCase() === cleanName.toLowerCase())) {
-      onChange([...selectedColors, { name: cleanName, hex: customHex }]);
-      setCustomName('');
+    const newColor = { name: cleanName, hex: customHex };
+
+    // Save to persistent custom colors list
+    if (!savedCustomColors.some((c) => c.name.toLowerCase() === cleanName.toLowerCase())) {
+      const updated = [...savedCustomColors, newColor];
+      saveCustomColorsToStorage(updated);
     }
+
+    if (!selectedColors.some((c) => c.name.toLowerCase() === cleanName.toLowerCase())) {
+      onChange([...selectedColors, newColor]);
+    }
+    setCustomName('');
   };
 
   const removeColor = (name: string) => {
     onChange(selectedColors.filter((sc) => sc.name !== name));
+  };
+
+  const deleteSavedCustomColor = (name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = savedCustomColors.filter((c) => c.name !== name);
+    saveCustomColorsToStorage(updated);
+    if (isSelected({ name, hex: '' })) {
+      removeColor(name);
+    }
   };
 
   return (
@@ -91,6 +126,40 @@ export function ColorSwatchPicker({ selectedColors, onChange }: Props) {
               </span>
               <span>{preset.name}</span>
             </button>
+          );
+        })}
+
+        {/* User Added Persistent Custom Colors */}
+        {savedCustomColors.map((custom) => {
+          const active = isSelected(custom);
+          return (
+            <div
+              key={custom.name}
+              onClick={() => togglePreset(custom)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                active 
+                  ? 'bg-brand-50 text-brand-900 border-brand-400 shadow-sm' 
+                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              <span 
+                className="w-4 h-4 rounded-full border border-black/15 shadow-inner flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: custom.hex }}
+              >
+                {active && (
+                  <Check className={`w-2.5 h-2.5 ${custom.hex === '#ffffff' || custom.hex === '#fef3c7' || custom.hex === '#fbcfe8' ? 'text-black' : 'text-white'}`} />
+                )}
+              </span>
+              <span>{custom.name}</span>
+              <button
+                type="button"
+                onClick={(e) => deleteSavedCustomColor(custom.name, e)}
+                title="Bu özel rengi hafızadan sil"
+                className="ml-1 text-slate-400 hover:text-rose-600 font-bold"
+              >
+                ×
+              </button>
+            </div>
           );
         })}
       </div>
