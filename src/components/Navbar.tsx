@@ -193,25 +193,15 @@ export function Navbar() {
         </button>
 
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white border border-cream-200/60 shadow-sm flex items-center justify-center p-1 group-hover:scale-105 transition-transform">
-            <Image
-              src="/uploads/eslasiyahlogo.png"
-              alt="Esla Kids Logo"
-              width={40}
-              height={40}
-              className="w-full h-full object-contain"
-              priority
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-heading font-extrabold text-2xl tracking-tight text-charcoal-900 group-hover:text-brand-600 transition-colors">
-              ESLA KIDS
-            </span>
-            <span className="text-[10px] tracking-widest text-brand-600 font-semibold uppercase -mt-1">
-              BEBEK & ÇOCUK GİYİM
-            </span>
-          </div>
+        <Link href="/" className="flex items-center group">
+          <Image
+            src="/uploads/eslasiyahlogo.png"
+            alt="Esla Kids"
+            width={160}
+            height={52}
+            className="h-10 sm:h-12 w-auto object-contain group-hover:opacity-90 transition-opacity"
+            priority
+          />
         </Link>
 
         {/* Live Search Bar */}

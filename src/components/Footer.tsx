@@ -56,20 +56,15 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand Info */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-white border border-cream-200/60 shadow-sm flex items-center justify-center p-1">
-                <Image
-                  src="/uploads/eslasiyahlogo.png"
-                  alt="Esla Kids Logo"
-                  width={36}
-                  height={36}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <span className="font-heading font-extrabold text-2xl text-charcoal-900">
-                ESLA KIDS
-              </span>
-            </div>
+            <Link href="/" className="inline-block">
+              <Image
+                src="/uploads/eslasiyahlogo.png"
+                alt="Esla Kids"
+                width={150}
+                height={48}
+                className="h-10 w-auto object-contain"
+              />
+            </Link>
             <p className="text-sm text-charcoal-600 leading-relaxed pr-6">
               Esla Kids, miniklerin konforunu, sağlığını ve şıklığını ön planda tutan yüksek kaliteli bebek ve çocuk giyim tasarımları sunar. %100 doğal pamuk ipliçinden üretilen takımlarımız ile çocuklarınız gün boyu özgür ve neşeli.
             </p>
