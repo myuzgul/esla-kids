@@ -83,3 +83,18 @@ export const ORDER_STATUS_MAP: Record<string, { label: string; color: string; bg
   REFUNDED: { label: 'İade Edildi', color: 'text-slate-600', bg: 'bg-slate-100 border-slate-300' },
   PENDING_PAYMENT: { label: 'Ödeme Bekleniyor', color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-200' },
 };
+
+export function formatPaymentMethod(method: string | null | undefined): string {
+  if (!method) return 'Belirtilmedi';
+  const m = method.toUpperCase();
+  if (m === 'COD' || m.includes('KAPIDA') || m.includes('CASH')) {
+    return 'KAPIDA NAKİT ÖDEME';
+  }
+  if (m === 'PAYTR' || m.includes('KREDI') || m.includes('CARD') || m.includes('CREDIT')) {
+    return 'KREDİ KARTI (PAYTR)';
+  }
+  if (m === 'HAVALE' || m === 'BANK_TRANSFER' || m.includes('EFT') || m.includes('TRANSFER')) {
+    return 'HAVALE / EFT';
+  }
+  return method;
+}

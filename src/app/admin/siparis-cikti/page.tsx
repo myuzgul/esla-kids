@@ -1,6 +1,6 @@
 import React from 'react';
 import { prisma } from '@/lib/prisma';
-import { formatPrice, formatDate } from '@/lib/utils';
+import { formatPrice, formatDate, formatPaymentMethod } from '@/lib/utils';
 import { generateQrDataUrl } from '@/lib/qr';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -232,7 +232,7 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
                   <strong>Kargo:</strong> {ord.trackingCompany || 'Yurtiçi Kargo'}
                 </div>
                 <div className="text-slate-700">
-                  <strong>Ödeme Şekli:</strong> {ord.paymentMethod} ({ord.paymentStatus === 'PAID' ? 'ÖDENDİ' : 'TAHSİL EDİLECEK'})
+                  <strong>Ödeme Şekli:</strong> {formatPaymentMethod(ord.paymentMethod)} ({ord.paymentStatus === 'PAID' ? 'ÖDENDİ' : 'TAHSİL EDİLECEK'})
                 </div>
               </div>
             </div>

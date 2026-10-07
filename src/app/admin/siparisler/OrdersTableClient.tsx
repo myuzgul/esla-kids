@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { formatPrice, formatDate, ORDER_STATUS_MAP } from '@/lib/utils';
+import { formatPrice, formatDate, ORDER_STATUS_MAP, formatPaymentMethod } from '@/lib/utils';
 import { 
   Printer, CheckSquare, Search, Eye, MoreHorizontal, 
   CheckCircle2, Truck, XCircle, ArrowRight, Trash2,
@@ -305,7 +305,7 @@ export function OrdersTableClient({ initialOrders }: Props) {
                       </td>
 
                       <td className="py-3.5 px-3">
-                        <span className="font-bold text-slate-800">{ord.paymentMethod}</span>
+                        <span className="font-bold text-slate-800">{formatPaymentMethod(ord.paymentMethod)}</span>
                         <div className="text-[10px] text-slate-400 uppercase font-semibold">
                           {ord.paymentStatus === 'PAID' ? '✓ Ödendi' : 'Bekliyor'}
                         </div>
