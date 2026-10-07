@@ -7,7 +7,7 @@ import { formatPrice, formatDate, ORDER_STATUS_MAP, formatPaymentMethod } from '
 import { 
   Printer, CheckSquare, Search, Eye, MoreHorizontal, 
   CheckCircle2, Truck, XCircle, ArrowRight, Trash2,
-  AlertTriangle, Loader2, Check
+  AlertTriangle, Loader2, Check, FileText, StickyNote
 } from 'lucide-react';
 
 interface Props {
@@ -260,13 +260,14 @@ export function OrdersTableClient({ initialOrders }: Props) {
                 <th className="py-3.5 px-3">Tutar</th>
                 <th className="py-3.5 px-3">Sipariş Durumu</th>
                 <th className="py-3.5 px-3">Yazdırma Durumu</th>
+                <th className="py-3.5 px-3">Yönetici Notu</th>
                 <th className="py-3.5 px-3 text-right">İşlemler</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-12 text-center text-slate-400">
+                  <td colSpan={10} className="p-12 text-center text-slate-400">
                     Kriterlere uygun sipariş bulunamadı.
                   </td>
                 </tr>
@@ -357,6 +358,20 @@ export function OrdersTableClient({ initialOrders }: Props) {
                               ✓
                             </button>
                           </div>
+                        )}
+                      </td>
+
+                      <td className="py-3.5 px-3 max-w-[220px]">
+                        {ord.internalNote ? (
+                          <div 
+                            title={ord.internalNote}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-amber-50 text-amber-900 border border-amber-200/80 font-medium max-w-full truncate"
+                          >
+                            <StickyNote className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                            <span className="truncate">{ord.internalNote}</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-300 text-xs italic">-</span>
                         )}
                       </td>
 
