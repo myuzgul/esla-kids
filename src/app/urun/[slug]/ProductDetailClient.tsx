@@ -212,6 +212,9 @@ export function ProductDetailClient({ product }: Props) {
             alt={product.title}
             onClick={() => setIsLightboxOpen(true)}
             className="relative z-10 w-full h-full object-contain object-center p-2 sm:p-4 transition-transform duration-300 hover:scale-105 cursor-zoom-in"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&auto=format&fit=crop&q=80';
+            }}
           />
 
           {discountPercent > 0 && (
@@ -243,7 +246,14 @@ export function ProductDetailClient({ product }: Props) {
                   selectedImage === img ? 'border-brand-500 shadow-sm ring-2 ring-brand-500/20' : 'border-cream-200 opacity-70 hover:opacity-100'
                 }`}
               >
-                <img src={img} alt="" className="w-full h-full object-contain" />
+                <img 
+                  src={img} 
+                  alt="" 
+                  className="w-full h-full object-contain" 
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&auto=format&fit=crop&q=80';
+                  }}
+                />
               </button>
             ))}
           </div>

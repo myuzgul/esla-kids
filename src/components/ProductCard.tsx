@@ -70,6 +70,9 @@ export function ProductCard({ product }: ProductCardProps) {
           alt=""
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-15 scale-110 pointer-events-none"
+          onError={(e) => {
+            (e.target as HTMLElement).style.display = 'none';
+          }}
         />
 
         {/* Crisp foreground image */}
@@ -78,6 +81,9 @@ export function ProductCard({ product }: ProductCardProps) {
           alt={product.title}
           className="relative z-10 w-full h-full object-contain object-center p-1.5 sm:p-2 group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&auto=format&fit=crop&q=80';
+          }}
         />
 
         {/* Badges */}
