@@ -268,8 +268,10 @@ export async function POST(req: NextRequest) {
       return order;
     });
 
-    // Send order confirmation email asynchronously
-    sendOrderNotificationEmail(result, 'CREATED').catch((e) => console.error(e));
+    // Send order confirmation email asynchronously for non-PAYTR payments (PayTR sends upon successful webhook callback)
+    if (paymentMethod !== 'PAYTR') {
+      sendOrderNotificationEmail(result, 'CREATED').catch((e) => console.error(e));
+    }
 
     // Handle PayTR payment token if chosen
     let paytrToken: string | undefined = undefined;

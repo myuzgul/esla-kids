@@ -42,6 +42,9 @@ export async function POST(req: NextRequest) {
           paymentStatus: 'PAID',
           status: 'APPROVED',
         },
+        include: {
+          items: true,
+        },
       });
 
       await prisma.activityLog.create({
