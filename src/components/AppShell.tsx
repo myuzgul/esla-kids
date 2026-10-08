@@ -18,7 +18,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen">{children}</main>
+      <main className="min-h-screen overflow-x-hidden w-full max-w-full">{children}</main>
       <Footer />
       <CartDrawer />
       <WhatsAppButton />

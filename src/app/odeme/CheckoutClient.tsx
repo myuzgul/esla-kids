@@ -247,7 +247,7 @@ export function CheckoutClient({ settings }: Props) {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+    <div className="max-w-7xl mx-auto px-3.5 sm:px-6 py-6 sm:py-10 w-full overflow-x-hidden">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-xs text-charcoal-400 mb-6">
         <Link href="/" className="hover:text-brand-600">Anasayfa</Link>
@@ -286,11 +286,11 @@ export function CheckoutClient({ settings }: Props) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full max-w-full">
         {/* Left Columns: Address & Payment Selection */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-8 space-y-8 w-full max-w-full">
           {/* 1. Contact & Delivery Address */}
-          <div className="bg-white p-6 rounded-2xl border border-cream-200 shadow-sm space-y-5">
+          <div className="bg-white p-4 sm:p-6 rounded-2xl border border-cream-200 shadow-sm space-y-5 w-full max-w-full box-border">
             <div className="flex items-center justify-between pb-3 border-b border-cream-200">
               <h2 className="font-heading font-bold text-base sm:text-lg text-charcoal-900">
                 1. Teslimat ve İletişim Bilgileri
@@ -341,11 +341,12 @@ export function CheckoutClient({ settings }: Props) {
                 <input
                   type="text"
                   name="guestName"
+                  autoComplete="name"
                   required
                   placeholder="Örn: Ayşe Yılmaz"
                   value={formData.guestName}
                   onChange={handleChange}
-                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-sm focus:outline-none focus:border-brand-500"
+                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-base sm:text-sm focus:outline-none focus:border-brand-500"
                 />
               </div>
 
@@ -355,12 +356,14 @@ export function CheckoutClient({ settings }: Props) {
                 </label>
                 <input
                   type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   name="guestPhone"
                   required
                   placeholder="05XX XXX XX XX"
                   value={formData.guestPhone}
                   onChange={handleChange}
-                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-sm focus:outline-none focus:border-brand-500"
+                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-base sm:text-sm focus:outline-none focus:border-brand-500"
                 />
               </div>
 
@@ -370,12 +373,14 @@ export function CheckoutClient({ settings }: Props) {
                 </label>
                 <input
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
                   name="guestEmail"
                   required
                   placeholder="ornek@email.com"
                   value={formData.guestEmail}
                   onChange={handleChange}
-                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-sm focus:outline-none focus:border-brand-500"
+                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-base sm:text-sm focus:outline-none focus:border-brand-500"
                 />
               </div>
 
@@ -385,10 +390,11 @@ export function CheckoutClient({ settings }: Props) {
                 </label>
                 <select
                   name="city"
+                  autoComplete="address-level1"
                   required
                   value={formData.city}
                   onChange={handleChange}
-                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-sm focus:outline-none focus:border-brand-500"
+                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-base sm:text-sm focus:outline-none focus:border-brand-500"
                 >
                   {TURKISH_CITIES.map((c) => (
                     <option key={c} value={c}>{c}</option>
@@ -402,12 +408,13 @@ export function CheckoutClient({ settings }: Props) {
                 </label>
                 <input
                   type="text"
+                  autoComplete="address-level2"
                   name="district"
                   required
                   placeholder="Örn: Nilüfer / Kadıköy"
                   value={formData.district}
                   onChange={handleChange}
-                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-sm focus:outline-none focus:border-brand-500"
+                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-base sm:text-sm focus:outline-none focus:border-brand-500"
                 />
               </div>
 
@@ -417,12 +424,13 @@ export function CheckoutClient({ settings }: Props) {
                 </label>
                 <textarea
                   name="address"
+                  autoComplete="street-address"
                   required
                   rows={2}
                   placeholder="Mahalle, cadde, sokak, bina no, daire no..."
                   value={formData.address}
                   onChange={handleChange}
-                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-sm focus:outline-none focus:border-brand-500"
+                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-base sm:text-sm focus:outline-none focus:border-brand-500 resize-none"
                 />
               </div>
 
@@ -436,7 +444,7 @@ export function CheckoutClient({ settings }: Props) {
                   placeholder="Örn: Zile basmayın lütfen, bebek uyuyor."
                   value={formData.customerNote}
                   onChange={handleChange}
-                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-sm focus:outline-none focus:border-brand-500"
+                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-base sm:text-sm focus:outline-none focus:border-brand-500"
                 />
               </div>
             </div>
@@ -456,29 +464,29 @@ export function CheckoutClient({ settings }: Props) {
                     ? 'border-brand-500 bg-brand-50/40 shadow-sm'
                     : 'border-cream-200 hover:border-cream-300 bg-white'
                 }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <input
                         type="radio"
                         name="paymentMethod"
                         value="PAYTR"
                         checked={paymentMethod === 'PAYTR'}
                         onChange={() => setPaymentMethod('PAYTR')}
-                        className="text-brand-600 focus:ring-brand-500"
+                        className="text-brand-600 focus:ring-brand-500 flex-shrink-0"
                       />
-                      <div>
-                        <div className="text-sm font-bold text-charcoal-900 flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-bold text-charcoal-900 flex flex-wrap items-center gap-2">
                           <span>KREDİ KARTI (PAYTR)</span>
                           <span className="text-[11px] bg-slate-100 text-slate-700 font-semibold px-2 py-0.5 rounded">
                             Tüm Kartlara Güvenli Ödeme
                           </span>
                         </div>
-                        <div className="text-xs text-charcoal-500 mt-0.5">
+                        <div className="text-xs text-charcoal-500 mt-0.5 leading-snug">
                           Tüm kredi kartlarına peşin fiyatına veya taksitli güvenli ödeme. Kart bilgileriniz saklanmaz.
                         </div>
                       </div>
                     </div>
-                    <CreditCard className="w-5 h-5 text-brand-500 hidden sm:block" />
+                    <CreditCard className="w-5 h-5 text-brand-500 hidden sm:block flex-shrink-0" />
                   </div>
                 </label>
               )}
@@ -489,18 +497,18 @@ export function CheckoutClient({ settings }: Props) {
                   ? 'border-emerald-500 bg-emerald-50/40 shadow-sm'
                   : 'border-cream-200 hover:border-cream-300 bg-white'
               }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <input
                       type="radio"
                       name="paymentMethod"
                       value="HAVALE"
                       checked={paymentMethod === 'HAVALE'}
                       onChange={() => setPaymentMethod('HAVALE')}
-                      className="text-emerald-600 focus:ring-emerald-500"
+                      className="text-emerald-600 focus:ring-emerald-500 flex-shrink-0"
                     />
-                    <div>
-                      <div className="text-sm font-bold text-charcoal-900 flex items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-charcoal-900 flex flex-wrap items-center gap-2">
                         <span>HAVALE / EFT</span>
                         {havaleDiscountPercent > 0 && (
                           <span className="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded flex items-center gap-1">
@@ -508,17 +516,17 @@ export function CheckoutClient({ settings }: Props) {
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-charcoal-500 mt-0.5">
+                      <div className="text-xs text-charcoal-500 mt-0.5 leading-snug">
                         {havaleDiscountPercent > 0 ? `Sipariş tutarından %${havaleDiscountPercent} anında düşer. ` : ''}
                         Banka hesaplarımıza güvenle ödeme yapabilirsiniz.
                       </div>
                     </div>
                   </div>
-                  <Landmark className="w-5 h-5 text-emerald-600 hidden sm:block" />
+                  <Landmark className="w-5 h-5 text-emerald-600 hidden sm:block flex-shrink-0" />
                 </div>
 
                 {paymentMethod === 'HAVALE' && settings.havale_bank_info && (
-                  <div className="mt-4 pt-3 border-t border-emerald-200 text-xs text-charcoal-700 space-y-2 bg-white/80 p-3 rounded-lg">
+                  <div className="mt-4 pt-3 border-t border-emerald-200 text-xs text-charcoal-700 space-y-2 bg-white/80 p-3 rounded-lg overflow-x-auto">
                     <p className="font-bold text-emerald-900">Banka Hesap Bilgilerimiz:</p>
                     <div className="whitespace-pre-line text-xs font-mono text-slate-800 leading-relaxed">
                       {settings.havale_bank_info}
@@ -537,18 +545,18 @@ export function CheckoutClient({ settings }: Props) {
                     ? 'border-indigo-500 bg-indigo-50/40 shadow-sm'
                     : 'border-cream-200 hover:border-cream-300 bg-white'
                 }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <input
                         type="radio"
                         name="paymentMethod"
                         value="COD"
                         checked={paymentMethod === 'COD'}
                         onChange={() => setPaymentMethod('COD')}
-                        className="text-indigo-600 focus:ring-indigo-500"
+                        className="text-indigo-600 focus:ring-indigo-500 flex-shrink-0"
                       />
-                      <div>
-                        <div className="text-sm font-bold text-charcoal-900 flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-bold text-charcoal-900 flex flex-wrap items-center gap-2">
                           <span>KAPIDA NAKİT ÖDEME</span>
                           {Number(settings.cod_fee) > 0 && (
                             <span className="text-[11px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded">
@@ -556,12 +564,12 @@ export function CheckoutClient({ settings }: Props) {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-charcoal-500 mt-0.5">
+                        <div className="text-xs text-charcoal-500 mt-0.5 leading-snug">
                           Kargonuz kapınıza geldiğinde nakit olarak teslimat anında ödeme yapabilirsiniz. ({settings.shipping_company || 'PTT Kargo'})
                         </div>
                       </div>
                     </div>
-                    <Truck className="w-5 h-5 text-indigo-600 hidden sm:block" />
+                    <Truck className="w-5 h-5 text-indigo-600 hidden sm:block flex-shrink-0" />
                   </div>
                 </label>
               )}

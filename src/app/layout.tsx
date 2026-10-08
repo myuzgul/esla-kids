@@ -1,8 +1,15 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import { AppShell } from '@/components/AppShell';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: 'Esla Kids | Premium Bebek ve Çocuk Giyim',
@@ -39,8 +46,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr">
-      <body className="bg-white text-charcoal-800 font-sans selection:bg-brand-100 selection:text-brand-900">
+    <html lang="tr" className="overflow-x-hidden max-w-full">
+      <body className="bg-white text-charcoal-800 font-sans selection:bg-brand-100 selection:text-brand-900 overflow-x-hidden w-full max-w-full relative">
         <AuthProvider>
           <CartProvider>
             <AppShell>
