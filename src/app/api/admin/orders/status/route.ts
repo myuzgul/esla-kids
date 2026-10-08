@@ -4,7 +4,7 @@ import { sendOrderNotificationEmail } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   try {
-    const { orderId, status, trackingCompany, trackingNumber, internalNote, isPrinted } = await req.json();
+    const { orderId, status, trackingCompany, trackingNumber, internalNote, isPrinted, paymentStatus } = await req.json();
 
     if (!orderId) {
       return NextResponse.json({ error: 'Order ID gereklidir.' }, { status: 400 });
@@ -37,6 +37,9 @@ export async function POST(req: NextRequest) {
     if (isPrinted !== undefined) {
       updateData.isPrinted = Boolean(isPrinted);
       updateData.printedAt = isPrinted ? (order.printedAt || new Date()) : null;
+    }
+    if (paymentStatus !== undefined) {
+      updateData.paymentStatus = paymentStatus;
     }
 
     const updated = await prisma.order.update({

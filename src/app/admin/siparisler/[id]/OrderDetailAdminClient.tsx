@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Truck, CheckCircle, Save, AlertCircle, Trash2, 
-  AlertTriangle, Loader2, Printer, Zap, RefreshCw, ExternalLink, PackageCheck 
+  AlertTriangle, Loader2, Printer, Zap, RefreshCw, ExternalLink, PackageCheck,
+  Landmark, CreditCard
 } from 'lucide-react';
 
 interface Props {
@@ -16,6 +17,8 @@ export function OrderDetailAdminClient({ order }: Props) {
   const [status, setStatus] = useState(order.status || 'CONFIRMED');
   const [carrier, setCarrier] = useState(order.trackingCompany || 'Yurtiçi Kargo');
   const [trackingNumber, setTrackingNumber] = useState(order.trackingNumber || '');
+  const [paymentStatus, setPaymentStatus] = useState(order.paymentStatus || 'PENDING');
+  const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
   const rawNote = (order.internalNote || '').trim();
   const isStocadoLog = rawNote.startsWith('[Stocado');
   const userNoteInitial = isStocadoLog ? '' : rawNote;
@@ -35,6 +38,10 @@ export function OrderDetailAdminClient({ order }: Props) {
   const [isTrackingStocado, setIsTrackingStocado] = useState(false);
   const [stocadoMsg, setStocadoMsg] = useState('');
 
+  const isHavale = order.paymentMethod?.toUpperCase().includes('HAVALE') || 
+                   order.paymentMethod?.toUpperCase().includes('EFT') || 
+                   order.paymentMethod === 'BANK_TRANSFER';
+
   // 1. Manuel Durum Kaydet
   const handleSave = async (overrideStatus?: string, overridePrinted?: boolean) => {
     setIsSaving(true);
@@ -48,6 +55,7 @@ export function OrderDetailAdminClient({ order }: Props) {
         body: JSON.stringify({
           orderId: order.id,
           status: targetStatus,
+          paymentStatus,
           trackingCompany: carrier,
           trackingNumber: trackingNumber || undefined,
           internalNote,
@@ -69,6 +77,36 @@ export function OrderDetailAdminClient({ order }: Props) {
       alert('Sipariş güncellenirken hata oluştu.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleTogglePaymentStatus = async (targetPaymentStatus?: string) => {
+    const nextPayment = targetPaymentStatus || (paymentStatus === 'PAID' ? 'PENDING' : 'PAID');
+    setIsUpdatingPayment(true);
+    try {
+      const res = await fetch('/api/admin/orders/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.id,
+          paymentStatus: nextPayment,
+          ...(nextPayment === 'PAID' && (status === 'NEW' || status === 'PENDING_PAYMENT') ? { status: 'CONFIRMED' } : {}),
+        }),
+      });
+      if (res.ok) {
+        setPaymentStatus(nextPayment);
+        if (nextPayment === 'PAID' && (status === 'NEW' || status === 'PENDING_PAYMENT')) {
+          setStatus('CONFIRMED');
+        }
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 4000);
+        router.refresh();
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Ödeme durumu güncellenirken hata oluştu.');
+    } finally {
+      setIsUpdatingPayment(false);
     }
   };
 
@@ -189,6 +227,74 @@ export function OrderDetailAdminClient({ order }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* 0. Havale / EFT Ödeme Onay Kartı */}
+      {isHavale && (
+        <div className={`rounded-2xl border-2 p-4 sm:p-5 space-y-3.5 shadow-sm transition-all ${
+          paymentStatus === 'PAID'
+            ? 'bg-gradient-to-br from-emerald-50 via-white to-emerald-50/50 border-emerald-300'
+            : 'bg-gradient-to-br from-amber-50 via-white to-amber-100/50 border-amber-300 ring-2 ring-amber-300/30'
+        }`}>
+          <div className="flex items-center justify-between pb-2.5 border-b border-slate-200/60">
+            <div className="flex items-center gap-2">
+              <Landmark className={`w-5 h-5 ${paymentStatus === 'PAID' ? 'text-emerald-600' : 'text-amber-600'}`} />
+              <div>
+                <h3 className="font-heading font-black text-xs sm:text-sm text-slate-900 uppercase">
+                  Havale / EFT Ödeme Durumu
+                </h3>
+              </div>
+            </div>
+            <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+              paymentStatus === 'PAID'
+                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                : 'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse'
+            }`}>
+              {paymentStatus === 'PAID' ? '✓ Ödendi' : 'Ödeme Bekliyor'}
+            </span>
+          </div>
+
+          {paymentStatus === 'PAID' ? (
+            <div className="space-y-2.5">
+              <div className="p-3 bg-white rounded-xl border border-emerald-200 flex items-center gap-2.5 text-xs text-emerald-900 font-semibold shadow-2xs">
+                <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>Havale ödemesi hesaba geçti olarak onaylandı.</span>
+              </div>
+              <button
+                type="button"
+                disabled={isUpdatingPayment}
+                onClick={() => handleTogglePaymentStatus('PENDING')}
+                className="w-full py-2 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold rounded-xl transition-colors cursor-pointer text-center"
+              >
+                {isUpdatingPayment ? 'Güncelleniyor...' : '✕ Tekrar "Bekliyor" Olarak İşaretle'}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-xs text-amber-950 font-medium leading-relaxed">
+                Müşteriden banka hesabınıza havale veya EFT ulaştığında aşağıdaki butona basarak onaylayabilirsiniz:
+              </p>
+              <button
+                type="button"
+                disabled={isUpdatingPayment}
+                onClick={() => handleTogglePaymentStatus('PAID')}
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-black text-xs rounded-xl shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                {isUpdatingPayment ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Kaydediliyor...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>✓ Havale Geldi (Ödendi Yap)</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Stocado Entegrasyon Kartı */}
       <div className="bg-gradient-to-br from-indigo-50/80 via-white to-brand-50/80 rounded-2xl border-2 border-indigo-200/90 shadow-sm p-5 space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-indigo-100">
@@ -310,6 +416,22 @@ export function OrderDetailAdminClient({ order }: Props) {
             <option value="DELIVERED">Teslim Edildi</option>
             <option value="CANCELLED">İptal Edildi</option>
             <option value="REFUNDED">İade Edildi</option>
+          </select>
+        </div>
+
+        {/* Payment Status Dropdown */}
+        <div>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 block">
+            Ödeme Durumu
+          </label>
+          <select
+            value={paymentStatus}
+            onChange={(e) => setPaymentStatus(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-500"
+          >
+            <option value="PAID">✓ Ödendi (Havale Geldi / Tahsil Edildi)</option>
+            <option value="PENDING">Ödeme Bekliyor</option>
+            <option value="FAILED">Ödeme Başarısız</option>
           </select>
         </div>
 

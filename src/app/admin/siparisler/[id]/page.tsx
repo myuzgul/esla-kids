@@ -49,6 +49,28 @@ export default async function OrderDetailPage({ params }: Props) {
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${ORDER_STATUS_MAP[order.status]?.bg} ${ORDER_STATUS_MAP[order.status]?.color}`}>
                 {ORDER_STATUS_MAP[order.status]?.label || order.status}
               </span>
+              {/* Payment Status Badge */}
+              {(order.paymentMethod?.toUpperCase().includes('HAVALE') || order.paymentMethod?.toUpperCase().includes('EFT') || order.paymentMethod === 'BANK_TRANSFER') ? (
+                order.paymentStatus === 'PAID' ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                    <span>✓</span>
+                    <span>Havale Geldi</span>
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span>Havale Bekliyor</span>
+                  </span>
+                )
+              ) : (
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                  order.paymentStatus === 'PAID'
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                    : 'bg-slate-100 text-slate-700 border-slate-200'
+                }`}>
+                  {order.paymentStatus === 'PAID' ? '✓ Ödendi' : 'Ödeme Bekliyor'}
+                </span>
+              )}
               {order.isPrinted ? (
                 <span
                   title={order.printedAt ? `Yazdırılma: ${formatDate(order.printedAt)}` : 'Yazdırıldı'}

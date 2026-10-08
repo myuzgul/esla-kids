@@ -107,6 +107,50 @@ export function OrdersTableClient({ initialOrders }: Props) {
     }
   };
 
+  const isHavaleMethod = (method: string) => {
+    const m = (method || '').toUpperCase();
+    return m.includes('HAVALE') || m.includes('EFT') || m === 'BANK_TRANSFER';
+  };
+
+  const handleTogglePayment = async (orderId: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'PAID' ? 'PENDING' : 'PAID';
+    const targetOrder = orders.find((o) => o.id === orderId);
+    const shouldConfirmOrder = nextStatus === 'PAID' && (targetOrder?.status === 'NEW' || targetOrder?.status === 'PENDING_PAYMENT');
+
+    try {
+      const res = await fetch('/api/admin/orders/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          orderId, 
+          paymentStatus: nextStatus,
+          ...(shouldConfirmOrder ? { status: 'CONFIRMED' } : {})
+        }),
+      });
+      if (res.ok) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId
+              ? { 
+                  ...o, 
+                  paymentStatus: nextStatus,
+                  status: shouldConfirmOrder ? 'CONFIRMED' : o.status 
+                }
+              : o
+          )
+        );
+        showNotification(
+          nextStatus === 'PAID'
+            ? 'Ödeme "Havale Geldi / Ödendi" olarak güncellendi.'
+            : 'Ödeme "Bekliyor" olarak güncellendi.'
+        );
+        router.refresh();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleDeleteSingle = async () => {
     if (!orderToDelete) return;
     setIsDeleting(true);
@@ -320,8 +364,47 @@ export function OrdersTableClient({ initialOrders }: Props) {
                 <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
                   <div>
                     <span className="font-bold text-slate-800">{formatPaymentMethod(ord.paymentMethod)}</span>
-                    <div className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">
-                      {ord.paymentStatus === 'PAID' ? '✓ Ödendi' : 'Bekliyor'}
+                    <div className="mt-1">
+                      {isHavaleMethod(ord.paymentMethod) ? (
+                        ord.paymentStatus === 'PAID' ? (
+                          <div className="inline-flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                              <span>Havale Geldi</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePayment(ord.id, ord.paymentStatus)}
+                              title="Bekliyor olarak geri al"
+                              className="text-[10px] text-slate-400 hover:text-amber-700 hover:bg-amber-50 px-1 py-0.5 rounded font-bold transition-colors cursor-pointer"
+                            >
+                              ↺
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                              <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                              <span>Havale Bekliyor</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePayment(ord.id, ord.paymentStatus)}
+                              className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded-md shadow-xs transition-colors cursor-pointer"
+                            >
+                              ✓ Onayla
+                            </button>
+                          </div>
+                        )
+                      ) : (
+                        <div className="text-[10px] font-semibold uppercase">
+                          {ord.paymentStatus === 'PAID' ? (
+                            <span className="text-emerald-700">✓ Ödendi</span>
+                          ) : (
+                            <span className="text-slate-400">Bekliyor</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">
@@ -484,8 +567,48 @@ export function OrdersTableClient({ initialOrders }: Props) {
 
                       <td className="py-3.5 px-3">
                         <span className="font-bold text-slate-800">{formatPaymentMethod(ord.paymentMethod)}</span>
-                        <div className="text-[10px] text-slate-400 uppercase font-semibold">
-                          {ord.paymentStatus === 'PAID' ? '✓ Ödendi' : 'Bekliyor'}
+                        <div className="mt-1">
+                          {isHavaleMethod(ord.paymentMethod) ? (
+                            ord.paymentStatus === 'PAID' ? (
+                              <div className="inline-flex items-center gap-1.5">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                  <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                                  <span>Havale Geldi</span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleTogglePayment(ord.id, ord.paymentStatus)}
+                                  title="Bekliyor olarak geri al"
+                                  className="text-[10px] text-slate-400 hover:text-amber-700 hover:bg-amber-50 px-1 py-0.5 rounded font-bold transition-colors cursor-pointer"
+                                >
+                                  ↺
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1.5">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                  <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                                  <span>Havale Bekliyor</span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleTogglePayment(ord.id, ord.paymentStatus)}
+                                  title="Havale Geldi olarak işaretle"
+                                  className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded-md shadow-xs transition-colors cursor-pointer"
+                                >
+                                  ✓ Onayla
+                                </button>
+                              </div>
+                            )
+                          ) : (
+                            <div className="text-[10px] font-semibold uppercase">
+                              {ord.paymentStatus === 'PAID' ? (
+                                <span className="text-emerald-700">✓ Ödendi</span>
+                              ) : (
+                                <span className="text-slate-400">Bekliyor</span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </td>
 
