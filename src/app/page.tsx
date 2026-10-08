@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { ProductCard } from '@/components/ProductCard';
 import { HomeWideBanner } from '@/components/HomeWideBanner';
-import { ArrowRight, Sparkles, Star, ShieldCheck, Heart, Truck, RefreshCw, Search } from 'lucide-react';
+import { ArrowRight, Sparkles, Star, ShieldCheck, Heart, Truck, RefreshCw } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,46 +73,6 @@ export default async function HomePage() {
     <div className="space-y-12 sm:space-y-16 pb-16">
       {/* 1. Wide Homepage Banner directly under menu */}
       <HomeWideBanner banners={banners} />
-
-      {/* 2. Homepage Fast Product Search Section */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 -mt-6 sm:-mt-8 relative z-20">
-        <div className="bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-lg border border-cream-200/90">
-          <form action="/arama" method="GET" className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-            <div className="relative flex-1 w-full">
-              <Search className="w-5 h-5 text-charcoal-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                name="q"
-                placeholder="Ürün adı, beden, model veya renk arayın (örn. Takım, Pijama, 2 Yaş)..."
-                className="w-full bg-cream-50/80 hover:bg-cream-50 focus:bg-white border border-cream-200 focus:border-brand-500 rounded-xl sm:rounded-2xl py-3 sm:py-3.5 pl-11 pr-4 text-sm text-charcoal-800 placeholder-charcoal-400 focus:outline-none transition-all shadow-inner"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-6 py-3 sm:py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm rounded-xl sm:rounded-2xl shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 flex-shrink-0"
-            >
-              <Search className="w-4 h-4" />
-              <span>Ürün Ara</span>
-            </button>
-          </form>
-
-          {/* Popular Search Badges */}
-          <div className="mt-3 pt-3 border-t border-cream-100 flex flex-wrap items-center gap-2 text-xs">
-            <span className="text-charcoal-400 font-medium flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-brand-500" /> Popüler:
-            </span>
-            {['Kız Bebek Takım', 'Erkek Çocuk', 'Pijama Takımı', 'Kışlık Takım', 'Elbise', 'Salopet'].map((tag) => (
-              <Link
-                key={tag}
-                href={`/arama?q=${encodeURIComponent(tag)}`}
-                className="px-2.5 py-1 bg-cream-100/70 hover:bg-brand-50 hover:text-brand-700 text-charcoal-600 rounded-full transition-colors text-[11px] sm:text-xs font-medium"
-              >
-                {tag}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Trust & Advantage Badges Strip */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6">
