@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { AdminSidebar } from '@/components/AdminSidebar';
@@ -11,6 +11,12 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close mobile drawer whenever route changes
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const isLoginPage = pathname === '/admin/login';
 
@@ -48,15 +54,15 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
-      <AdminSidebar />
+      <AdminSidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <AdminHeader />
+        <AdminHeader onOpenMobile={() => setMobileOpen(true)} />
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-3.5 sm:p-6 overflow-y-auto">
           {children}
         </main>
       </div>

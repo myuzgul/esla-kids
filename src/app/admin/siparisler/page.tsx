@@ -76,7 +76,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
             Sipariş Yönetimi
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Gelen siparişleri filtreleyin, hazırlayın, toplu yazdırın veya kargoya verin.
+            Gelen siparişleri filtreleyin, hazırlayın, yazdırın veya kargoya verin.
           </p>
         </div>
 
@@ -85,17 +85,17 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
             <Link
               href={`/admin/siparis-cikti?ids=${orders.filter(o => !o.isPrinted).map(o => o.id).join(',')}`}
               target="_blank"
-              className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-colors"
+              className="flex-1 sm:flex-none justify-center bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-colors text-center"
             >
               <Printer className="w-4 h-4" />
-              <span>Yazdırılmayanları Yazdır ({unprintedInView})</span>
+              <span>Yazdırılmayanlar ({unprintedInView})</span>
             </Link>
           )}
 
           <Link
             href="/admin/siparis-cikti"
             target="_blank"
-            className="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-colors"
+            className="flex-1 sm:flex-none justify-center bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-colors text-center"
           >
             <Printer className="w-4 h-4" />
             <span>Tümünü Yazdır</span>
@@ -103,14 +103,45 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* Filter Tabs Container */}
-      <div className="space-y-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+      {/* Search & Filter Container */}
+      <div className="space-y-3.5 bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-xs">
+        {/* Search Bar */}
+        <form method="GET" action="/admin/siparisler" className="flex items-center gap-2">
+          {status && <input type="hidden" name="status" value={status} />}
+          {printStatus && <input type="hidden" name="printStatus" value={printStatus} />}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              name="q"
+              defaultValue={q || ''}
+              placeholder="Sipariş no, müşteri adı, telefon veya takip no ara..."
+              className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-brand-500 focus:bg-white rounded-xl text-xs text-slate-800 font-medium placeholder-slate-400 transition-colors focus:outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            className="bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-xs cursor-pointer flex-shrink-0"
+          >
+            Ara
+          </button>
+          {q && (
+            <Link
+              href={buildUrl(undefined, undefined).replace(/([?&])q=[^&]*(&|$)/, '$1').replace(/[?&]$/, '')}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold px-3 py-2.5 rounded-xl transition-colors cursor-pointer flex-shrink-0"
+              title="Aramayı Temizle"
+            >
+              Temizle
+            </Link>
+          )}
+        </form>
+
         {/* Status Filter Tabs */}
         <div>
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
             Sipariş Durumu
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex overflow-x-auto pb-1 no-scrollbar gap-1.5 sm:gap-2 sm:flex-wrap">
             {[
               { key: 'ALL', label: 'Tüm Siparişler' },
               { key: 'CONFIRMED', label: 'Onaylandı' },
@@ -124,7 +155,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                 <Link
                   key={tab.key}
                   href={buildUrl(tab.key, undefined)}
-                  className={`text-xs px-3.5 py-2 rounded-xl font-bold transition-all ${
+                  className={`text-xs px-3 py-2 rounded-xl font-bold whitespace-nowrap transition-all flex-shrink-0 ${
                     isActive
                       ? 'bg-slate-900 text-white shadow-sm'
                       : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -143,7 +174,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
             <Printer className="w-3.5 h-3.5 text-brand-600" />
             <span>Yazdırma Durumu:</span>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex overflow-x-auto pb-1 no-scrollbar gap-1.5 sm:gap-2 sm:flex-wrap">
             {[
               {
                 key: 'ALL',

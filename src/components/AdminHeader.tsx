@@ -3,10 +3,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ExternalLink, LogOut, ShieldCheck } from 'lucide-react';
+import { ExternalLink, LogOut, ShieldCheck, Menu } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
-export function AdminHeader() {
+interface AdminHeaderProps {
+  onOpenMobile?: () => void;
+}
+
+export function AdminHeader({ onOpenMobile }: AdminHeaderProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
 
@@ -17,40 +21,51 @@ export function AdminHeader() {
   };
 
   return (
-    <header className="bg-white border-b border-slate-200 h-16 px-6 flex items-center justify-between no-print flex-shrink-0">
-      <div className="flex items-center gap-3">
-        <span className="font-heading font-extrabold text-slate-800 text-lg">
-          Esla Kids Kontrol Merkezi
+    <header className="bg-white border-b border-slate-200 h-16 px-4 sm:px-6 flex items-center justify-between no-print flex-shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Mobile Hamburger Menu Button */}
+        <button
+          type="button"
+          onClick={onOpenMobile}
+          className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+          aria-label="Menüyü Aç"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <span className="font-heading font-extrabold text-slate-800 text-base sm:text-lg truncate">
+          Esla Kids <span className="hidden sm:inline">Kontrol Merkezi</span>
         </span>
-        <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+        <span className="hidden md:flex text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold items-center gap-1">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>Güvenli Oturum</span>
         </span>
       </div>
 
-      <div className="flex items-center gap-4 text-xs">
+      <div className="flex items-center gap-2 sm:gap-4 text-xs">
         <Link
           href="/"
           target="_blank"
-          className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold transition-colors"
+          className="hidden sm:flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold transition-colors"
         >
           <span>Mağaza Vitrini</span>
           <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
         </Link>
 
-        <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-          <div className="w-8 h-8 rounded-full bg-brand-500 text-white font-bold flex items-center justify-center text-xs shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 sm:border-l border-slate-200">
+          <div className="w-8 h-8 rounded-full bg-brand-500 text-white font-bold flex items-center justify-center text-xs shadow-sm flex-shrink-0">
             {user?.name ? user.name.slice(0, 2).toUpperCase() : 'AD'}
           </div>
-          <div className="hidden sm:block text-left">
-            <div className="font-bold text-slate-800">{user?.name || 'Esla Yönetici'}</div>
-            <div className="text-[10px] text-slate-400">{user?.email || 'admin@eslakids.com'}</div>
+          <div className="hidden md:block text-left">
+            <div className="font-bold text-slate-800 truncate max-w-[120px]">{user?.name || 'Esla Yönetici'}</div>
+            <div className="text-[10px] text-slate-400 truncate max-w-[120px]">{user?.email || 'admin@eslakids.com'}</div>
           </div>
 
           <button
             onClick={handleLogout}
             title="Güvenli Çıkış Yap"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1"
+            className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            aria-label="Çıkış Yap"
           >
             <LogOut className="w-4 h-4" />
           </button>

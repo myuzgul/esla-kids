@@ -314,12 +314,12 @@ export function OrderDetailAdminClient({ order }: Props) {
         </div>
 
         {/* Yazdırma Durumu Kutusu */}
-        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Yazdırma Durumu
             </div>
-            <div className="mt-1 flex items-center gap-2">
+            <div className="mt-1 flex items-center gap-2 flex-wrap">
               {isPrinted ? (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                   <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
@@ -343,7 +343,7 @@ export function OrderDetailAdminClient({ order }: Props) {
             type="button"
             disabled={isUpdatingPrint}
             onClick={handleTogglePrintStatus}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+            className={`w-full sm:w-auto px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border text-center justify-center flex items-center gap-1.5 ${
               isPrinted
                 ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
                 : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'

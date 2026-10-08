@@ -18,6 +18,11 @@ interface MenuItem {
   highlight?: boolean;
 }
 
+interface AdminSidebarProps {
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
+}
+
 const MENU_ITEMS: MenuItem[] = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { label: 'Siparişler', href: '/admin/siparisler', icon: ShoppingCart },
@@ -35,28 +40,53 @@ const MENU_ITEMS: MenuItem[] = [
   { label: 'Site Ayarları', href: '/admin/ayarlar', icon: Settings },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-charcoal-900 text-slate-300 min-h-screen flex flex-col justify-between flex-shrink-0 no-print">
-      <div>
-        {/* Brand header */}
-        <div className="p-5 border-b border-charcoal-800 flex items-center justify-between">
-          <Link href="/admin" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-brand-500 text-white font-bold flex items-center justify-center text-sm shadow-sm">
-              E
-            </div>
-            <div>
-              <div className="font-heading font-extrabold text-white text-base tracking-tight">
-                ESLA KIDS
+    <>
+      {/* Mobile Backdrop */}
+      {mobileOpen && (
+        <div 
+          onClick={onCloseMobile}
+          className="fixed inset-0 bg-slate-950/60 z-40 lg:hidden backdrop-blur-xs transition-opacity"
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 lg:static lg:z-auto
+        w-64 bg-charcoal-900 text-slate-300 min-h-screen flex flex-col justify-between flex-shrink-0 no-print
+        transition-transform duration-300 ease-in-out
+        ${mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        <div className="flex-1 overflow-y-auto">
+          {/* Brand header */}
+          <div className="p-4 sm:p-5 border-b border-charcoal-800 flex items-center justify-between">
+            <Link href="/admin" onClick={onCloseMobile} className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-brand-500 text-white font-bold flex items-center justify-center text-sm shadow-sm">
+                E
               </div>
-              <div className="text-[10px] text-brand-400 font-semibold tracking-wider uppercase">
-                YÖNETİM PANELİ
+              <div>
+                <div className="font-heading font-extrabold text-white text-base tracking-tight">
+                  ESLA KIDS
+                </div>
+                <div className="text-[10px] text-brand-400 font-semibold tracking-wider uppercase">
+                  YÖNETİM PANELİ
+                </div>
               </div>
-            </div>
-          </Link>
-        </div>
+            </Link>
+
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              className="lg:hidden p-1.5 text-slate-400 hover:text-white hover:bg-charcoal-800 rounded-lg transition-colors"
+              aria-label="Menüyü Kapat"
+            >
+              ✕
+            </button>
+          </div>
 
         {/* Navigation */}
         <nav className="p-3 space-y-1">
@@ -68,6 +98,7 @@ export function AdminSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onCloseMobile}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                   isActive
                     ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
@@ -107,5 +138,6 @@ export function AdminSidebar() {
         </Link>
       </div>
     </aside>
+    </>
   );
 }

@@ -59,17 +59,17 @@ export default async function AdminDashboardPage() {
           </p>
         </div>
 
-        <div className="flex gap-2.5">
+        <div className="flex flex-wrap gap-2">
           <Link
             href="/admin/siparis-hazirlama"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-colors"
+            className="flex-1 sm:flex-none justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-colors"
           >
             <CheckSquare className="w-4 h-4" />
-            <span>Sipariş Hazırlama Ekranı</span>
+            <span>Sipariş Hazırlama</span>
           </Link>
           <Link
             href="/admin/urunler/yeni"
-            className="bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-colors"
+            className="flex-1 sm:flex-none justify-center bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-colors"
           >
             <Package className="w-4 h-4" />
             <span>Yeni Ürün Ekle</span>
@@ -193,7 +193,7 @@ export default async function AdminDashboardPage() {
                     </td>
                     <td className="py-3 text-right space-x-1">
                       <Link
-                        href={`/admin/siparis-ciktiçids=${ord.id}`}
+                        href={`/admin/siparis-cikti?ids=${ord.id}`}
                         target="_blank"
                         className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 inline-block"
                         title="Fiş / QR Çıktısı Al"

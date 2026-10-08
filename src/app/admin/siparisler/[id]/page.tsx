@@ -71,7 +71,7 @@ export default async function OrderDetailPage({ params }: Props) {
             href={`/admin/siparis-cikti?ids=${order.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-colors"
+            className="w-full sm:w-auto justify-center bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-colors text-center"
           >
             <Printer className="w-4 h-4" />
             <span>Fotoğraflı & QR Fiş Yazdır</span>
@@ -83,25 +83,25 @@ export default async function OrderDetailPage({ params }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Line Items & Totals */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-4">
             <h2 className="font-heading font-bold text-base text-slate-900 pb-3 border-b border-slate-100">
               Sipariş Edilen Ürünler ({order.items.length})
             </h2>
 
             <div className="divide-y divide-slate-100">
               {order.items.map((item) => (
-                <div key={item.id} className="py-3.5 flex items-center justify-between gap-4">
+                <div key={item.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                   <div className="flex items-center gap-3.5">
                     <div className="w-14 h-18 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200">
                       {item.image && (
                         <img src={item.image} alt="" className="w-full h-full object-cover" />
                       )}
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="text-xs font-mono font-bold text-slate-500">
                         SKU: {item.sku || '-'}
                       </div>
-                      <h4 className="text-sm font-bold text-slate-900 mt-0.5">
+                      <h4 className="text-sm font-bold text-slate-900 mt-0.5 line-clamp-2">
                         {item.title}
                       </h4>
                       {item.variationName && (
@@ -115,9 +115,9 @@ export default async function OrderDetailPage({ params }: Props) {
                     </div>
                   </div>
 
-                  <div className="text-right">
+                  <div className="flex items-center justify-between sm:justify-end sm:flex-col text-right pl-17 sm:pl-0">
                     <div className="text-xs text-slate-400">Adet: <strong className="text-slate-800 text-sm">{item.quantity}</strong></div>
-                    <div className="text-base font-bold text-slate-900 mt-1">
+                    <div className="text-base font-bold text-slate-900 mt-0.5">
                       {formatPrice(item.total)}
                     </div>
                   </div>
@@ -127,7 +127,7 @@ export default async function OrderDetailPage({ params }: Props) {
 
             {/* Totals Breakdown */}
             <div className="pt-4 border-t border-slate-200 flex justify-end">
-              <div className="w-64 space-y-2 text-xs">
+              <div className="w-full sm:w-72 space-y-2 text-xs">
                 <div className="flex justify-between text-slate-600">
                   <span>Ara Toplam:</span>
                   <span className="font-semibold">{formatPrice(order.subtotal)}</span>
@@ -158,14 +158,36 @@ export default async function OrderDetailPage({ params }: Props) {
 
           {/* Customer & Address Details */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
               <div className="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
                 <User className="w-4 h-4 text-brand-500" />
                 <span>Müşteri Bilgileri</span>
               </div>
               <div className="font-bold text-slate-900 text-sm">{order.guestName}</div>
-              <div className="text-xs text-slate-600">Telefon: {order.guestPhone}</div>
-              <div className="text-xs text-slate-600">E-posta: {order.guestEmail}</div>
+              <div className="text-xs text-slate-600">
+                Telefon:{' '}
+                {order.guestPhone ? (
+                  <a
+                    href={`tel:${order.guestPhone}`}
+                    className="text-brand-600 font-bold hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>{order.guestPhone}</span>
+                    <span className="text-[10px] bg-brand-50 text-brand-700 px-1.5 py-0.2 rounded font-semibold">Ara</span>
+                  </a>
+                ) : (
+                  '-'
+                )}
+              </div>
+              <div className="text-xs text-slate-600">
+                E-posta:{' '}
+                {order.guestEmail ? (
+                  <a href={`mailto:${order.guestEmail}`} className="text-brand-600 hover:underline">
+                    {order.guestEmail}
+                  </a>
+                ) : (
+                  '-'
+                )}
+              </div>
               {order.customerNote && (
                 <div className="mt-3 bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-xs text-amber-900">
                   <strong>Müşteri Notu:</strong> {order.customerNote}
@@ -173,7 +195,7 @@ export default async function OrderDetailPage({ params }: Props) {
               )}
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
               <div className="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
                 <MapPin className="w-4 h-4 text-powder-500" />
                 <span>Teslimat Adresi</span>
