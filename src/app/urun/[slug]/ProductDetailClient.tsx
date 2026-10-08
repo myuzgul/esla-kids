@@ -34,6 +34,49 @@ function sortSizes(sizes: string[]): string[] {
   return [...sizes].sort((a, b) => getSortWeight(a) - getSortWeight(b));
 }
 
+function renderProductDescription(rawText?: string | null) {
+  if (!rawText || !rawText.trim()) {
+    return <p className="text-charcoal-400 italic text-xs">Bu ürün için henüz detaylı açıklama eklenmemiştir.</p>;
+  }
+
+  let text = rawText.trim();
+
+  // If HTML-encoded (&lt;p&gt; etc.), decode it
+  if (text.includes('&lt;') && text.includes('&gt;')) {
+    text = text
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, '&');
+  }
+
+  // Check if it has any HTML tags like <p>, <ul>, <div>, <span>, <b>, <br>
+  const hasHtml = /<\/?[a-z][\s\S]*>/i.test(text);
+
+  if (hasHtml) {
+    // Clean noisy WooCommerce attributes (data-path-to-node, id="p-rc_...", class names)
+    const cleaned = text
+      .replace(/\s+data-path-to-node="[^"]*"/gi, '')
+      .replace(/\s+id="p-rc_[^"]*"/gi, '')
+      .replace(/\s+class="[^"]*"/gi, '');
+
+    return (
+      <div
+        className="product-rich-content text-charcoal-700 text-sm leading-relaxed space-y-2 [&>p]:mb-2.5 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-3 [&>ul]:space-y-1 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-3 [&>ol]:space-y-1 [&>li]:text-charcoal-700 [&>h3]:text-base [&>h3]:font-bold [&>h3]:mb-2 [&>h4]:text-sm [&>h4]:font-bold [&>h4]:mb-1.5 [&>b]:font-semibold [&>strong]:font-semibold"
+        dangerouslySetInnerHTML={{ __html: cleaned }}
+      />
+    );
+  }
+
+  // Pure plain text: preserve line breaks
+  return (
+    <div className="text-charcoal-700 whitespace-pre-line leading-relaxed text-sm">
+      {text}
+    </div>
+  );
+}
+
 export function ProductDetailClient({ product }: Props) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -535,10 +578,10 @@ export function ProductDetailClient({ product }: Props) {
 
           <div className="py-4 text-sm text-charcoal-600 leading-relaxed">
             {activeTab === 'desc' && (
-              <div className="space-y-3">
-                <p>{product.description || product.shortDescription}</p>
-                <div className="bg-cream-50 p-3.5 rounded-xl text-xs space-y-1.5 border border-cream-200">
-                  <div className="font-bold text-charcoal-800">Yıkama & Bakım Talimat?:</div>
+              <div className="space-y-4">
+                {renderProductDescription(product.description || product.shortDescription)}
+                <div className="bg-cream-50 p-3.5 rounded-xl text-xs space-y-1.5 border border-cream-200 mt-4">
+                  <div className="font-bold text-charcoal-800">Yıkama & Bakım Talimatı:</div>
                   <ul className="list-disc list-inside space-y-1 text-charcoal-600">
                     <li>30 derecede benzer renklerle tersten yıkayınız.</li>
                     <li>Ağartıcı ve optik deterjan kullanmayınız.</li>

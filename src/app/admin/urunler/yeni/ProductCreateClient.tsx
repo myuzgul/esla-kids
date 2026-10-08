@@ -14,6 +14,7 @@ import {
   ColorItem,
   PickerTarget,
 } from '@/components/admin/VariationImageManager';
+import { RichTextEditor } from '@/components/admin/RichTextEditor';
 
 interface Props {
   categories: any[];
@@ -480,11 +481,11 @@ export function ProductCreateClient({ categories }: Props) {
         </div>
 
         {/* Açıklamalar */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
           <div>
             <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Kısa Açıklama (Özet)</label>
             <textarea
-              rows={3}
+              rows={2}
               placeholder="%100 Pamuklu 2 İp Kumaş, Fermuarlı Üst ve Beli Lastikli Eşofman Altı."
               value={shortDescription}
               onChange={(e) => setShortDescription(e.target.value)}
@@ -493,13 +494,11 @@ export function ProductCreateClient({ categories }: Props) {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Detaylı Açıklama & Kumaş Özellikleri</label>
-            <textarea
-              rows={3}
-              placeholder="Ürünün kumaş yapısı, dikiş kalitesi, çocukların hareket rahatlığı vb."
+            <RichTextEditor
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 focus:outline-none focus:border-brand-500"
+              onChange={setDescription}
+              label="Detaylı Açıklama & Kumaş Özellikleri"
+              placeholder="Ürünün kumaş yapısı, dikiş kalitesi, çocukların hareket rahatlığı vb."
             />
           </div>
         </div>
