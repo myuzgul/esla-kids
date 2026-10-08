@@ -4,6 +4,7 @@ import { getSettings } from '@/lib/settings';
 import { sendOrderNotificationEmail } from '@/lib/email';
 import { createPayTRToken } from '@/lib/paytr';
 import { getCurrentCustomer } from '@/lib/auth';
+import { formatVariationLabel } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
   try {
@@ -99,17 +100,16 @@ export async function POST(req: NextRequest) {
           barcode = variation.barcode || '';
           const varTaxRate = variation.product.taxRate || 10;
           price = Math.round(variation.price * (1 + varTaxRate / 100) * 100) / 100;
-          try {
-            const attrObj = JSON.parse(variation.attributes);
-            variationName = Object.entries(attrObj).map(([k, v]) => `${k}: ${v}`).join(', ');
-          } catch (e) {
-            variationName = '';
-          }
+          variationName = formatVariationLabel(variation.attributes) || '';
 
-          try {
-            const imgs = JSON.parse(variation.product.images);
-            image = imgs[0] || '';
-          } catch (e) {}
+          // Prefer variation image, then cartItem.image, then first product gallery image
+          image = variation.image || cartItem.image || '';
+          if (!image) {
+            try {
+              const imgs = JSON.parse(variation.product.images);
+              image = imgs[0] || '';
+            } catch (e) {}
+          }
 
         } else {
           const product = await tx.product.findUnique({
@@ -146,10 +146,13 @@ export async function POST(req: NextRequest) {
           barcode = product.barcode || '';
           const prodTaxRate = product.taxRate || 10;
           price = Math.round(product.price * (1 + prodTaxRate / 100) * 100) / 100;
-          try {
-            const imgs = JSON.parse(product.images);
-            image = imgs[0] || '';
-          } catch (e) {}
+          image = cartItem.image || '';
+          if (!image) {
+            try {
+              const imgs = JSON.parse(product.images);
+              image = imgs[0] || '';
+            } catch (e) {}
+          }
         }
 
         const lineTotal = price * cartItem.quantity;

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { formatPrice, formatDate, ORDER_STATUS_MAP } from '@/lib/utils';
+import { formatPrice, formatDate, ORDER_STATUS_MAP, formatVariationLabel } from '@/lib/utils';
 import { 
   Package, Search, Truck, CheckCircle2, ChevronRight, 
   AlertCircle, ExternalLink, MapPin, Calendar, Clock, CreditCard, ShoppingBag 
@@ -231,47 +231,51 @@ export default function OrderTrackingPage() {
             </h4>
 
             <div className="divide-y divide-cream-100 border border-cream-200 rounded-2xl overflow-hidden bg-neutral-50/40">
-              {order.items?.map((it: any) => (
-                <div key={it.id} className="p-4 flex items-center justify-between gap-4 bg-white hover:bg-cream-50/30 transition-colors">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    {/* Aspect-ratio safe Product Thumbnail with soft backdrop */}
-                    <div className="w-14 h-16 rounded-xl bg-neutral-50 border border-cream-200 overflow-hidden flex-shrink-0 relative flex items-center justify-center">
-                      {it.image ? (
-                        <>
-                          <img
-                            src={it.image}
-                            alt=""
-                            className="absolute inset-0 w-full h-full object-cover blur-md opacity-20 pointer-events-none"
-                          />
-                          <img
-                            src={it.image}
-                            alt={it.title}
-                            className="relative z-10 w-full h-full object-contain p-1"
-                          />
-                        </>
-                      ) : (
-                        <Package className="w-6 h-6 text-charcoal-300" />
-                      )}
-                    </div>
+              {order.items.map((it: any) => {
+                const itemImg = it.variation?.image || it.image;
+                const displayVar = formatVariationLabel(it.variationName || it.variation?.attributes);
 
-                    <div className="min-w-0">
-                      <h5 className="font-bold text-xs sm:text-sm text-charcoal-900 truncate">
-                        {it.title}
-                      </h5>
-                      {it.variationName && (
-                        <div className="mt-1">
-                          <span className="text-[11px] font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-md border border-brand-200/50 inline-block">
-                            {it.variationName}
-                          </span>
+                return (
+                  <div key={it.id} className="p-4 flex items-center justify-between gap-4 bg-white hover:bg-cream-50/30 transition-colors">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      {/* Aspect-ratio safe Product Thumbnail with soft backdrop */}
+                      <div className="w-14 h-16 rounded-xl bg-neutral-50 border border-cream-200 overflow-hidden flex-shrink-0 relative flex items-center justify-center">
+                        {itemImg ? (
+                          <>
+                            <img
+                              src={itemImg}
+                              alt=""
+                              className="absolute inset-0 w-full h-full object-cover blur-md opacity-20 pointer-events-none"
+                            />
+                            <img
+                              src={itemImg}
+                              alt={it.title}
+                              className="relative z-10 w-full h-full object-contain p-1"
+                            />
+                          </>
+                        ) : (
+                          <Package className="w-6 h-6 text-charcoal-300" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0">
+                        <h5 className="font-bold text-xs sm:text-sm text-charcoal-900 truncate">
+                          {it.title}
+                        </h5>
+                        {displayVar && (
+                          <div className="mt-1">
+                            <span className="text-[11px] font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-md border border-brand-200/50 inline-block">
+                              {displayVar}
+                            </span>
+                          </div>
+                        )}
+                        <div className="text-[11px] text-charcoal-500 mt-1">
+                          Birim Fiyat: {formatPrice(it.price)}
                         </div>
-                      )}
-                      <div className="text-[11px] text-charcoal-500 mt-1">
-                        Birim Fiyat: {formatPrice(it.price)}
                       </div>
                     </div>
-                  </div>
 
-                  <div className="text-right flex-shrink-0">
+                    <div className="text-right flex-shrink-0">
                     <div className="text-xs text-charcoal-500 font-medium">
                       {it.quantity} Adet
                     </div>
@@ -280,7 +284,8 @@ export default function OrderTrackingPage() {
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+            })}
             </div>
 
             {/* Fiyat Özeti & Teslimat Adresi */}

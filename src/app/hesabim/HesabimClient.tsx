@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth, CustomerAddress } from '@/context/AuthContext';
-import { formatPrice, formatDate, ORDER_STATUS_MAP } from '@/lib/utils';
+import { formatPrice, formatDate, ORDER_STATUS_MAP, formatVariationLabel } from '@/lib/utils';
 import { 
   User, Package, MapPin, KeyRound, LogOut, Plus, Trash2, 
   Edit2, Check, AlertCircle, Truck, ExternalLink, ShieldCheck, 
@@ -435,27 +435,32 @@ export function HesabimClient() {
                       </div>
 
                       <div className="divide-y divide-cream-100">
-                        {ord.items?.map((it: any) => (
-                          <div key={it.id} className="py-2.5 flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-3">
-                              {it.image && (
-                                <img src={it.image} alt="" className="w-12 h-14 object-cover rounded-lg bg-cream-50 border border-cream-200" />
-                              )}
-                              <div>
-                                <div className="font-bold text-charcoal-900">{it.title}</div>
-                                {it.variationName && (
-                                  <div className="text-[11px] text-charcoal-500 font-medium">{it.variationName}</div>
+                        {ord.items?.map((it: any) => {
+                          const itemImg = it.variation?.image || it.image;
+                          const displayVar = formatVariationLabel(it.variationName || it.variation?.attributes);
+
+                          return (
+                            <div key={it.id} className="py-2.5 flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-3">
+                                {itemImg && (
+                                  <img src={itemImg} alt="" className="w-12 h-14 object-cover rounded-lg bg-cream-50 border border-cream-200" />
                                 )}
-                                <div className="text-[11px] text-charcoal-400 mt-0.5">
-                                  {it.quantity} Adet × {formatPrice(it.price)}
+                                <div>
+                                  <div className="font-bold text-charcoal-900">{it.title}</div>
+                                  {displayVar && (
+                                    <div className="text-[11px] text-brand-700 font-semibold mt-0.5">{displayVar}</div>
+                                  )}
+                                  <div className="text-[11px] text-charcoal-400 mt-0.5">
+                                    {it.quantity} Adet × {formatPrice(it.price)}
+                                  </div>
                                 </div>
                               </div>
+                              <div className="font-bold text-brand-600 text-sm">
+                                {formatPrice(it.total)}
+                              </div>
                             </div>
-                            <div className="font-bold text-brand-600 text-sm">
-                              {formatPrice(it.total)}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       <div className="pt-3 flex flex-wrap items-center justify-between gap-2 border-t border-cream-100 text-xs">

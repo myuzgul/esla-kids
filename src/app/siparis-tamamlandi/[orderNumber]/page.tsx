@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { formatPrice, formatDate } from '@/lib/utils';
+import { formatPrice, formatDate, formatVariationLabel } from '@/lib/utils';
 import { CheckCircle, Landmark, Truck, Package, ArrowRight, Phone } from 'lucide-react';
 
 interface Props {
@@ -12,14 +12,22 @@ interface Props {
 export default async function OrderSuccessPage({ params }: Props) {
   let order = await prisma.order.findUnique({
     where: { orderNumber: params.orderNumber },
-    include: { items: true },
+    include: {
+      items: {
+        include: { variation: true },
+      },
+    },
   });
 
   if (!order && params.orderNumber.startsWith('EK') && !params.orderNumber.includes('-')) {
     const withDash = 'EK-' + params.orderNumber.substring(2);
     order = await prisma.order.findUnique({
       where: { orderNumber: withDash },
-      include: { items: true },
+      include: {
+        items: {
+          include: { variation: true },
+        },
+      },
     });
   }
 
@@ -100,23 +108,28 @@ export default async function OrderSuccessPage({ params }: Props) {
             Sipariş Edilen Ürünler ({order.items.length})
           </h3>
           <div className="divide-y divide-cream-100">
-            {order.items.map((item) => (
-              <div key={item.id} className="py-3 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-16 bg-cream-100 rounded-lg overflow-hidden flex-shrink-0">
-                    {item.image && <img src={item.image} alt="" className="w-full h-full object-cover" />}
+            {order.items.map((item) => {
+              const itemImg = item.variation?.image || item.image;
+              const displayVar = formatVariationLabel(item.variationName || item.variation?.attributes);
+
+              return (
+                <div key={item.id} className="py-3 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-16 bg-cream-100 rounded-lg overflow-hidden flex-shrink-0">
+                      {itemImg && <img src={itemImg} alt="" className="w-full h-full object-cover" />}
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-charcoal-800">{item.title}</div>
+                      {displayVar && <div className="text-[11px] font-semibold text-brand-700">{displayVar}</div>}
+                      <div className="text-[11px] text-charcoal-400 mt-0.5">Adet: {item.quantity} x {formatPrice(item.price)}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-semibold text-charcoal-800">{item.title}</div>
-                    {item.variationName && <div className="text-[11px] text-charcoal-500">{item.variationName}</div>}
-                    <div className="text-[11px] text-charcoal-400 mt-0.5">Adet: {item.quantity} x {formatPrice(item.price)}</div>
+                  <div className="text-sm font-bold text-brand-600">
+                    {formatPrice(item.total)}
                   </div>
                 </div>
-                <div className="text-sm font-bold text-brand-600">
-                  {formatPrice(item.total)}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

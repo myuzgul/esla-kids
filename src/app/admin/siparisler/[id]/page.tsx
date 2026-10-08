@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { formatPrice, formatDate, ORDER_STATUS_MAP } from '@/lib/utils';
+import { formatPrice, formatDate, ORDER_STATUS_MAP, formatVariationLabel } from '@/lib/utils';
 import { OrderDetailAdminClient } from './OrderDetailAdminClient';
 import { ArrowLeft, Printer, User, MapPin, CreditCard, Truck } from 'lucide-react';
 
@@ -14,7 +14,11 @@ export default async function OrderDetailPage({ params }: Props) {
   const order = await prisma.order.findUnique({
     where: { id: params.id },
     include: {
-      items: true,
+      items: {
+        include: {
+          variation: true,
+        },
+      },
       customer: true,
     },
   });
@@ -89,40 +93,45 @@ export default async function OrderDetailPage({ params }: Props) {
             </h2>
 
             <div className="divide-y divide-slate-100">
-              {order.items.map((item) => (
-                <div key={item.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-14 h-18 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200">
-                      {item.image && (
-                        <img src={item.image} alt="" className="w-full h-full object-cover" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-mono font-bold text-slate-500">
-                        SKU: {item.sku || '-'}
-                      </div>
-                      <h4 className="text-sm font-bold text-slate-900 mt-0.5 line-clamp-2">
-                        {item.title}
-                      </h4>
-                      {item.variationName && (
-                        <div className="text-xs font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded mt-1 inline-block">
-                          {item.variationName}
-                        </div>
-                      )}
-                      <div className="text-xs text-slate-500 mt-1">
-                        Birim: {formatPrice(item.price)}
-                      </div>
-                    </div>
-                  </div>
+              {order.items.map((item) => {
+                const itemImg = item.variation?.image || item.image;
+                const displayVar = formatVariationLabel(item.variationName || item.variation?.attributes);
 
-                  <div className="flex items-center justify-between sm:justify-end sm:flex-col text-right pl-17 sm:pl-0">
-                    <div className="text-xs text-slate-400">Adet: <strong className="text-slate-800 text-sm">{item.quantity}</strong></div>
-                    <div className="text-base font-bold text-slate-900 mt-0.5">
-                      {formatPrice(item.total)}
+                return (
+                  <div key={item.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-14 h-18 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200">
+                        {itemImg && (
+                          <img src={itemImg} alt="" className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-mono font-bold text-slate-500">
+                          SKU: {item.sku || '-'}
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 mt-0.5 line-clamp-2">
+                          {item.title}
+                        </h4>
+                        {displayVar && (
+                          <div className="text-xs font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded mt-1 inline-block">
+                            {displayVar}
+                          </div>
+                        )}
+                        <div className="text-xs text-slate-500 mt-1">
+                          Birim: {formatPrice(item.price)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-end sm:flex-col text-right pl-17 sm:pl-0">
+                      <div className="text-xs text-slate-400">Adet: <strong className="text-slate-800 text-sm">{item.quantity}</strong></div>
+                      <div className="text-base font-bold text-slate-900 mt-0.5">
+                        {formatPrice(item.total)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Totals Breakdown */}

@@ -98,3 +98,72 @@ export function formatPaymentMethod(method: string | null | undefined): string {
   }
   return method;
 }
+
+export function formatVariationLabel(raw: any): string {
+  if (!raw) return '';
+  let str = typeof raw === 'object' ? JSON.stringify(raw) : String(raw).trim();
+  if (!str) return '';
+
+  let color = '';
+  let size = '';
+
+  // 1. Try parsing JSON if starts with { and ends with }
+  if (str.startsWith('{') && str.endsWith('}')) {
+    try {
+      const obj = JSON.parse(str);
+      color = obj['Renk'] || obj['renk'] || obj['Color'] || obj['color'] || '';
+      size = obj['Yaş'] || obj['yaş'] || obj['Yas'] || obj['yas'] || obj['Beden'] || obj['beden'] || obj['Size'] || obj['size'] || '';
+    } catch (e) {}
+  }
+
+  // 2. If not found in JSON, search formatted string (e.g. "Renk: Lacivert, RenkKodu: #1e3a8a, Beden: 6 Yaş, Yaş: 6 Yaş")
+  if (!color && !size) {
+    const colorMatch = str.match(/(?:Renk|Color)\s*:\s*([^,;/]+)/i);
+    if (colorMatch) color = colorMatch[1].trim();
+
+    const ageMatch = str.match(/(?:Yaş|yaş|Yas|yas)\s*:\s*([^,;/]+)/i);
+    const sizeMatch = str.match(/(?:Beden|Size|beden)\s*:\s*([^,;/]+)/i);
+
+    if (ageMatch) {
+      size = ageMatch[1].trim();
+    } else if (sizeMatch) {
+      size = sizeMatch[1].trim();
+    }
+  }
+
+  // 3. Fallback for slash separated "Lacivert / 6 Yaş"
+  if (!color && !size && str.includes('/')) {
+    const parts = str.split('/').map((s) => s.trim());
+    if (parts.length === 2) {
+      color = parts[0];
+      size = parts[1];
+    }
+  }
+
+  // 4. If neither recognized, just clean RenkKodu and duplicate Beden
+  if (!color && !size) {
+    return str
+      .replace(/,\s*RenkKodu:\s*#[a-f0-9]+/gi, '')
+      .replace(/RenkKodu:\s*#[a-f0-9]+,?\s*/gi, '')
+      .replace(/Beden:\s*[^,]+,\s*(?=Yaş:)/gi, '')
+      .trim();
+  }
+
+  const parts: string[] = [];
+  if (color) {
+    parts.push(`Renk: ${color}`);
+  }
+
+  if (size) {
+    const isAge = /yaş/i.test(size) || (!size.toLowerCase().includes('ay') && !['xs', 's', 'm', 'l', 'xl', 'xxl'].includes(size.toLowerCase()));
+    const numSize = size.replace(/\s*yaş/i, '').trim();
+    if (isAge) {
+      parts.push(`Yaş: ${numSize}`);
+    } else {
+      parts.push(`Beden: ${size}`);
+    }
+  }
+
+  return parts.join(' ');
+}
+

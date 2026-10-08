@@ -22,7 +22,11 @@ export async function GET(req: NextRequest) {
         ],
       },
       include: {
-        items: true,
+        items: {
+          include: {
+            variation: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });

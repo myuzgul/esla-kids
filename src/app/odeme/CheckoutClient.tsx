@@ -143,6 +143,8 @@ export function CheckoutClient({ settings }: Props) {
             productId: it.productId,
             variationId: it.variationId,
             quantity: it.quantity,
+            image: it.image,
+            variationName: it.variationName,
           })),
         }),
       });

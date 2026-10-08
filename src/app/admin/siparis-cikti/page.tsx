@@ -1,6 +1,6 @@
 import React from 'react';
 import { prisma } from '@/lib/prisma';
-import { formatPrice, formatDate, formatPaymentMethod } from '@/lib/utils';
+import { formatPrice, formatDate, formatPaymentMethod, formatVariationLabel } from '@/lib/utils';
 import { generateQrDataUrl } from '@/lib/qr';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -39,6 +39,7 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
         items: {
           include: {
             product: { select: { slug: true } },
+            variation: true,
           },
         },
       },
@@ -53,6 +54,7 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
         items: {
           include: {
             product: { select: { slug: true } },
+            variation: true,
           },
         },
       },
@@ -66,6 +68,7 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
           items: {
             include: {
               product: { select: { slug: true } },
+              variation: true,
             },
           },
         },
@@ -252,30 +255,34 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {ord.itemsWithQr.map((it: any) => (
-                    <tr key={it.id} className="align-middle">
-                      <td className="py-3">
-                        <div className="w-12 h-14 bg-slate-100 rounded border border-slate-200 overflow-hidden flex-shrink-0">
-                          {it.image && (
-                            <img
-                              src={it.image}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                          )}
-                        </div>
-                      </td>
+                  {ord.itemsWithQr.map((it: any) => {
+                    const itemImg = it.variation?.image || it.image;
+                    const displayVar = formatVariationLabel(it.variationName || it.variation?.attributes);
 
-                      <td className="py-3 pr-2">
-                        <div className="font-bold text-slate-900 text-xs">
-                          {it.title}
-                        </div>
-                        {it.variationName && (
-                          <div className="text-[11px] font-semibold text-brand-700 mt-0.5">
-                            {it.variationName}
+                    return (
+                      <tr key={it.id} className="align-middle">
+                        <td className="py-3">
+                          <div className="w-12 h-14 bg-slate-100 rounded border border-slate-200 overflow-hidden flex-shrink-0">
+                            {itemImg && (
+                              <img
+                                src={itemImg}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            )}
                           </div>
-                        )}
-                      </td>
+                        </td>
+
+                        <td className="py-3 pr-2">
+                          <div className="font-bold text-slate-900 text-xs">
+                            {it.title}
+                          </div>
+                          {displayVar && (
+                            <div className="text-[11px] font-semibold text-brand-700 mt-0.5">
+                              {displayVar}
+                            </div>
+                          )}
+                        </td>
 
                       <td className="py-3 font-mono text-[11px] text-slate-600 font-bold">
                         {it.sku || '-'}
@@ -318,7 +325,8 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  );
+                })}
                 </tbody>
               </table>
             </div>
