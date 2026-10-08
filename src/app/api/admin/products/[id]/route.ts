@@ -53,28 +53,45 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Güncellenecek ürün bulunamadı.' }, { status: 404 });
     }
 
-    // Model Kodu (SKU) opsiyonel: Boş ise mevcut olanı koru veya otomatik kod üret
-    const finalSku = (sku && sku.trim()) 
-      ? sku.trim().toUpperCase() 
-      : (existing.sku || `EK-${Date.now().toString().slice(-6)}`);
-
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Delete old category relations
+      // 1. Ensure Product SKU is unique (excluding self)
+      let candidateProductSku = (sku && sku.trim()) 
+        ? sku.trim().toUpperCase() 
+        : (existing.sku || `EK-${Date.now().toString().slice(-6)}`);
+
+      let isProductSkuUnique = false;
+      let finalSku = candidateProductSku;
+      while (!isProductSkuUnique) {
+        const existingProd = await tx.product.findFirst({
+          where: {
+            sku: finalSku,
+            NOT: { id: params.id },
+          },
+          select: { id: true },
+        });
+        if (existingProd) {
+          finalSku = `${candidateProductSku}-${Math.floor(100 + Math.random() * 900)}`;
+        } else {
+          isProductSkuUnique = true;
+        }
+      }
+
+      // 2. Delete old category relations
       await tx.categoriesOnProducts.deleteMany({
         where: { productId: params.id },
       });
 
-      // 2. Delete existing variations
+      // 3. Delete existing variations
       await tx.productVariation.deleteMany({
         where: { productId: params.id },
       });
 
-      // 3. Calculate total stock
+      // 4. Calculate total stock
       const calculatedStock = variations.length > 0 
         ? variations.reduce((acc: number, v: any) => acc + (parseInt(v.stock) || 0), 0) 
         : (parseInt(stock) || 0);
 
-      // 4. Update Product
+      // 5. Update Product
       const updatedProduct = await tx.product.update({
         where: { id: params.id },
         data: {
@@ -97,12 +114,42 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         },
       });
 
-      // 5. Create new variations if provided
+      // 6. Create new variations if provided with guaranteed unique SKUs
+      const usedVariationSkusInBatch = new Set<string>();
+
       for (const v of variations) {
+        let candidateVarSku = (v.sku && v.sku.trim()
+          ? v.sku.trim()
+          : `${updatedProduct.sku}-${Math.random().toString(36).substring(2, 6)}`
+        ).toUpperCase();
+
+        let isVarUnique = false;
+        let finalVarSku = candidateVarSku;
+        while (!isVarUnique) {
+          if (usedVariationSkusInBatch.has(finalVarSku)) {
+            finalVarSku = `${candidateVarSku}-${Math.floor(100 + Math.random() * 900)}`;
+            continue;
+          }
+
+          const existingDbVar = await tx.productVariation.findUnique({
+            where: { sku: finalVarSku },
+            select: { id: true },
+          });
+
+          if (existingDbVar) {
+            finalVarSku = `${candidateVarSku}-${Math.floor(100 + Math.random() * 900)}`;
+            continue;
+          }
+
+          isVarUnique = true;
+        }
+
+        usedVariationSkusInBatch.add(finalVarSku);
+
         await tx.productVariation.create({
           data: {
             productId: updatedProduct.id,
-            sku: (v.sku && v.sku.trim() ? v.sku.trim() : `${updatedProduct.sku}-${Math.random().toString(36).substring(2, 6)}`).toUpperCase(),
+            sku: finalVarSku,
             barcode: null,
             price: v.price ? parseFloat(v.price) : updatedProduct.price,
             compareAtPrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : updatedProduct.compareAtPrice,

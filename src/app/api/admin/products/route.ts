@@ -40,14 +40,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Ürün adı ve fiyat zorunludur.' }, { status: 400 });
     }
 
-    // Model Kodu (SKU) opsiyonel: Boş ise otomatik benzersiz kod üret
-    const finalSku = (sku && sku.trim()) 
-      ? sku.trim().toUpperCase() 
-      : `EK-${Date.now().toString().slice(-6)}${Math.floor(10 + Math.random() * 90)}`;
-
     const slug = slugify(title) + '-' + Math.floor(1000 + Math.random() * 9000);
 
     const result = await prisma.$transaction(async (tx) => {
+      // 1. Ensure Product SKU is globally unique in DB
+      let candidateProductSku = (sku && sku.trim()) 
+        ? sku.trim().toUpperCase() 
+        : `EK-${Date.now().toString().slice(-6)}${Math.floor(10 + Math.random() * 90)}`;
+
+      let isProductSkuUnique = false;
+      let finalSku = candidateProductSku;
+      while (!isProductSkuUnique) {
+        const existingProd = await tx.product.findUnique({
+          where: { sku: finalSku },
+          select: { id: true },
+        });
+        if (existingProd) {
+          finalSku = `${candidateProductSku}-${Math.floor(100 + Math.random() * 900)}`;
+        } else {
+          isProductSkuUnique = true;
+        }
+      }
+
       // Create Product
       const product = await tx.product.create({
         data: {
@@ -71,12 +85,42 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Create Variations if any
+      // 2. Create Variations if any with guaranteed unique SKUs
+      const usedVariationSkusInBatch = new Set<string>();
+
       for (const v of variations) {
+        let candidateVarSku = (v.sku && v.sku.trim()
+          ? v.sku.trim()
+          : `${product.sku}-${Math.random().toString(36).substring(2, 7)}`
+        ).toUpperCase();
+
+        let isVarUnique = false;
+        let finalVarSku = candidateVarSku;
+        while (!isVarUnique) {
+          if (usedVariationSkusInBatch.has(finalVarSku)) {
+            finalVarSku = `${candidateVarSku}-${Math.floor(100 + Math.random() * 900)}`;
+            continue;
+          }
+
+          const existingDbVar = await tx.productVariation.findUnique({
+            where: { sku: finalVarSku },
+            select: { id: true },
+          });
+
+          if (existingDbVar) {
+            finalVarSku = `${candidateVarSku}-${Math.floor(100 + Math.random() * 900)}`;
+            continue;
+          }
+
+          isVarUnique = true;
+        }
+
+        usedVariationSkusInBatch.add(finalVarSku);
+
         await tx.productVariation.create({
           data: {
             productId: product.id,
-            sku: (v.sku && v.sku.trim() ? v.sku.trim() : `${product.sku}-${Math.random().toString(36).substring(2, 7)}`).toUpperCase(),
+            sku: finalVarSku,
             barcode: null,
             price: v.price ? parseFloat(v.price) : product.price,
             compareAtPrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : product.compareAtPrice,

@@ -147,16 +147,25 @@ export function ProductEditClient({ product, categories }: Props) {
       return;
     }
 
-    const baseSku = (sku && sku.trim()) ? sku.trim() : 'EK';
+    const baseSku = (sku && sku.trim()) 
+      ? sku.trim().toUpperCase() 
+      : ((product.sku && product.sku.trim()) ? product.sku.trim().toUpperCase() : `EK-${Date.now().toString().slice(-5)}`);
     const basePrice = price ? parseFloat(price) : product.price || 0;
     const baseCompare = compareAtPrice ? parseFloat(compareAtPrice) : null;
-    const list = [];
+    const list: any[] = [];
+    const usedSkus = new Set<string>();
 
     for (const c of selectedColors) {
       for (const s of selectedSizes) {
         const cleanSize = s.replace(/[^0-9]/g, '') || s.substring(0, 3);
         const cleanColor = c.name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase();
-        const vSku = `${baseSku}-${cleanColor}-${cleanSize}`;
+        let vSku = `${baseSku}-${cleanColor}-${cleanSize}`.toUpperCase();
+
+        while (usedSkus.has(vSku)) {
+          vSku = `${baseSku}-${cleanColor}-${cleanSize}-${Math.floor(10 + Math.random() * 90)}`.toUpperCase();
+        }
+        usedSkus.add(vSku);
+
         const existingImg = variations.find((v) => v.color === c.name && v.image)?.image || '';
         list.push({
           sku: vSku,

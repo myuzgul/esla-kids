@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   ShoppingBag, Search, Menu as MenuIcon, X, Phone, MessageCircle, 
   User, Truck, ChevronDown, Sparkles, Heart, LogOut, Package, MapPin, 
@@ -56,6 +56,7 @@ const DEFAULT_MENU_CATEGORIES = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { totalItems, setIsOpen } = useCart();
   const { user, isLoggedIn, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -111,10 +112,21 @@ export function Navbar() {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setShowSearchDropdown(false);
+      router.push(`/arama?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      const clickedDesktop = searchRef.current && searchRef.current.contains(event.target as Node);
+      const clickedMobile = mobileSearchRef.current && mobileSearchRef.current.contains(event.target as Node);
+      if (!clickedDesktop && !clickedMobile) {
         setShowSearchDropdown(false);
       }
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
@@ -206,17 +218,32 @@ export function Navbar() {
 
         {/* Live Search Bar */}
         <div ref={searchRef} className="hidden md:flex flex-1 max-w-md mx-6 relative">
-          <div className="relative w-full">
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
             <input
               type="text"
               placeholder="Ürün adı, beden, model veya kod ara..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => { if (searchResults.length > 0) setShowSearchDropdown(true); }}
-              className="w-full bg-cream-50 border border-cream-200 rounded-full py-2.5 pl-11 pr-4 text-sm text-charcoal-800 placeholder-charcoal-400 focus:outline-none focus:border-brand-400 focus:bg-white transition-all shadow-inner"
+              className="w-full bg-cream-50 border border-cream-200 rounded-full py-2.5 pl-11 pr-10 text-sm text-charcoal-800 placeholder-charcoal-400 focus:outline-none focus:border-brand-400 focus:bg-white transition-all shadow-inner"
             />
-            <Search className="w-4 h-4 text-charcoal-400 absolute left-4 top-1/2 -translate-y-1/2" />
-          </div>
+            <button
+              type="submit"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-charcoal-400 hover:text-brand-500 transition-colors p-1"
+              title="Ara"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(''); setShowSearchDropdown(false); }}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-charcoal-400 hover:text-charcoal-600 p-1"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </form>
 
           {/* Autocomplete Dropdown */}
           {showSearchDropdown && (
@@ -224,33 +251,60 @@ export function Navbar() {
               {isSearching ? (
                 <div className="p-4 text-center text-xs text-charcoal-400">Aranıyor...</div>
               ) : searchResults.length > 0 ? (
-                <div className="divide-y divide-cream-100 max-h-96 overflow-y-auto">
-                  {searchResults.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/urun/${item.slug}`}
-                      onClick={() => setShowSearchDropdown(false)}
-                      className="flex items-center gap-3 p-3 hover:bg-cream-50 transition-colors"
+                <div>
+                  <div className="divide-y divide-cream-100 max-h-96 overflow-y-auto">
+                    {searchResults.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={`/urun/${item.slug}`}
+                        onClick={() => setShowSearchDropdown(false)}
+                        className="flex items-center gap-3 p-3 hover:bg-cream-50 transition-colors"
+                      >
+                        <div className="w-12 h-14 bg-cream-100 rounded-lg overflow-hidden flex-shrink-0 relative">
+                          {item.image && (
+                            <img 
+                              src={item.image} 
+                              alt={item.title} 
+                              className="w-full h-full object-contain p-0.5" 
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-charcoal-800 truncate">{item.title}</div>
+                          <div className="text-xs text-charcoal-400">Kod: {item.sku}</div>
+                          <div className="text-sm font-bold text-brand-600 mt-0.5">{formatPrice(item.price)}</div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="p-2.5 bg-cream-50 border-t border-cream-100 text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSearchDropdown(false);
+                        router.push(`/arama?q=${encodeURIComponent(searchQuery.trim())}`);
+                      }}
+                      className="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline inline-flex items-center gap-1"
                     >
-                      <div className="w-12 h-14 bg-cream-100 rounded-lg overflow-hidden flex-shrink-0 relative">
-                        {item.image && (
-                          <img 
-                            src={item.image} 
-                            alt={item.title} 
-                            className="w-full h-full object-contain p-0.5" 
-                          />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-charcoal-800 truncate">{item.title}</div>
-                        <div className="text-xs text-charcoal-400">Kod: {item.sku}</div>
-                        <div className="text-sm font-bold text-brand-600 mt-0.5">{formatPrice(item.price)}</div>
-                      </div>
-                    </Link>
-                  ))}
+                      <span>&quot;{searchQuery}&quot; için tüm sonuçları gör</span>
+                      <span>&rarr;</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div className="p-4 text-center text-xs text-charcoal-400">Sonuç bulunamadı.</div>
+                <div className="p-4 text-center">
+                  <div className="text-xs text-charcoal-400 mb-1.5">Sonuç bulunamadı.</div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSearchDropdown(false);
+                      router.push(`/arama?q=${encodeURIComponent(searchQuery.trim())}`);
+                    }}
+                    className="text-xs font-bold text-brand-600 hover:underline"
+                  >
+                    Arama sayfasına git &rarr;
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -412,6 +466,99 @@ export function Navbar() {
         </div>
       </div>
 
+      {/* Mobile Search Bar Row */}
+      <div ref={mobileSearchRef} className="md:hidden px-4 pb-3 pt-0 relative">
+        <form onSubmit={handleSearchSubmit} className="relative w-full">
+          <input
+            type="text"
+            placeholder="Ürün adı, beden veya kod ara..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => { if (searchResults.length > 0) setShowSearchDropdown(true); }}
+            className="w-full bg-cream-50 border border-cream-200 rounded-full py-2 pl-9 pr-9 text-xs text-charcoal-800 placeholder-charcoal-400 focus:outline-none focus:border-brand-400 focus:bg-white transition-all shadow-inner"
+          />
+          <button
+            type="submit"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-400 hover:text-brand-500 transition-colors"
+            title="Ara"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => { setSearchQuery(''); setShowSearchDropdown(false); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-400 hover:text-charcoal-600 p-0.5"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </form>
+
+        {/* Mobile Autocomplete Dropdown */}
+        {showSearchDropdown && (
+          <div className="absolute top-full left-4 right-4 mt-1 bg-white rounded-2xl shadow-xl border border-cream-200 overflow-hidden z-50">
+            {isSearching ? (
+              <div className="p-3 text-center text-xs text-charcoal-400">Aranıyor...</div>
+            ) : searchResults.length > 0 ? (
+              <div>
+                <div className="divide-y divide-cream-100 max-h-64 overflow-y-auto">
+                  {searchResults.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={`/urun/${item.slug}`}
+                      onClick={() => setShowSearchDropdown(false)}
+                      className="flex items-center gap-3 p-2.5 hover:bg-cream-50 transition-colors"
+                    >
+                      <div className="w-10 h-12 bg-cream-100 rounded-lg overflow-hidden flex-shrink-0 relative">
+                        {item.image && (
+                          <img 
+                            src={item.image} 
+                            alt={item.title} 
+                            className="w-full h-full object-contain p-0.5" 
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium text-charcoal-800 truncate">{item.title}</div>
+                        <div className="text-[10px] text-charcoal-400">Kod: {item.sku}</div>
+                        <div className="text-xs font-bold text-brand-600 mt-0.5">{formatPrice(item.price)}</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                <div className="p-2 bg-cream-50 border-t border-cream-100 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSearchDropdown(false);
+                      router.push(`/arama?q=${encodeURIComponent(searchQuery.trim())}`);
+                    }}
+                    className="text-xs font-bold text-brand-600 hover:underline"
+                  >
+                    &quot;{searchQuery}&quot; için tüm sonuçları gör &rarr;
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 text-center">
+                <div className="text-xs text-charcoal-400 mb-1">Sonuç bulunamadı.</div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSearchDropdown(false);
+                    router.push(`/arama?q=${encodeURIComponent(searchQuery.trim())}`);
+                  }}
+                  className="text-xs font-bold text-brand-600 hover:underline"
+                >
+                  Arama sayfasına git &rarr;
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Primary Category Navigation Bar (Desktop) */}
       <nav className="hidden lg:block border-t border-cream-200 bg-cream-50">
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -548,6 +695,30 @@ export function Navbar() {
                   </Link>
                 </div>
               )}
+            </div>
+
+            {/* Mobile Drawer Quick Search */}
+            <div className="p-4 pb-1">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (searchQuery.trim()) {
+                    setMobileMenuOpen(false);
+                    setShowSearchDropdown(false);
+                    router.push(`/arama?q=${encodeURIComponent(searchQuery.trim())}`);
+                  }
+                }}
+                className="relative"
+              >
+                <input
+                  type="text"
+                  placeholder="Ürün veya kategori ara..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-cream-50 border border-cream-200 rounded-xl py-2 pl-9 pr-4 text-xs text-charcoal-800 placeholder-charcoal-400 focus:outline-none focus:border-brand-400 focus:bg-white"
+                />
+                <Search className="w-3.5 h-3.5 text-charcoal-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              </form>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-1">

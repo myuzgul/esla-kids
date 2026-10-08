@@ -4,36 +4,61 @@ import { prisma } from '@/lib/prisma';
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get('q')?.trim() || '';
+  const limitParam = parseInt(searchParams.get('limit') || '10', 10);
+  const limit = Math.min(Math.max(limitParam, 1), 50);
 
   if (!q || q.length < 2) {
-    return NextResponse.json({ results: [] });
+    return NextResponse.json({ results: [], total: 0 });
   }
 
   try {
-    const products = await prisma.product.findMany({
-      where: {
-        isActive: true,
-        OR: [
-          { title: { contains: q } },
-          { sku: { contains: q } },
-          { barcode: { contains: q } },
-          { description: { contains: q } },
-          { brand: { name: { contains: q } } },
-          { categories: { some: { category: { name: { contains: q } } } } },
-        ],
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        sku: true,
-        price: true,
-        compareAtPrice: true,
-        images: true,
-        stockStatus: true,
-      },
-      take: 8,
-    });
+    const whereCondition: any = {
+      isActive: true,
+      OR: [
+        { title: { contains: q, mode: 'insensitive' } },
+        { sku: { contains: q, mode: 'insensitive' } },
+        { barcode: { contains: q, mode: 'insensitive' } },
+        { description: { contains: q, mode: 'insensitive' } },
+        { brand: { name: { contains: q, mode: 'insensitive' } } },
+        { categories: { some: { category: { name: { contains: q, mode: 'insensitive' } } } } },
+        { variations: { some: { OR: [
+          { sku: { contains: q, mode: 'insensitive' } },
+          { attributes: { contains: q, mode: 'insensitive' } },
+        ] } } },
+      ],
+    };
+
+    const [products, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        where: whereCondition,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          sku: true,
+          price: true,
+          compareAtPrice: true,
+          images: true,
+          stockStatus: true,
+          stock: true,
+          variations: {
+            select: {
+              id: true,
+              sku: true,
+              price: true,
+              compareAtPrice: true,
+              stock: true,
+              image: true,
+              attributes: true,
+            },
+          },
+        },
+        take: limit,
+      }),
+      prisma.product.count({
+        where: whereCondition,
+      }),
+    ]);
 
     const results = products.map((p) => {
       let image = '';
@@ -41,6 +66,14 @@ export async function GET(req: NextRequest) {
         const imgs = JSON.parse(p.images);
         if (Array.isArray(imgs) && imgs.length > 0) image = imgs[0];
       } catch (e) {}
+
+      // If product has variation image and base image is empty
+      if (!image && p.variations && p.variations.length > 0) {
+        const varImg = p.variations.find((v) => v.image)?.image;
+        if (varImg) image = varImg;
+      }
+
+      const inStock = p.stockStatus === 'IN_STOCK' || (p.stock !== undefined && p.stock > 0) || p.variations.some((v) => v.stock > 0);
 
       return {
         id: p.id,
@@ -50,7 +83,8 @@ export async function GET(req: NextRequest) {
         price: p.price,
         compareAtPrice: p.compareAtPrice,
         image,
-        inStock: p.stockStatus === 'IN_STOCK',
+        inStock,
+        variationCount: p.variations?.length || 0,
       };
     });
 
@@ -61,7 +95,7 @@ export async function GET(req: NextRequest) {
       return 0;
     });
 
-    return NextResponse.json({ results: sortedResults });
+    return NextResponse.json({ results: sortedResults, total: totalCount });
   } catch (err: any) {
     console.error('Search API error:', err);
     return NextResponse.json({ error: 'Arama sırasında hata oluştu' }, { status: 500 });
