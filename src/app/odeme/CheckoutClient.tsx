@@ -10,7 +10,7 @@ import { formatPrice } from '@/lib/utils';
 import { SiteSettings } from '@/lib/settings';
 import { 
   CreditCard, Landmark, Truck, ShieldCheck, CheckCircle2, 
-  AlertCircle, ChevronRight, Lock, Sparkles, X 
+  AlertCircle, ChevronRight, Lock, Sparkles, X, ShoppingBag 
 } from 'lucide-react';
 
 const TURKISH_CITIES = [
@@ -142,6 +142,8 @@ export function CheckoutClient({ settings }: Props) {
           items: items.map((it) => ({
             productId: it.productId,
             variationId: it.variationId,
+            title: it.title,
+            sku: it.sku,
             quantity: it.quantity,
             image: it.image,
             variationName: it.variationName,
@@ -265,9 +267,18 @@ export function CheckoutClient({ settings }: Props) {
       </div>
 
       {errorMsg && (
-        <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
-          <span>{errorMsg}</span>
+        <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+            <span className="font-semibold leading-relaxed">{errorMsg}</span>
+          </div>
+          <Link
+            href="/sepet"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex-shrink-0"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>Sepetime Git & Düzenle</span>
+          </Link>
         </div>
       )}
 

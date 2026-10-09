@@ -64,17 +64,72 @@ export async function POST(req: NextRequest) {
         let variationName = '';
 
         if (cartItem.variationId) {
-          const variation = await tx.productVariation.findUnique({
+          let variation = await tx.productVariation.findUnique({
             where: { id: cartItem.variationId },
             include: { product: true },
           });
 
+          // Smart recovery if variationId was invalidated (e.g. product updated in admin)
+          if ((!variation || !variation.isActive) && cartItem.productId) {
+            // 1. Try finding by SKU on the same product
+            if (cartItem.sku) {
+              variation = await tx.productVariation.findFirst({
+                where: { 
+                  productId: cartItem.productId, 
+                  sku: cartItem.sku,
+                  isActive: true,
+                },
+                include: { product: true },
+              });
+            }
+
+            // 2. Try finding by matching attributes from cartItem.variationName
+            if (!variation && cartItem.variationName) {
+              const allVars = await tx.productVariation.findMany({
+                where: { productId: cartItem.productId, isActive: true },
+                include: { product: true },
+              });
+
+              const parts = cartItem.variationName
+                .split(/[/•-]/)
+                .map((s: string) => s.trim().toLowerCase())
+                .filter(Boolean);
+
+              variation = allVars.find((v) => {
+                try {
+                  const attrs = typeof v.attributes === 'string' ? JSON.parse(v.attributes) : v.attributes;
+                  const vColor = (attrs?.['Renk'] || attrs?.['Desen'] || attrs?.['Model'] || '').toLowerCase();
+                  const vSize = (attrs?.['Beden'] || attrs?.['Yaş'] || attrs?.['Size'] || attrs?.['yas'] || attrs?.['yaş'] || '').toLowerCase();
+
+                  if (parts.length >= 2) {
+                    return (parts.includes(vColor) || !vColor) && (parts.includes(vSize) || !vSize);
+                  } else if (parts.length === 1) {
+                    return vColor === parts[0] || vSize === parts[0];
+                  }
+                } catch (e) {
+                  return false;
+                }
+                return false;
+              }) || null;
+            }
+          }
+
+          const productTitle = variation?.product?.title || cartItem.title || 'Ürün';
+          const itemVarName = variation 
+            ? (formatVariationLabel(variation.attributes) || cartItem.variationName || '')
+            : (cartItem.variationName || '');
+          const fullItemName = itemVarName ? `"${productTitle} (${itemVarName})"` : `"${productTitle}"`;
+
           if (!variation || !variation.isActive) {
-            throw new Error(`Seçtiğiniz ürün varyasyonu artık mevcut değil.`);
+            throw new Error(`${fullItemName} ürünü artık mevcut değildir. Lütfen sepetinizden çıkararak devam ediniz.`);
           }
 
           if (variation.stock < cartItem.quantity) {
-            throw new Error(`"${variation.product.title}" (${variation.sku}) için yeterli stok bulunmuyor. Kalan stok: ${variation.stock}`);
+            if (variation.stock <= 0) {
+              throw new Error(`${fullItemName} ürününün stoğu tükenmiştir. Lütfen sepetinizden çıkarınız.`);
+            } else {
+              throw new Error(`${fullItemName} için yalnızca ${variation.stock} adet stok kalmıştır. Sepetinizdeki adeti ${variation.stock} olarak güncelleyiniz.`);
+            }
           }
 
           // Decrement variation stock atomically
@@ -116,12 +171,18 @@ export async function POST(req: NextRequest) {
             where: { id: cartItem.productId },
           });
 
+          const productTitle = product?.title || cartItem.title || 'Ürün';
+
           if (!product || !product.isActive) {
-            throw new Error(`Seçtiğiniz ürün artık mevcut değil.`);
+            throw new Error(`"${productTitle}" ürünü artık mevcut değildir. Lütfen sepetinizden çıkararak devam ediniz.`);
           }
 
           if (product.stock < cartItem.quantity) {
-            throw new Error(`"${product.title}" için yeterli stok bulunmuyor. Kalan stok: ${product.stock}`);
+            if (product.stock <= 0) {
+              throw new Error(`"${productTitle}" ürününün stoğu tükenmiştir. Lütfen sepetinizden çıkarınız.`);
+            } else {
+              throw new Error(`"${productTitle}" için yalnızca ${product.stock} adet stok kalmıştır. Sepetinizdeki adeti ${product.stock} olarak güncelleyiniz.`);
+            }
           }
 
           // Decrement product stock atomically

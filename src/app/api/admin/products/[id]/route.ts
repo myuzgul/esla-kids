@@ -81,8 +81,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         where: { productId: params.id },
       });
 
-      // 3. Delete existing variations
-      await tx.productVariation.deleteMany({
+      // 3. Load existing variations to preserve their IDs across updates
+      const existingVariations = await tx.productVariation.findMany({
         where: { productId: params.id },
       });
 
@@ -114,49 +114,99 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         },
       });
 
-      // 6. Create new variations if provided with guaranteed unique SKUs
+      // 6. Upsert variations: preserve IDs if existing variation matches
       const usedVariationSkusInBatch = new Set<string>();
+      const processedVariationIds = new Set<string>();
 
       for (const v of variations) {
-        let candidateVarSku = (v.sku && v.sku.trim()
-          ? v.sku.trim()
-          : `${updatedProduct.sku}-${Math.random().toString(36).substring(2, 6)}`
-        ).toUpperCase();
-
-        let isVarUnique = false;
-        let finalVarSku = candidateVarSku;
-        while (!isVarUnique) {
-          if (usedVariationSkusInBatch.has(finalVarSku)) {
-            finalVarSku = `${candidateVarSku}-${Math.floor(100 + Math.random() * 900)}`;
-            continue;
+        const incomingAttrsStr = typeof v.attributes === 'string' ? v.attributes : JSON.stringify(v.attributes || {});
+        
+        let matchingExisting = existingVariations.find((ev) => {
+          if (v.id && ev.id === v.id) return true;
+          if (v.sku && ev.sku.toUpperCase() === v.sku.trim().toUpperCase()) return true;
+          // Match by identical attributes
+          try {
+            const evAttrs = typeof ev.attributes === 'string' ? JSON.parse(ev.attributes) : ev.attributes;
+            const inAttrs = typeof v.attributes === 'string' ? JSON.parse(v.attributes) : v.attributes;
+            const evColor = (evAttrs?.['Renk'] || evAttrs?.['Desen'] || '').toLowerCase();
+            const evSize = (evAttrs?.['Beden'] || evAttrs?.['Yaş'] || evAttrs?.['Size'] || '').toLowerCase();
+            const inColor = (inAttrs?.['Renk'] || inAttrs?.['Desen'] || '').toLowerCase();
+            const inSize = (inAttrs?.['Beden'] || inAttrs?.['Yaş'] || inAttrs?.['Size'] || '').toLowerCase();
+            return evColor === inColor && evSize === inSize;
+          } catch (e) {
+            return false;
           }
+        });
 
-          const existingDbVar = await tx.productVariation.findUnique({
-            where: { sku: finalVarSku },
-            select: { id: true },
-          });
+        let finalVarSku = (matchingExisting?.sku || (v.sku && v.sku.trim() ? v.sku.trim() : `${updatedProduct.sku}-${Math.random().toString(36).substring(2, 6)}`)).toUpperCase();
 
-          if (existingDbVar) {
-            finalVarSku = `${candidateVarSku}-${Math.floor(100 + Math.random() * 900)}`;
-            continue;
+        // Ensure SKU uniqueness if newly generated
+        if (!matchingExisting || matchingExisting.sku !== finalVarSku) {
+          let isVarUnique = false;
+          let candidate = finalVarSku;
+          while (!isVarUnique) {
+            if (usedVariationSkusInBatch.has(candidate)) {
+              candidate = `${finalVarSku}-${Math.floor(100 + Math.random() * 900)}`;
+              continue;
+            }
+            const existingDbVar = await tx.productVariation.findUnique({
+              where: { sku: candidate },
+              select: { id: true },
+            });
+            if (existingDbVar && (!matchingExisting || existingDbVar.id !== matchingExisting.id)) {
+              candidate = `${finalVarSku}-${Math.floor(100 + Math.random() * 900)}`;
+              continue;
+            }
+            isVarUnique = true;
+            finalVarSku = candidate;
           }
-
-          isVarUnique = true;
         }
 
         usedVariationSkusInBatch.add(finalVarSku);
 
-        await tx.productVariation.create({
-          data: {
-            productId: updatedProduct.id,
-            sku: finalVarSku,
-            barcode: null,
-            price: v.price ? parseFloat(v.price) : updatedProduct.price,
-            compareAtPrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : updatedProduct.compareAtPrice,
-            stock: parseInt(v.stock) || 0,
-            attributes: typeof v.attributes === 'string' ? v.attributes : JSON.stringify(v.attributes || {}),
-            image: v.image || (images[0] || null),
-          },
+        if (matchingExisting) {
+          // UPDATE existing variation -> PRESERVES variation ID!
+          processedVariationIds.add(matchingExisting.id);
+          await tx.productVariation.update({
+            where: { id: matchingExisting.id },
+            data: {
+              sku: finalVarSku,
+              barcode: null,
+              price: v.price ? parseFloat(v.price) : updatedProduct.price,
+              compareAtPrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : updatedProduct.compareAtPrice,
+              stock: parseInt(v.stock) || 0,
+              attributes: incomingAttrsStr,
+              image: v.image || (images[0] || null),
+              isActive: true,
+            },
+          });
+        } else {
+          // CREATE brand new variation
+          const created = await tx.productVariation.create({
+            data: {
+              productId: updatedProduct.id,
+              sku: finalVarSku,
+              barcode: null,
+              price: v.price ? parseFloat(v.price) : updatedProduct.price,
+              compareAtPrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : updatedProduct.compareAtPrice,
+              stock: parseInt(v.stock) || 0,
+              attributes: incomingAttrsStr,
+              image: v.image || (images[0] || null),
+              isActive: true,
+            },
+          });
+          processedVariationIds.add(created.id);
+        }
+      }
+
+      // Delete only the old variations that are no longer part of the updated list
+      const removedVariationIds = existingVariations
+        .filter((ev) => !processedVariationIds.has(ev.id))
+        .map((ev) => ev.id);
+
+      if (removedVariationIds.length > 0) {
+        await tx.productVariation.deleteMany({
+          where: { id: { in: removedVariationIds } },
         });
       }
 
