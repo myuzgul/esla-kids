@@ -108,7 +108,7 @@ export async function sendOrderNotificationEmail(
         <div style="background:#FFFBEB; border-left:4px solid #F59E0B; padding:16px; margin:20px 0; border-radius:8px;">
           <h4 style="margin:0 0 8px 0; color:#92400E; font-size:14px; font-weight:700;">🏦 Havale / EFT Banka Hesap Bilgileri</h4>
           <div style="margin:0 0 10px 0; font-size:13px; color:#78350F; line-height:1.6; white-space:pre-line;">
-            ${settings.havale_bank_info || 'Ziraat Bankası\nIBAN: TR12 0001 0002 0003 0004 0005 06'}
+            ${settings.havale_bank_info || 'Halk Bankası - Kemal Bostan\nIBAN: TR93 0001 2009 2910 0009 0200 15'}
           </div>
           <div style="font-size:12px; color:#92400E; font-weight:600; padding-top:8px; border-top:1px dashed #FDE68A;">
             ⚠️ Havale veya EFT yaparken açıklama kısmına mutlaka <strong>#${order.orderNumber}</strong> sipariş numaranızı yazınız.

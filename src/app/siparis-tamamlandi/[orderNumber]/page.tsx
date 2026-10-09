@@ -2,7 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { formatPrice, formatDate, formatVariationLabel } from '@/lib/utils';
+import { formatPrice, formatDate, formatVariationLabel, formatPaymentMethod } from '@/lib/utils';
+import { getSettings } from '@/lib/settings';
 import { CheckCircle, Landmark, Truck, Package, ArrowRight, Phone } from 'lucide-react';
 
 interface Props {
@@ -35,6 +36,8 @@ export default async function OrderSuccessPage({ params }: Props) {
     notFound();
   }
 
+  const settings = await getSettings();
+
   let shippingAddr: any = {};
   try {
     shippingAddr = JSON.parse(order.shippingAddress);
@@ -53,7 +56,7 @@ export default async function OrderSuccessPage({ params }: Props) {
             Siparişiniz Başarıyla Alındı!
           </h1>
           <p className="text-sm text-charcoal-600 max-w-md mx-auto">
-            Sipariş detaylarınız ve bilgilendirme e-postası <strong>{order.guestEmail}</strong> adresinize günderildi.
+            Sipariş detaylarınız ve bilgilendirme e-postası <strong>{order.guestEmail}</strong> adresinize gönderildi.
           </p>
         </div>
 
@@ -69,7 +72,7 @@ export default async function OrderSuccessPage({ params }: Props) {
           </div>
           <div>
             <div className="text-[11px] text-charcoal-500 font-semibold uppercase">Ödeme Yöntemi</div>
-            <div className="text-sm font-bold text-charcoal-800 mt-0.5">{order.paymentMethod}</div>
+            <div className="text-sm font-bold text-charcoal-800 mt-0.5">{formatPaymentMethod(order.paymentMethod)}</div>
           </div>
           <div>
             <div className="text-[11px] text-charcoal-500 font-semibold uppercase">Toplam Tutar</div>
@@ -78,26 +81,25 @@ export default async function OrderSuccessPage({ params }: Props) {
         </div>
 
         {/* Havale Instructions if needed */}
-        {order.paymentMethod === 'HAVALE' && (
-          <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
+        {(order.paymentMethod === 'HAVALE' || order.paymentMethod === 'BANK_TRANSFER' || order.paymentMethod?.includes('EFT')) && (
+          <div className="p-5 sm:p-6 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-4">
             <div className="flex items-center gap-2 text-emerald-900 font-bold text-sm">
               <Landmark className="w-5 h-5 text-emerald-700" />
               <span>Havale / EFT Ödeme Talimatları</span>
             </div>
-            <p className="text-xs text-emerald-800">
-              Siparişinizin işleme alınabilmesi için lütfen aşağıdaki banka hesaplarımıza <strong>{formatPrice(order.totalAmount)}</strong> tutarı günderirken açıklama kısmına <strong>{order.orderNumber}</strong> sipariş numaranızı yazınız.
+            <p className="text-xs text-emerald-800 leading-relaxed">
+              Siparişinizin işleme alınabilmesi için lütfen aşağıdaki banka hesabımıza <strong>{formatPrice(order.totalAmount)}</strong> tutarı gönderirken açıklama kısmına <strong>{order.orderNumber}</strong> sipariş numaranızı yazınız.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-white p-4 rounded-xl border border-emerald-100">
-              <div>
-                <strong className="text-emerald-900">Ziraat Bankası</strong>
-                <p className="text-charcoal-700 font-mono text-xs mt-1">TR12 0001 0002 0003 0004 0005 06</p>
-                <p className="text-[11px] text-charcoal-500">Esla Kids Tekstil San. Tic. Ltd. Şti.</p>
+            <div className="bg-white p-4 sm:p-5 rounded-xl border border-emerald-200 shadow-xs space-y-2">
+              <div className="text-xs font-bold text-emerald-900 uppercase tracking-wide">
+                Banka ve IBAN Hesap Bilgilerimiz:
               </div>
-              <div>
-                <strong className="text-emerald-900">Garanti BBVA</strong>
-                <p className="text-charcoal-700 font-mono text-xs mt-1">TR56 0006 2000 0001 0002 0003 04</p>
-                <p className="text-[11px] text-charcoal-500">Esla Kids Tekstil San. Tic. Ltd. Şti.</p>
+              <div className="text-xs sm:text-sm text-charcoal-800 whitespace-pre-line font-mono font-medium leading-relaxed bg-cream-50/80 p-3.5 rounded-lg border border-cream-200 select-all">
+                {settings.havale_bank_info}
               </div>
+              <p className="text-[11px] text-charcoal-500 italic pt-1">
+                * Havale/EFT ulaştığında siparişiniz onaylanarak kargo hazırlık sürecine alınacaktır.
+              </p>
             </div>
           </div>
         )}
