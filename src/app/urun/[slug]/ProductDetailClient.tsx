@@ -642,23 +642,75 @@ export function ProductDetailClient({ product }: Props) {
             )}
 
             {activeTab === 'size' && (
-              <div className="space-y-3 text-xs">
-                <p>çocukların hızlı büyüme süreçleri göz önüne alınarak bedenlerimiz rahat kalıp üretilmiştir.</p>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse border border-cream-200">
+              <div className="space-y-3.5 text-xs">
+                <div className="bg-amber-50/80 border border-amber-200/80 p-3.5 rounded-xl text-amber-900 leading-relaxed space-y-1">
+                  <p className="font-semibold text-amber-950">
+                    📌 <strong>Not:</strong> Kilo tahminidir, kız ve erkek çocuğa göre çok değişken olabilir, boylar nettir.
+                  </p>
+                  <p className="text-amber-800">
+                    Çocukların hızlı büyüme süreçleri göz önüne alınarak bedenlerimiz rahat kalıp üretilmiştir.
+                  </p>
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-cream-200">
+                  <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="bg-cream-100 text-charcoal-800 font-bold">
-                        <th className="p-2 border border-cream-200">Beden</th>
-                        <th className="p-2 border border-cream-200">Boy (cm)</th>
-                        <th className="p-2 border border-cream-200">Kilo (kg)</th>
+                      <tr className="bg-cream-100 text-charcoal-800 font-bold border-b border-cream-200">
+                        <th className="py-2.5 px-3 whitespace-nowrap">Beden</th>
+                        <th className="py-2.5 px-3 whitespace-nowrap">Üst Boy (cm)</th>
+                        <th className="py-2.5 px-3 whitespace-nowrap">Alt Boy (cm)</th>
+                        <th className="py-2.5 px-3 whitespace-nowrap">Tahmini Kilo (kg)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-cream-100 text-charcoal-700">
-                      <tr><td className="p-2 border border-cream-200">1-2 Yaş</td><td className="p-2 border border-cream-200">86 - 92 cm</td><td className="p-2 border border-cream-200">11 - 13 kg</td></tr>
-                      <tr><td className="p-2 border border-cream-200">2-3 Yaş</td><td className="p-2 border border-cream-200">92 - 98 cm</td><td className="p-2 border border-cream-200">13 - 15 kg</td></tr>
-                      <tr><td className="p-2 border border-cream-200">3-4 Yaş</td><td className="p-2 border border-cream-200">98 - 104 cm</td><td className="p-2 border border-cream-200">15 - 17 kg</td></tr>
-                      <tr><td className="p-2 border border-cream-200">4-5 Yaş</td><td className="p-2 border border-cream-200">104 - 110 cm</td><td className="p-2 border border-cream-200">17 - 19 kg</td></tr>
-                      <tr><td className="p-2 border border-cream-200">5-6 Yaş</td><td className="p-2 border border-cream-200">110 - 116 cm</td><td className="p-2 border border-cream-200">19 - 22 kg</td></tr>
+                      <tr className="hover:bg-cream-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-charcoal-900 whitespace-nowrap">1-2 Yaş</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">40 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">53 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">11 - 13 kg</td>
+                      </tr>
+                      <tr className="hover:bg-cream-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-charcoal-900 whitespace-nowrap">2-3 Yaş</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">42 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">56.5 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">13 - 15 kg</td>
+                      </tr>
+                      <tr className="hover:bg-cream-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-charcoal-900 whitespace-nowrap">3-4 Yaş</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">44 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">60 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">15 - 17 kg</td>
+                      </tr>
+                      <tr className="hover:bg-cream-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-charcoal-900 whitespace-nowrap">4-5 Yaş</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">46 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">63.5 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">17 - 19 kg</td>
+                      </tr>
+                      <tr className="hover:bg-cream-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-charcoal-900 whitespace-nowrap">5-6 Yaş</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">48 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">67 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">19 - 22 kg</td>
+                      </tr>
+                      <tr className="hover:bg-cream-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-charcoal-900 whitespace-nowrap">6-7 Yaş</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">50 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">70.5 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">22 - 25 kg</td>
+                      </tr>
+                      <tr className="hover:bg-cream-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-charcoal-900 whitespace-nowrap">7-8 Yaş</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">52 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">74 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">25 - 28 kg</td>
+                      </tr>
+                      <tr className="hover:bg-cream-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-charcoal-900 whitespace-nowrap">9-10 Yaş</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">54 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">77.5 cm</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">29 - 35 kg</td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
