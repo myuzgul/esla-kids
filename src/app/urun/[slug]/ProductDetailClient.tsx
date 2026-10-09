@@ -204,7 +204,30 @@ export function ProductDetailClient({ product }: Props) {
   const taxAmount = calculateTaxAmount(rawPrice, taxRate);
   const currentSku = currentVariation ? currentVariation.sku : product.sku;
   const currentStock = currentVariation ? currentVariation.stock : product.stock;
-  const isOutOfStock = currentStock <= 0;
+  const isOutOfStock = currentStock <= 0 || (currentVariation ? currentVariation.stockStatus === 'OUT_OF_STOCK' : product.stockStatus === 'OUT_OF_STOCK');
+
+  // Check if a specific size is out of stock (for the currently selected color)
+  const isSizeOutOfStock = (size: string) => {
+    if (!product.variations || product.variations.length === 0) {
+      return (product.stock ?? 0) <= 0 || product.stockStatus === 'OUT_OF_STOCK';
+    }
+
+    const matchingVar = product.variations.find((v: any) => {
+      try {
+        const attrs = typeof v.attributes === 'string' ? JSON.parse(v.attributes) : v.attributes;
+        const vColor = attrs?.['Renk'] || attrs?.['Desen'] || attrs?.['Model'];
+        const vSize = attrs?.['Beden'] || attrs?.['Yaş'] || attrs?.['Size'] || attrs?.['yas'] || attrs?.['yaş'];
+
+        const matchColor = !selectedColor || vColor === selectedColor;
+        return matchColor && vSize === size;
+      } catch (e) {
+        return false;
+      }
+    });
+
+    if (!matchingVar) return true;
+    return (matchingVar.stock ?? 0) <= 0 || matchingVar.stockStatus === 'OUT_OF_STOCK';
+  };
 
   const discountPercent =
     compareAtPrice && compareAtPrice > price
@@ -427,17 +450,44 @@ export function ProductDetailClient({ product }: Props) {
             <div className="flex flex-wrap gap-2">
               {availableSizes.map((size) => {
                 const isSelected = selectedSize === size;
+                const isOut = isSizeOutOfStock(size);
+
                 return (
                   <button
                     key={size}
+                    type="button"
                     onClick={() => setSelectedSize(size)}
-                    className={`min-w-14 px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                    title={isOut ? `${size} (Tükendi)` : size}
+                    className={`relative min-w-14 px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all overflow-hidden flex items-center justify-center select-none cursor-pointer ${
                       isSelected
-                        ? 'border-brand-500 bg-brand-500 text-white shadow-md shadow-brand-500/20'
+                        ? isOut
+                          ? 'border-brand-500 bg-brand-500 text-white shadow-md shadow-brand-500/20'
+                          : 'border-brand-500 bg-brand-500 text-white shadow-md shadow-brand-500/20'
+                        : isOut
+                        ? 'border-slate-200 bg-slate-100/80 text-slate-400 hover:border-slate-300'
                         : 'border-cream-300 bg-white text-charcoal-800 hover:border-brand-300'
                     }`}
                   >
-                    {size}
+                    <span className={isOut && !isSelected ? 'text-slate-400' : ''}>{size}</span>
+
+                    {/* Çapraz Çizgi (Tükenmiş Beden Çarpısı) */}
+                    {isOut && (
+                      <svg
+                        className="absolute inset-0 w-full h-full pointer-events-none"
+                        preserveAspectRatio="none"
+                        viewBox="0 0 100 100"
+                      >
+                        <line
+                          x1="0"
+                          y1="100"
+                          x2="100"
+                          y2="0"
+                          stroke={isSelected ? 'rgba(255, 255, 255, 0.85)' : '#94a3b8'}
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    )}
                   </button>
                 );
               })}
