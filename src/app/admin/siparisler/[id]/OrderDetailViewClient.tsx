@@ -487,7 +487,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                 paymentStatus === 'PAID' ? (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
                     <span>✓</span>
-                    <span>Tahsil Edildi</span>
+                    <span>Onaylandı</span>
                   </span>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300 flex items-center gap-1">
@@ -853,7 +853,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                     : 'bg-amber-100 text-amber-900 border border-amber-300'
                 }`}>
-                  {paymentStatus === 'PAID' ? '✓ Tahsil Edildi' : 'Kapıda Nakit Ödeme'}
+                  {paymentStatus === 'PAID' ? '✓ Onaylandı' : 'Kapıda Nakit Ödeme'}
                 </span>
               </div>
 
@@ -861,7 +861,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                 <div className="space-y-2.5">
                   <div className="p-3 bg-white rounded-xl border border-emerald-200 flex items-center gap-2.5 text-xs text-emerald-900 font-semibold shadow-2xs">
                     <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span>Kapıda nakit tahsilat hesaba geçti / teslim edildi olarak onaylandı.</span>
+                    <span>Kapıda nakit ödeme onaylandı.</span>
                   </div>
                   <button
                     type="button"
@@ -875,7 +875,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
               ) : (
                 <div className="space-y-3">
                   <p className="text-xs text-slate-700 font-medium leading-relaxed">
-                    Kargo firması teslimatı yapıp kapıda nakit tahsilat tutarını ({formatPrice(order.totalAmount)}) size ulaştırdığında ödemeyi onaylayabilirsiniz:
+                    Kapıda nakit ödeme siparişini teyit ettiyseniz onaylayabilirsiniz:
                   </p>
                   <button
                     type="button"
@@ -891,7 +891,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                     ) : (
                       <>
                         <CheckCircle className="w-4 h-4" />
-                        <span>✓ Tahsil Edildi (Ödendi Yap)</span>
+                        <span>✓ Onayla</span>
                       </>
                     )}
                   </button>

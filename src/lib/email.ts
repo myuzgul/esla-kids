@@ -98,7 +98,7 @@ export async function sendOrderNotificationEmail(
 
     if (isCod) {
       if (order.paymentStatus === 'PAID') {
-        paymentStatusText = 'Kapıda Tahsil Edildi';
+        paymentStatusText = 'Kapıda Ödeme Onaylandı';
         paymentStatusColor = '#059669';
       } else {
         paymentStatusText = 'Kapıda Nakit Ödeme';

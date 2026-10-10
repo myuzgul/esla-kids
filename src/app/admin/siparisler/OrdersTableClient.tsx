@@ -281,7 +281,7 @@ export function OrdersTableClient({
         );
         showNotification(
           nextStatus === 'PAID'
-            ? 'Ödeme durumu "Ödendi / Tahsil Edildi" olarak güncellendi.'
+            ? 'Ödeme durumu güncellendi (Onaylandı).'
             : 'Ödeme durumu güncellendi.'
         );
         router.refresh();
@@ -731,7 +731,7 @@ export function OrdersTableClient({
                             <div className="inline-flex items-center gap-1.5">
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                                 <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
-                                <span>Tahsil Edildi</span>
+                                <span>Onaylandı</span>
                               </span>
                               <button
                                 type="button"
@@ -750,7 +750,7 @@ export function OrdersTableClient({
                               <button
                                 type="button"
                                 onClick={() => handleTogglePayment(ord.id, ord.paymentStatus)}
-                                title="Tahsil Edildi olarak işaretle"
+                                title="Onaylandı olarak işaretle"
                                 className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded-md shadow-xs transition-colors cursor-pointer"
                               >
                                 ✓ Onayla
@@ -960,7 +960,7 @@ export function OrdersTableClient({
                                 <div className="inline-flex items-center gap-1.5">
                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                                     <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
-                                    <span>Tahsil Edildi</span>
+                                    <span>Onaylandı</span>
                                   </span>
                                   <button
                                     type="button"
@@ -979,7 +979,7 @@ export function OrdersTableClient({
                                   <button
                                     type="button"
                                     onClick={() => handleTogglePayment(ord.id, ord.paymentStatus)}
-                                    title="Tahsil Edildi olarak işaretle"
+                                    title="Onaylandı olarak işaretle"
                                     className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded-md shadow-xs transition-colors cursor-pointer"
                                   >
                                     ✓ Onayla
@@ -1049,7 +1049,7 @@ export function OrdersTableClient({
 
                         <td className="py-3.5 px-3 max-w-[160px]">
                           {(() => {
-                            const note = ord.internalNote || ord.customerNote;
+                            const note = ord.internalNote?.trim();
                             if (!note) return <span className="text-slate-300">-</span>;
                             return (
                               <div 
