@@ -3,7 +3,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { formatPrice, formatDate, ORDER_STATUS_MAP, formatPaymentMethod } from '@/lib/utils';
+import { 
+  formatPrice, formatDate, ORDER_STATUS_MAP, formatPaymentMethod, isCodMethod, isHavaleMethod 
+} from '@/lib/utils';
 import { 
   Printer, CheckSquare, Search, Eye, MoreHorizontal, 
   CheckCircle2, Truck, XCircle, ArrowRight, Trash2,
@@ -107,11 +109,6 @@ export function OrdersTableClient({ initialOrders }: Props) {
     }
   };
 
-  const isHavaleMethod = (method: string) => {
-    const m = (method || '').toUpperCase();
-    return m.includes('HAVALE') || m.includes('EFT') || m === 'BANK_TRANSFER';
-  };
-
   const handleTogglePayment = async (orderId: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'PAID' ? 'PENDING' : 'PAID';
     const targetOrder = orders.find((o) => o.id === orderId);
@@ -141,8 +138,8 @@ export function OrdersTableClient({ initialOrders }: Props) {
         );
         showNotification(
           nextStatus === 'PAID'
-            ? 'Ödeme "Havale Geldi / Ödendi" olarak güncellendi.'
-            : 'Ödeme "Bekliyor" olarak güncellendi.'
+            ? 'Ödeme durumu "Ödendi / Tahsil Edildi" olarak güncellendi.'
+            : 'Ödeme durumu güncellendi.'
         );
         router.refresh();
       }
@@ -396,6 +393,37 @@ export function OrdersTableClient({ initialOrders }: Props) {
                             </button>
                           </div>
                         )
+                      ) : isCodMethod(ord.paymentMethod) ? (
+                        ord.paymentStatus === 'PAID' ? (
+                          <div className="inline-flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                              <span>Tahsil Edildi</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePayment(ord.id, ord.paymentStatus)}
+                              title="Geri al"
+                              className="text-[10px] text-slate-400 hover:text-amber-700 hover:bg-amber-50 px-1 py-0.5 rounded font-bold transition-colors cursor-pointer"
+                            >
+                              ↺
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-1.5">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-300">
+                              Kapıda Nakit Ödeme
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePayment(ord.id, ord.paymentStatus)}
+                              title="Tahsil Edildi olarak işaretle"
+                              className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded-md shadow-xs transition-colors cursor-pointer"
+                            >
+                              ✓ Onayla
+                            </button>
+                          </div>
+                        )
                       ) : (
                         <div className="text-[10px] font-semibold uppercase">
                           {ord.paymentStatus === 'PAID' ? (
@@ -594,6 +622,37 @@ export function OrdersTableClient({ initialOrders }: Props) {
                                   type="button"
                                   onClick={() => handleTogglePayment(ord.id, ord.paymentStatus)}
                                   title="Havale Geldi olarak işaretle"
+                                  className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded-md shadow-xs transition-colors cursor-pointer"
+                                >
+                                  ✓ Onayla
+                                </button>
+                              </div>
+                            )
+                          ) : isCodMethod(ord.paymentMethod) ? (
+                            ord.paymentStatus === 'PAID' ? (
+                              <div className="inline-flex items-center gap-1.5">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                  <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                                  <span>Tahsil Edildi</span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleTogglePayment(ord.id, ord.paymentStatus)}
+                                  title="Geri al"
+                                  className="text-[10px] text-slate-400 hover:text-amber-700 hover:bg-amber-50 px-1 py-0.5 rounded font-bold transition-colors cursor-pointer"
+                                >
+                                  ↺
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1.5">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-300">
+                                  Kapıda Nakit Ödeme
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleTogglePayment(ord.id, ord.paymentStatus)}
+                                  title="Tahsil Edildi olarak işaretle"
                                   className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded-md shadow-xs transition-colors cursor-pointer"
                                 >
                                   ✓ Onayla

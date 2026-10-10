@@ -41,6 +41,8 @@ export function OrderDetailAdminClient({ order }: Props) {
   const isHavale = order.paymentMethod?.toUpperCase().includes('HAVALE') || 
                    order.paymentMethod?.toUpperCase().includes('EFT') || 
                    order.paymentMethod === 'BANK_TRANSFER';
+  const isCod = order.paymentMethod?.toUpperCase() === 'COD' ||
+                order.paymentMethod?.toUpperCase().includes('KAPIDA');
 
   // 1. Manuel Durum Kaydet
   const handleSave = async (overrideStatus?: string, overridePrinted?: boolean) => {
@@ -429,8 +431,8 @@ export function OrderDetailAdminClient({ order }: Props) {
             onChange={(e) => setPaymentStatus(e.target.value)}
             className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-500"
           >
-            <option value="PAID">✓ Ödendi (Havale Geldi / Tahsil Edildi)</option>
-            <option value="PENDING">Ödeme Bekliyor</option>
+            <option value="PAID">✓ Ödendi / Tahsil Edildi</option>
+            <option value="PENDING">{isCod ? 'Kapıda Nakit Ödeme' : isHavale ? 'Havale Bekliyor' : 'Ödeme Bekliyor'}</option>
             <option value="FAILED">Ödeme Başarısız</option>
           </select>
         </div>

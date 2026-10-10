@@ -79,13 +79,35 @@ export async function sendOrderNotificationEmail(
       addressLines = `<div>${order.shippingAddress || ''}</div>`;
     }
 
-    // Payment method text
+    // Payment method & status text
+    const methodUpper = (order.paymentMethod || '').toUpperCase();
+    const isCod = methodUpper === 'COD' || methodUpper.includes('KAPIDA') || methodUpper.includes('CASH');
+    const isHavale = methodUpper === 'HAVALE' || methodUpper === 'BANK_TRANSFER' || methodUpper.includes('EFT') || methodUpper.includes('TRANSFER');
+
     const paymentMethods: Record<string, string> = {
       PAYTR: 'Kredi / Banka Kartı (PayTR)',
       HAVALE: 'Banka Havalesi / EFT',
-      COD: 'Kapıda Ödeme',
+      COD: 'Kapıda Nakit Ödeme',
     };
-    const paymentMethodText = paymentMethods[order.paymentMethod] || order.paymentMethod || 'Online Ödeme';
+    const paymentMethodText = isCod
+      ? 'Kapıda Nakit Ödeme'
+      : paymentMethods[order.paymentMethod] || (isHavale ? 'Banka Havalesi / EFT' : order.paymentMethod || 'Online Ödeme');
+
+    let paymentStatusText = order.paymentStatus === 'PAID' ? 'Ödeme Alındı' : 'Ödeme Bekleniyor';
+    let paymentStatusColor = order.paymentStatus === 'PAID' ? '#059669' : '#D97706';
+
+    if (isCod) {
+      if (order.paymentStatus === 'PAID') {
+        paymentStatusText = 'Kapıda Tahsil Edildi';
+        paymentStatusColor = '#059669';
+      } else {
+        paymentStatusText = 'Kapıda Nakit Ödeme';
+        paymentStatusColor = '#1E293B';
+      }
+    } else if (isHavale && order.paymentStatus !== 'PAID') {
+      paymentStatusText = 'Havale Bekleniyor';
+      paymentStatusColor = '#D97706';
+    }
 
     // Tracking info HTML
     let trackingHtml = '';
@@ -209,8 +231,8 @@ export async function sendOrderNotificationEmail(
                       </tr>
                       <tr>
                         <td style="padding:6px 0; color:#64748B;">Ödeme Durumu:</td>
-                        <td style="padding:6px 0; text-align:right; font-weight:600; color:${order.paymentStatus === 'PAID' ? '#059669' : '#D97706'};">
-                          ${order.paymentStatus === 'PAID' ? 'Ödeme Alındı' : 'Ödeme Bekleniyor'}
+                        <td style="padding:6px 0; text-align:right; font-weight:600; color:${paymentStatusColor};">
+                          ${paymentStatusText}
                         </td>
                       </tr>
                     </table>

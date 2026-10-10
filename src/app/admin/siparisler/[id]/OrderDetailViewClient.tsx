@@ -11,7 +11,7 @@ import {
   ArrowLeft, Printer, User, MapPin, CreditCard, Truck, 
   CheckCircle, Save, AlertCircle, Trash2, AlertTriangle, 
   Loader2, Zap, RefreshCw, PackageCheck, Landmark, Edit, 
-  Phone, Mail, Minus, Plus, X, Check, RefreshCcw
+  Phone, Mail, Minus, Plus, X, Check, RefreshCcw, Banknote
 } from 'lucide-react';
 
 interface Props {
@@ -483,6 +483,17 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                     <span>Havale Bekliyor</span>
                   </span>
                 )
+              ) : isCod ? (
+                paymentStatus === 'PAID' ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                    <span>✓</span>
+                    <span>Tahsil Edildi</span>
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300 flex items-center gap-1">
+                    <span>Kapıda Nakit Ödeme</span>
+                  </span>
+                )
               ) : (
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                   paymentStatus === 'PAID'
@@ -821,6 +832,74 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
             </div>
           )}
 
+          {/* 1.1 Kapıda Nakit Ödeme Onay Kartı */}
+          {isCod && (
+            <div className={`rounded-2xl border-2 p-4 sm:p-5 space-y-3.5 shadow-sm transition-all ${
+              paymentStatus === 'PAID'
+                ? 'bg-gradient-to-br from-emerald-50 via-white to-emerald-50/50 border-emerald-300'
+                : 'bg-gradient-to-br from-amber-50/70 via-white to-amber-50/40 border-amber-300 ring-1 ring-amber-300/40'
+            }`}>
+              <div className="flex items-center justify-between pb-2.5 border-b border-slate-200/60">
+                <div className="flex items-center gap-2">
+                  <Banknote className={`w-5 h-5 ${paymentStatus === 'PAID' ? 'text-emerald-600' : 'text-amber-700'}`} />
+                  <div>
+                    <h3 className="font-heading font-black text-xs sm:text-sm text-slate-900 uppercase">
+                      Kapıda Nakit Ödeme Durumu
+                    </h3>
+                  </div>
+                </div>
+                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                  paymentStatus === 'PAID'
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    : 'bg-amber-100 text-amber-900 border border-amber-300'
+                }`}>
+                  {paymentStatus === 'PAID' ? '✓ Tahsil Edildi' : 'Kapıda Nakit Ödeme'}
+                </span>
+              </div>
+
+              {paymentStatus === 'PAID' ? (
+                <div className="space-y-2.5">
+                  <div className="p-3 bg-white rounded-xl border border-emerald-200 flex items-center gap-2.5 text-xs text-emerald-900 font-semibold shadow-2xs">
+                    <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                    <span>Kapıda nakit tahsilat hesaba geçti / teslim edildi olarak onaylandı.</span>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isUpdatingPayment}
+                    onClick={() => handleTogglePaymentStatus('PENDING')}
+                    className="w-full py-2 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold rounded-xl transition-colors cursor-pointer text-center"
+                  >
+                    {isUpdatingPayment ? 'Güncelleniyor...' : '✕ Tekrar "Kapıda Nakit Ödeme" Olarak İşaretle'}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                    Kargo firması teslimatı yapıp kapıda nakit tahsilat tutarını ({formatPrice(order.totalAmount)}) size ulaştırdığında ödemeyi onaylayabilirsiniz:
+                  </p>
+                  <button
+                    type="button"
+                    disabled={isUpdatingPayment}
+                    onClick={() => handleTogglePaymentStatus('PAID')}
+                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-black text-xs rounded-xl shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    {isUpdatingPayment ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Kaydediliyor...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        <span>✓ Tahsil Edildi (Ödendi Yap)</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 2. Stocado Entegrasyon Kartı */}
           <div className="bg-gradient-to-br from-indigo-50/80 via-white to-brand-50/80 rounded-2xl border-2 border-indigo-200/90 shadow-sm p-5 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-indigo-100">
@@ -984,8 +1063,8 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                 onChange={(e) => setPaymentStatus(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-500"
               >
-                <option value="PAID">✓ Ödendi (Havale Geldi / Tahsil Edildi)</option>
-                <option value="PENDING">Ödeme Bekliyor</option>
+                <option value="PAID">✓ Ödendi / Tahsil Edildi</option>
+                <option value="PENDING">{isCod ? 'Kapıda Nakit Ödeme' : isHavale ? 'Havale Bekliyor' : 'Ödeme Bekliyor'}</option>
                 <option value="FAILED">Ödeme Başarısız</option>
               </select>
             </div>

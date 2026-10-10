@@ -84,6 +84,18 @@ export const ORDER_STATUS_MAP: Record<string, { label: string; color: string; bg
   PENDING_PAYMENT: { label: 'Ödeme Bekleniyor', color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-200' },
 };
 
+export function isCodMethod(method: string | null | undefined): boolean {
+  if (!method) return false;
+  const m = method.toUpperCase();
+  return m === 'COD' || m.includes('KAPIDA') || m.includes('CASH');
+}
+
+export function isHavaleMethod(method: string | null | undefined): boolean {
+  if (!method) return false;
+  const m = method.toUpperCase();
+  return m === 'HAVALE' || m === 'BANK_TRANSFER' || m.includes('EFT') || m.includes('TRANSFER');
+}
+
 export function formatPaymentMethod(method: string | null | undefined): string {
   if (!method) return 'Belirtilmedi';
   const m = method.toUpperCase();
