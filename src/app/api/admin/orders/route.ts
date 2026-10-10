@@ -1,38 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { buildOrderSearchWhere } from '@/lib/orderSearch';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const statusParam = searchParams.get('status');
-  const q = searchParams.get('q')?.trim();
+  const printStatusParam = searchParams.get('printStatus');
+  const q = searchParams.get('q')?.trim() || '';
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get('pageSize') || '30', 10) || 30));
+  const searchAll = searchParams.get('searchAll') === 'true';
 
-  const where: any = {};
+  const where = buildOrderSearchWhere({
+    q,
+    status: statusParam,
+    printStatus: printStatusParam,
+    searchAllStatusesIfQuery: searchAll,
+  });
 
-  if (statusParam) {
-    const statuses = statusParam.split(',').filter(Boolean);
-    where.status = { in: statuses };
-  }
-
-  if (q) {
-    where.OR = [
-      { orderNumber: { contains: q } },
-      { guestName: { contains: q } },
-      { guestPhone: { contains: q } },
-      { guestEmail: { contains: q } },
-      { trackingNumber: { contains: q } },
-    ];
-  }
+  const skip = (page - 1) * pageSize;
 
   try {
-    const orders = await prisma.order.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        items: true,
-      },
-    });
+    const [totalCount, orders] = await Promise.all([
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+        include: {
+          items: true,
+          customer: true,
+        },
+      }),
+    ]);
 
-    return NextResponse.json({ orders });
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+    return NextResponse.json({ 
+      orders, 
+      totalCount, 
+      totalPages, 
+      page, 
+      pageSize 
+    });
   } catch (err: any) {
     console.error('Admin orders API error:', err);
     return NextResponse.json({ error: 'Siparişler getirilemedi' }, { status: 500 });
