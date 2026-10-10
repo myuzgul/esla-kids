@@ -62,6 +62,8 @@ export async function POST(req: NextRequest) {
         let price = 0;
         let image = '';
         let variationName = '';
+        let targetProductId: string | null = cartItem.productId || null;
+        let targetVariationId: string | null = null;
 
         if (cartItem.variationId) {
           let variation = await tx.productVariation.findUnique({
@@ -150,6 +152,8 @@ export async function POST(req: NextRequest) {
             },
           });
 
+          targetVariationId = variation.id;
+          targetProductId = variation.productId;
           title = variation.product.title;
           sku = variation.sku;
           barcode = variation.barcode || '';
@@ -202,6 +206,8 @@ export async function POST(req: NextRequest) {
             },
           });
 
+          targetProductId = product.id;
+          targetVariationId = null;
           title = product.title;
           sku = product.sku;
           barcode = product.barcode || '';
@@ -219,9 +225,31 @@ export async function POST(req: NextRequest) {
         const lineTotal = price * cartItem.quantity;
         subtotal += lineTotal;
 
+        // Double check targetVariationId exists in DB before adding to OrderItem to guarantee foreign key constraint is satisfied
+        if (targetVariationId) {
+          const varExists = await tx.productVariation.findUnique({
+            where: { id: targetVariationId },
+            select: { id: true },
+          });
+          if (!varExists) {
+            targetVariationId = null;
+          }
+        }
+
+        // Double check targetProductId exists in DB
+        if (targetProductId) {
+          const prodExists = await tx.product.findUnique({
+            where: { id: targetProductId },
+            select: { id: true },
+          });
+          if (!prodExists) {
+            targetProductId = null;
+          }
+        }
+
         orderItemsData.push({
-          productId: cartItem.productId,
-          variationId: cartItem.variationId || null,
+          productId: targetProductId,
+          variationId: targetVariationId,
           title,
           sku,
           barcode,
@@ -382,8 +410,17 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: any) {
     console.error('Checkout error:', err);
+    let userMsg = err.message || 'Sipariş oluşturulurken bir hata meydana geldi. Lütfen tekrar deneyiniz.';
+    if (
+      userMsg.includes('prisma') ||
+      userMsg.includes('Foreign key') ||
+      userMsg.includes('constraint') ||
+      userMsg.includes('invocation')
+    ) {
+      userMsg = 'Siparişiniz işlenirken geçici bir sepet uyuşmazlığı oluştu. Lütfen sepetinizi yenileyip tekrar deneyiniz.';
+    }
     return NextResponse.json(
-      { error: err.message || 'Sipariş oluşturulurken bir hata meydana geldi. Lütfen tekrar deneyiniz.' },
+      { error: userMsg },
       { status: 400 }
     );
   }
