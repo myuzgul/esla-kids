@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ProductCard } from '@/components/ProductCard';
-import { ChevronRight, Filter, SlidersHorizontal } from 'lucide-react';
+import { CategoryFilterClient, DesktopSortSelect } from '@/components/CategoryFilterClient';
+import { ChevronRight } from 'lucide-react';
 import type { Metadata } from 'next';
 
 interface Props {
@@ -131,7 +132,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       </nav>
 
       {/* Category Header */}
-      <div className="mb-8">
+      <div className="mb-4 sm:mb-8">
         <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-charcoal-900">
           {category.name}
         </h1>
@@ -141,14 +142,14 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           </p>
         )}
 
-        {/* Subcategories pill chips */}
+        {/* Subcategories pill chips - horizontal scrollable on mobile */}
         {category.children.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none text-xs font-semibold whitespace-nowrap mt-3.5 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
             {category.children.map((sub) => (
               <Link
                 key={sub.id}
                 href={`/kategori/${sub.slug}`}
-                className="text-xs font-semibold px-3.5 py-1.5 rounded-full bg-cream-100 hover:bg-brand-50 hover:text-brand-700 text-charcoal-700 border border-cream-200 transition-colors"
+                className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full bg-cream-100 hover:bg-brand-50 hover:text-brand-700 text-charcoal-700 border border-cream-200 transition-colors"
               >
                 {sub.name}
               </Link>
@@ -158,123 +159,30 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       </div>
 
       {/* Layout: Sidebar Filter & Products Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Filters Sidebar */}
-        <aside className="lg:col-span-1 space-y-6 bg-cream-50/60 p-5 rounded-2xl border border-cream-200/80 h-fit">
-          <div className="flex items-center justify-between pb-3 border-b border-cream-200">
-            <div className="flex items-center gap-2 font-bold text-sm text-charcoal-900">
-              <SlidersHorizontal className="w-4 h-4 text-brand-600" />
-              <span>Filtreler</span>
-            </div>
-            {(beden || renk || minPrice || maxPrice || sort || inStock) && (
-              <Link
-                href={`/kategori/${slug}`}
-                className="text-xs text-brand-600 hover:underline font-semibold"
-              >
-                Temizle
-              </Link>
-            )}
-          </div>
-
-          {/* Size Filter */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-charcoal-700 mb-2.5">
-              Beden / Yaş
-            </h4>
-            <div className="flex flex-wrap gap-1.5">
-              {availableSizes.map((s) => {
-                const isActive = beden === s;
-                return (
-                  <Link
-                    key={s}
-                    href={`/kategori/${slug}?${new URLSearchParams({
-                      ...(beden && !isActive ? { beden: s } : isActive ? {} : { beden: s }),
-                      ...(renk ? { renk } : {}),
-                      ...(sort ? { sort } : {}),
-                    }).toString()}`}
-                    className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-all ${
-                      isActive
-                        ? 'bg-brand-500 border-brand-500 text-white font-bold'
-                        : 'bg-white border-cream-200 text-charcoal-700 hover:border-brand-300'
-                    }`}
-                  >
-                    {s}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Color Filter */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-charcoal-700 mb-2.5">
-              Renk
-            </h4>
-            <div className="flex flex-wrap gap-1.5">
-              {availableColors.map((c) => {
-                const isActive = renk === c;
-                return (
-                  <Link
-                    key={c}
-                    href={`/kategori/${slug}?${new URLSearchParams({
-                      ...(beden ? { beden } : {}),
-                      ...(renk && !isActive ? { renk: c } : isActive ? {} : { renk: c }),
-                      ...(sort ? { sort } : {}),
-                    }).toString()}`}
-                    className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-all ${
-                      isActive
-                        ? 'bg-brand-500 border-brand-500 text-white font-bold'
-                        : 'bg-white border-cream-200 text-charcoal-700 hover:border-brand-300'
-                    }`}
-                  >
-                    {c}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Stock Only Filter */}
-          <div className="pt-2 border-t border-cream-200">
-            <Link
-              href={`/kategori/${slug}?${new URLSearchParams({
-                ...(beden ? { beden } : {}),
-                ...(renk ? { renk } : {}),
-                ...(inStock === 'true' ? {} : { inStock: 'true' }),
-                ...(sort ? { sort } : {}),
-              }).toString()}`}
-              className="flex items-center gap-2 text-xs font-semibold text-charcoal-800"
-            >
-              <input
-                type="checkbox"
-                readOnly
-                checked={inStock === 'true'}
-                className="rounded border-cream-300 text-brand-500 focus:ring-brand-400"
-              />
-              <span>Sadece Stoktaki Ürünler</span>
-            </Link>
-          </div>
-        </aside>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8 items-start">
+        {/* Client-side Mobile Filter Bar, Mobile Drawer Modal, and Desktop Sidebar Filter */}
+        <CategoryFilterClient
+          slug={slug}
+          totalProducts={sortedProducts.length}
+          availableSizes={availableSizes}
+          availableColors={availableColors}
+          initialFilters={{
+            beden,
+            renk,
+            sort,
+            inStock,
+          }}
+        />
 
         {/* Product Grid */}
         <div className="lg:col-span-3">
-          {/* Sorting and Results Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-cream-200">
+          {/* Sorting and Results Bar (Desktop only, mobile has it in CategoryFilterClient) */}
+          <div className="hidden lg:flex items-center justify-between gap-3 mb-6 pb-4 border-b border-cream-200">
             <div className="text-xs text-charcoal-500">
               Toplam <strong className="text-charcoal-900">{sortedProducts.length}</strong> ürün listeleniyor
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-charcoal-600 font-medium">Sırala:</span>
-              <select
-                defaultValue={sort || 'newest'}
-                className="bg-white border border-cream-200 rounded-lg text-xs py-1.5 px-3 text-charcoal-800 focus:outline-none focus:border-brand-400"
-              >
-                <option value="newest">En Yeniler</option>
-                <option value="price_asc">Fiyat: Düşükten Yükseğe</option>
-                <option value="price_desc">Fiyat: Yüksekten Düşüğe</option>
-              </select>
-            </div>
+            <DesktopSortSelect currentSort={sort} />
           </div>
 
           {sortedProducts.length === 0 ? (
