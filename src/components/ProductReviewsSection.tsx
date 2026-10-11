@@ -6,7 +6,7 @@ import {
   X, MessageSquare, ThumbsUp, AlertCircle, Loader2, 
   ChevronRight, Sparkles 
 } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+
 
 interface ReviewItem {
   id: string;
@@ -560,9 +560,6 @@ export function ProductReviewsSection({ productId, productTitle, initialReviews 
                               />
                             ))}
                           </div>
-                          <span className="text-[11px] text-charcoal-400">
-                            {formatDate(rev.createdAt)}
-                          </span>
                         </div>
                       </div>
                     </div>
