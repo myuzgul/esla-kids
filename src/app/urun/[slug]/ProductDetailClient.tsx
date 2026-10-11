@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { formatPrice, addTax, calculateTaxAmount } from '@/lib/utils';
+import { trackViewContent, trackAddToCart } from '@/lib/metaPixel';
 import { 
   ShoppingBag, Zap, ShieldCheck, Truck, RefreshCw, Banknote,
   Check, AlertCircle, Heart, Bell, Maximize2, X, ChevronLeft, ChevronRight 
@@ -234,6 +235,16 @@ export function ProductDetailClient({ product }: Props) {
       ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
       : 0;
 
+  // Track Meta ViewContent when product is viewed
+  useEffect(() => {
+    trackViewContent({
+      id: product.id,
+      name: product.title,
+      price: price,
+      category: product.categories?.[0]?.category?.name,
+    });
+  }, [product.id, price]);
+
   const handleAddToCart = (fastBuy = false) => {
     if (isOutOfStock) return;
 
@@ -242,12 +253,24 @@ export function ProductDetailClient({ product }: Props) {
     else if (selectedSize) variationName = `${selectedSize}`;
     else if (selectedColor) variationName = `${selectedColor}`;
 
+    const itemPrice = price;
+    const itemId = currentVariation?.id || product.id;
+
+    // Track Meta AddToCart (triggers both Browser Pixel and Server CAPI with common event_id)
+    trackAddToCart({
+      id: itemId,
+      name: product.title,
+      price: itemPrice,
+      quantity,
+      category: product.categories?.[0]?.category?.name,
+    });
+
     addItem({
       productId: product.id,
       variationId: currentVariation?.id,
       title: product.title,
       variationName,
-      price,
+      price: itemPrice,
       quantity,
       image: currentVariation?.image || colorImageMap[selectedColor] || selectedImage,
       sku: currentSku,

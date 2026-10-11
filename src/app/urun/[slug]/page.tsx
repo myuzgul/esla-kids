@@ -26,13 +26,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         { id: decoded },
       ],
     },
-    select: { title: true, shortDescription: true, description: true, images: true },
+    select: { title: true, shortDescription: true, description: true, images: true, price: true, taxRate: true },
   });
 
   if (!product) return { title: 'Ürün Bulunamadı | Esla Kids' };
 
   let images: string[] = [];
   try { images = JSON.parse(product.images); } catch (e) {}
+
+  const taxRate = product.taxRate || 10;
+  const priceWithTax = (product.price * (1 + taxRate / 100)).toFixed(2);
 
   return {
     title: `${product.title} | Esla Kids`,
@@ -41,6 +44,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: product.title,
       description: product.shortDescription || '',
       images: images[0] ? [{ url: images[0] }] : [],
+      type: 'website',
+    },
+    other: {
+      'og:price:amount': priceWithTax,
+      'og:price:currency': 'TRY',
+      'product:price:amount': priceWithTax,
+      'product:price:currency': 'TRY',
     },
   };
 }

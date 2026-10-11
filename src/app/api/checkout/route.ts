@@ -5,6 +5,7 @@ import { sendOrderNotificationEmail } from '@/lib/email';
 import { createPayTRToken } from '@/lib/paytr';
 import { getCurrentCustomer } from '@/lib/auth';
 import { formatVariationLabel } from '@/lib/utils';
+import { sendMetaServerEvent } from '@/lib/metaCapiServer';
 
 export async function POST(req: NextRequest) {
   try {
@@ -363,6 +364,37 @@ export async function POST(req: NextRequest) {
     // Send order confirmation email asynchronously for non-PAYTR payments (PayTR sends upon successful webhook callback)
     if (paymentMethod !== 'PAYTR') {
       sendOrderNotificationEmail(result, 'CREATED').catch((e) => console.error(e));
+
+      // Trigger Meta CAPI Purchase server-side event
+      let parsedShipping: any = {};
+      try { parsedShipping = JSON.parse(result.shippingAddress); } catch (e) {}
+
+      sendMetaServerEvent({
+        eventName: 'Purchase',
+        eventId: `order_${result.orderNumber}`,
+        eventSourceUrl: `https://eslakids.com/siparis-tamamlandi/${result.orderNumber}`,
+        clientIp: req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1',
+        clientUserAgent: req.headers.get('user-agent') || '',
+        userData: {
+          email: result.guestEmail || '',
+          phone: result.guestPhone || parsedShipping.phone || '',
+          fullName: result.guestName || parsedShipping.fullName || '',
+          city: parsedShipping.city || '',
+        },
+        customData: {
+          value: result.totalAmount,
+          currency: 'TRY',
+          order_id: result.orderNumber,
+          num_items: result.items?.reduce((sum: number, it: any) => sum + it.quantity, 0) || 0,
+          content_type: 'product',
+          content_ids: result.items?.map((it: any) => String(it.variationId || it.productId || it.id)) || [],
+          contents: result.items?.map((it: any) => ({
+            id: String(it.variationId || it.productId || it.id),
+            quantity: it.quantity,
+            item_price: it.price,
+          })) || [],
+        },
+      }).catch((e) => console.warn('[Meta CAPI Checkout]', e));
     }
 
     // Handle PayTR payment token if chosen

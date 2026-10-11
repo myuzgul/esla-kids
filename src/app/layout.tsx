@@ -40,6 +40,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { Suspense } from 'react';
+import { MetaPixel } from '@/components/analytics/MetaPixel';
+
 export default function RootLayout({
   children,
 }: {
@@ -48,6 +51,9 @@ export default function RootLayout({
   return (
     <html lang="tr" className="overflow-x-hidden max-w-full">
       <body className="bg-white text-charcoal-800 font-sans selection:bg-brand-100 selection:text-brand-900 overflow-x-hidden w-full max-w-full relative">
+        <Suspense fallback={null}>
+          <MetaPixel />
+        </Suspense>
         <AuthProvider>
           <CartProvider>
             <AppShell>

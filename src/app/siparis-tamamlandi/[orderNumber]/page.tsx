@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { formatPrice, formatDate, formatVariationLabel, formatPaymentMethod } from '@/lib/utils';
 import { getSettings } from '@/lib/settings';
 import { CheckCircle, Landmark, Truck, Package, ArrowRight, Phone } from 'lucide-react';
+import { MetaPurchaseTracker } from '@/components/analytics/MetaPurchaseTracker';
 
 interface Props {
   params: { orderNumber: string };
@@ -43,8 +44,27 @@ export default async function OrderSuccessPage({ params }: Props) {
     shippingAddr = JSON.parse(order.shippingAddress);
   } catch (e) {}
 
+  const trackingItems = order.items.map((item) => ({
+    id: item.variationId || item.productId || item.id,
+    name: item.title,
+    price: item.price,
+    quantity: item.quantity,
+  }));
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+      <MetaPurchaseTracker
+        orderNumber={order.orderNumber}
+        totalAmount={order.totalAmount}
+        currency="TRY"
+        items={trackingItems}
+        customer={{
+          email: order.guestEmail || '',
+          phone: order.guestPhone || shippingAddr.phone || '',
+          fullName: order.guestName || shippingAddr.fullName || '',
+          city: shippingAddr.city || '',
+        }}
+      />
       <div className="bg-white rounded-3xl border border-cream-200 shadow-sm p-6 sm:p-10 space-y-8">
         {/* Header Alert */}
         <div className="text-center space-y-3">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyPayTRCallback } from '@/lib/paytr';
 import { sendOrderNotificationEmail } from '@/lib/email';
+import { sendMetaServerEvent } from '@/lib/metaCapiServer';
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,6 +59,37 @@ export async function POST(req: NextRequest) {
       });
 
       sendOrderNotificationEmail(updated, 'CONFIRMED').catch((e) => console.error(e));
+
+      // Trigger Meta CAPI Purchase server-side event
+      let parsedShipping: any = {};
+      try { parsedShipping = JSON.parse(updated.shippingAddress); } catch (e) {}
+
+      sendMetaServerEvent({
+        eventName: 'Purchase',
+        eventId: `order_${updated.orderNumber}`,
+        eventSourceUrl: `https://eslakids.com/siparis-tamamlandi/${updated.orderNumber}`,
+        clientIp: req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1',
+        clientUserAgent: req.headers.get('user-agent') || '',
+        userData: {
+          email: updated.guestEmail || '',
+          phone: updated.guestPhone || parsedShipping.phone || '',
+          fullName: updated.guestName || parsedShipping.fullName || '',
+          city: parsedShipping.city || '',
+        },
+        customData: {
+          value: updated.totalAmount,
+          currency: 'TRY',
+          order_id: updated.orderNumber,
+          num_items: updated.items?.reduce((sum: number, it: any) => sum + it.quantity, 0) || 0,
+          content_type: 'product',
+          content_ids: updated.items?.map((it: any) => String(it.variationId || it.productId || it.id)) || [],
+          contents: updated.items?.map((it: any) => ({
+            id: String(it.variationId || it.productId || it.id),
+            quantity: it.quantity,
+            item_price: it.price,
+          })) || [],
+        },
+      }).catch((e) => console.warn('[Meta CAPI PayTR]', e));
     } else {
       await prisma.order.update({
         where: { id: order.id },

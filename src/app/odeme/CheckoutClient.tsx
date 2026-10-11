@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Script from 'next/script';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatPrice } from '@/lib/utils';
+import { trackInitiateCheckout } from '@/lib/metaPixel';
 import { SiteSettings } from '@/lib/settings';
 import { 
   CreditCard, Landmark, Truck, ShieldCheck, CheckCircle2, 
@@ -75,6 +76,29 @@ export function CheckoutClient({ settings }: Props) {
       }
     }
   }, [user]);
+
+  // Track Meta InitiateCheckout when user enters checkout with items
+  const hasTrackedCheckoutRef = useRef(false);
+  useEffect(() => {
+    if (items.length > 0 && !hasTrackedCheckoutRef.current) {
+      hasTrackedCheckoutRef.current = true;
+      trackInitiateCheckout({
+        items: items.map((it) => ({
+          id: it.variationId || it.productId,
+          name: it.title,
+          price: it.price,
+          quantity: it.quantity,
+        })),
+        totalValue: subtotal,
+        numItems: items.reduce((sum, it) => sum + it.quantity, 0),
+        userData: {
+          email: formData.guestEmail,
+          phone: formData.guestPhone,
+          fullName: formData.guestName,
+        },
+      });
+    }
+  }, [items, subtotal, formData.guestEmail, formData.guestPhone, formData.guestName]);
 
   const handleSelectSavedAddress = (addr: any) => {
     setSelectedAddressId(addr.id);
