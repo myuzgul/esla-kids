@@ -17,7 +17,7 @@ export default async function HomePage() {
     const res = await Promise.all([
       prisma.product.findMany({
         where: { isActive: true },
-        take: 12,
+        take: 24,
         orderBy: { createdAt: 'desc' },
         include: { variations: true },
       }),
@@ -32,7 +32,7 @@ export default async function HomePage() {
       }),
       prisma.product.findMany({
         where: { isActive: true, isFeatured: true },
-        take: 8,
+        take: 16,
         orderBy: { updatedAt: 'desc' },
         include: { variations: true },
       }),
@@ -61,10 +61,10 @@ export default async function HomePage() {
 
   // Vitrin (Featured) Products - prioritize products marked as isFeatured by admin
   const vitrinProducts = sortedFeatured.length > 0
-    ? (sortedFeatured.length < 4
-        ? [...sortedFeatured, ...sortedProducts.filter((p) => !sortedFeatured.some((f) => f.id === p.id))].slice(0, 4)
-        : sortedFeatured.slice(0, 8))
-    : sortedProducts.slice(0, 4);
+    ? (sortedFeatured.length < 16
+        ? [...sortedFeatured, ...sortedProducts.filter((p) => !sortedFeatured.some((f) => f.id === p.id))].slice(0, 16)
+        : sortedFeatured.slice(0, 16))
+    : sortedProducts.slice(0, 16);
 
   // New arrivals - other products
   const newArrivals = sortedProducts.filter((p) => !vitrinProducts.some((v) => v.id === p.id)).slice(0, 4);
