@@ -11,7 +11,8 @@ import {
   ArrowLeft, Printer, User, MapPin, CreditCard, Truck, 
   CheckCircle, Save, AlertCircle, Trash2, AlertTriangle, 
   Loader2, Zap, RefreshCw, PackageCheck, Landmark, Edit, 
-  Phone, Mail, Minus, Plus, X, Check, RefreshCcw, Banknote
+  Phone, Mail, Minus, Plus, X, Check, RefreshCcw, Banknote,
+  MessageCircle
 } from 'lucide-react';
 
 interface Props {
@@ -105,6 +106,67 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
   } catch (e) {
     currentShippingAddr = {};
   }
+
+  // 4. WHATSAPP İLETİŞİM STATE & ŞABLONLAR
+  const [showWhatsappModal, setShowWhatsappModal] = useState(false);
+  const [selectedWhatsappTemplate, setSelectedWhatsappTemplate] = useState<string>('CONFIRMATION');
+  const [whatsappMessage, setWhatsappMessage] = useState('');
+
+  const customerName = currentShippingAddr.fullName || order.guestName || order.customer?.name || 'Değerli Müşterimiz';
+  const customerPhone = currentShippingAddr.phone || order.guestPhone || order.customer?.phone || '';
+  const orderNumber = order.orderNumber || '';
+  const orderTotal = formatPrice(order.total);
+  const activeCarrier = carrier || order.trackingCompany || 'Yurtiçi Kargo';
+  const activeTracking = trackingNumber || order.trackingNumber || '';
+
+  const getWhatsappTemplateText = (templateKey: string) => {
+    switch (templateKey) {
+      case 'CONFIRMATION':
+        return `Merhaba Sayın ${customerName},\n\nEsla Kids'ten vermiş olduğunuz #${orderNumber} numaralı siparişiniz onaylandı ve özenle hazırlanıyor. Sipariş tutarınız: ${orderTotal}.\n\nBizi tercih ettiğiniz için teşekkür ederiz!`;
+      case 'SHIPPED':
+        return `Merhaba Sayın ${customerName},\n\nEsla Kids'ten #${orderNumber} numaralı siparişiniz ${activeCarrier} ile kargoya verilmiştir.${activeTracking ? `\nKargo Takip No: ${activeTracking}` : ''}\n\nSiparişinizi buradan takip edebilirsiniz:\nhttps://eslakids.com/siparis-takip?orderNumber=${orderNumber}\n\nGüzel ve mutlu günlerde kullanmanızı dileriz!`;
+      case 'HAVALE':
+        return `Merhaba Sayın ${customerName},\n\nEsla Kids'ten vermiş olduğunuz #${orderNumber} numaralı siparişinizin işleme alınabilmesi için ${orderTotal} tutarındaki havale/EFT ödemenizi beklemekteyiz.\n\nÖdemenizi tamamladıktan sonra siparişiniz aynı gün kargoya hazırlanacaktır. Banka hesap bilgilerimize sitemizden ulaşabilirsiniz.`;
+      case 'DELIVERED':
+        return `Merhaba Sayın ${customerName},\n\nEsla Kids'ten #${orderNumber} numaralı siparişinizin teslim edildiğini görüyoruz. Ürünlerimizden memnun kaldınız mı? Güzel ve mutlu günlerde kullanmanızı dileriz!`;
+      case 'CUSTOM':
+      default:
+        return `Merhaba Sayın ${customerName},\n\nEsla Kids'ten #${orderNumber} numaralı siparişiniz hakkında bilgilendirme: `;
+    }
+  };
+
+  const handleOpenWhatsappModal = (defaultTemplate = 'CONFIRMATION') => {
+    const tpl = isHavale && defaultTemplate === 'CONFIRMATION' ? 'HAVALE' : defaultTemplate;
+    setSelectedWhatsappTemplate(tpl);
+    setWhatsappMessage(getWhatsappTemplateText(tpl));
+    setShowWhatsappModal(true);
+  };
+
+  const selectWhatsappTemplate = (templateKey: string) => {
+    setSelectedWhatsappTemplate(templateKey);
+    setWhatsappMessage(getWhatsappTemplateText(templateKey));
+  };
+
+  const handleSendWhatsapp = () => {
+    const rawPhone = customerPhone;
+    let clean = rawPhone.replace(/\D/g, '');
+    if (clean.startsWith('90')) {
+      // zaten 90 ile başlıyor
+    } else if (clean.startsWith('0')) {
+      clean = '9' + clean;
+    } else if (clean.length === 10) {
+      clean = '90' + clean;
+    }
+
+    if (!clean) {
+      alert('Müşteriye ait geçerli bir telefon numarası bulunamadı.');
+      return;
+    }
+
+    const url = `https://wa.me/${clean}?text=${encodeURIComponent(whatsappMessage)}`;
+    window.open(url, '_blank');
+    setShowWhatsappModal(false);
+  };
 
   // --- ADRES GÜNCELLEME İŞLEMİ ---
   const handleSaveAddress = async (e: React.FormEvent) => {
@@ -694,14 +756,25 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
               <div className="font-bold text-slate-900 text-sm">{order.guestName || '-'}</div>
               <div className="text-xs text-slate-600">
                 Telefon:{' '}
-                {order.guestPhone ? (
-                  <a
-                    href={`tel:${order.guestPhone}`}
-                    className="text-brand-600 font-bold hover:underline inline-flex items-center gap-1"
-                  >
-                    <span>{order.guestPhone}</span>
-                    <span className="text-[10px] bg-brand-50 text-brand-700 px-1.5 py-0.2 rounded font-semibold">Ara</span>
-                  </a>
+                {customerPhone ? (
+                  <div className="inline-flex items-center gap-1.5 flex-wrap">
+                    <a
+                      href={`tel:${customerPhone}`}
+                      className="text-brand-600 font-bold hover:underline inline-flex items-center gap-1"
+                    >
+                      <span>{customerPhone}</span>
+                      <span className="text-[10px] bg-brand-50 text-brand-700 px-1.5 py-0.5 rounded font-semibold">Ara</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenWhatsappModal('CONFIRMATION')}
+                      className="text-[10px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded font-bold inline-flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                      title="WhatsApp ile Mesaj Gönder"
+                    >
+                      <MessageCircle className="w-3 h-3 fill-emerald-600" />
+                      <span>WhatsApp</span>
+                    </button>
+                  </div>
                 ) : (
                   '-'
                 )}
@@ -1174,6 +1247,16 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
               <span>{isSaving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}</span>
             </button>
 
+            {/* WhatsApp ile Mesaj Gönder */}
+            <button
+              type="button"
+              onClick={() => handleOpenWhatsappModal('CONFIRMATION')}
+              className="w-full py-3 bg-[#25D366] hover:bg-[#20ba59] active:scale-[0.99] text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <MessageCircle className="w-4 h-4 fill-white" />
+              <span>WhatsApp ile Mesaj Gönder</span>
+            </button>
+
             {/* Sipariş Silme */}
             <div className="pt-3 border-t border-slate-100">
               {!showDeleteConfirm ? (
@@ -1486,6 +1569,149 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                   Vazgeç
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 4. WHATSAPP İLE MESAJ GÖNDERME MODALI */}
+      {showWhatsappModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="bg-[#128C7E] text-white p-4 sm:p-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center">
+                  <MessageCircle className="w-6 h-6 fill-white" />
+                </div>
+                <div>
+                  <h3 className="font-heading font-extrabold text-base text-white">
+                    WhatsApp ile Müşteriye Mesaj Gönder
+                  </h3>
+                  <div className="text-xs text-white/80 font-medium flex items-center gap-2 mt-0.5">
+                    <span>{customerName}</span>
+                    <span>•</span>
+                    <span className="font-mono">{customerPhone || 'Telefon Bulunamadı'}</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowWhatsappModal(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4 overflow-y-auto flex-1">
+              {/* Şablon Seçiciler */}
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2 block">
+                  Hızlı Şablon Seçin
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => selectWhatsappTemplate('CONFIRMATION')}
+                    className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer flex flex-col gap-1 ${
+                      selectedWhatsappTemplate === 'CONFIRMATION'
+                        ? 'border-[#25D366] bg-emerald-50/70 text-emerald-900 shadow-xs'
+                        : 'border-slate-200 hover:border-slate-300 text-slate-700 bg-slate-50/50'
+                    }`}
+                  >
+                    <span className="text-base">📦</span>
+                    <span>Sipariş Onayı</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => selectWhatsappTemplate('SHIPPED')}
+                    className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer flex flex-col gap-1 ${
+                      selectedWhatsappTemplate === 'SHIPPED'
+                        ? 'border-[#25D366] bg-emerald-50/70 text-emerald-900 shadow-xs'
+                        : 'border-slate-200 hover:border-slate-300 text-slate-700 bg-slate-50/50'
+                    }`}
+                  >
+                    <span className="text-base">🚚</span>
+                    <span>Kargo Takip</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => selectWhatsappTemplate('HAVALE')}
+                    className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer flex flex-col gap-1 ${
+                      selectedWhatsappTemplate === 'HAVALE'
+                        ? 'border-[#25D366] bg-emerald-50/70 text-emerald-900 shadow-xs'
+                        : 'border-slate-200 hover:border-slate-300 text-slate-700 bg-slate-50/50'
+                    }`}
+                  >
+                    <span className="text-base">💳</span>
+                    <span>Havale Hatırlat</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => selectWhatsappTemplate('CUSTOM')}
+                    className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer flex flex-col gap-1 ${
+                      selectedWhatsappTemplate === 'CUSTOM'
+                        ? 'border-[#25D366] bg-emerald-50/70 text-emerald-900 shadow-xs'
+                        : 'border-slate-200 hover:border-slate-300 text-slate-700 bg-slate-50/50'
+                    }`}
+                  >
+                    <span className="text-base">✍️</span>
+                    <span>Özel Mesaj</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Mesaj İçeriği */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Mesaj İçeriği (Göndermeden önce düzenleyebilirsiniz)
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {whatsappMessage.length} karakter
+                  </span>
+                </div>
+                <textarea
+                  rows={6}
+                  value={whatsappMessage}
+                  onChange={(e) => setWhatsappMessage(e.target.value)}
+                  placeholder="WhatsApp mesajınızı buraya yazın..."
+                  className="w-full bg-slate-50 border border-slate-300 rounded-2xl p-3.5 text-xs text-slate-800 leading-relaxed focus:outline-none focus:border-[#25D366] focus:ring-1 focus:ring-[#25D366]"
+                />
+              </div>
+
+              {/* Bilgilendirme Kutusu */}
+              <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-2xl text-[11px] text-emerald-800 flex items-start gap-2">
+                <span className="text-base leading-none">💡</span>
+                <p>
+                  <strong>{customerPhone}</strong> numarasına mesaj gönderilecektir. Telefonunuzda doğrudan WhatsApp açılır, bilgisayarınızda ise <strong>WhatsApp Web</strong> sekmesi başlatılır. Numara rehberinizde kayıtlı olmak zorunda değildir.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 px-5 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setShowWhatsappModal(false)}
+                className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-600 font-bold text-xs rounded-xl border border-slate-200 transition-colors cursor-pointer"
+              >
+                Vazgeç
+              </button>
+
+              <button
+                type="button"
+                disabled={!whatsappMessage.trim() || !customerPhone}
+                onClick={handleSendWhatsapp}
+                className="flex-1 sm:flex-none px-6 py-2.5 bg-[#25D366] hover:bg-[#20ba59] disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4 fill-white" />
+                <span>WhatsApp'ta Aç ve Gönder</span>
+              </button>
             </div>
           </div>
         </div>
