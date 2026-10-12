@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { saveFileToDb } from '@/lib/media';
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,8 +24,17 @@ export async function POST(req: NextRequest) {
 
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
     const reviewsDir = path.join(uploadDir, 'reviews');
-    await mkdir(uploadDir, { recursive: true });
-    await mkdir(reviewsDir, { recursive: true });
+    try {
+      await mkdir(uploadDir, { recursive: true });
+      await mkdir(reviewsDir, { recursive: true });
+    } catch (e) {}
+
+    const mimeTypes: Record<string, string> = {
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.webp': 'image/webp',
+    };
 
     const uploadedUrls: string[] = [];
 
@@ -43,8 +53,18 @@ export async function POST(req: NextRequest) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
-      await writeFile(path.join(uploadDir, cleanFileName), buffer);
-      await writeFile(path.join(reviewsDir, cleanFileName), buffer);
+      // 1. Try writing to local disk cache
+      try {
+        await writeFile(path.join(uploadDir, cleanFileName), buffer);
+        await writeFile(path.join(reviewsDir, cleanFileName), buffer);
+      } catch (e) {
+        console.warn('Could not write review image to ephemeral disk cache:', e);
+      }
+
+      // 2. Persist permanently to Neon PostgreSQL database
+      const mimeType = mimeTypes[safeExt] || file.type || 'image/jpeg';
+      await saveFileToDb(cleanFileName, buffer, mimeType);
+
       uploadedUrls.push(`/uploads/${cleanFileName}`);
     }
 

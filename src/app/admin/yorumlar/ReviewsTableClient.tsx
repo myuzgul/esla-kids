@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { 
   Star, Check, X, Trash2, Eye, ExternalLink, 
   AlertTriangle, Loader2, CheckCircle, Search, 
-  MessageSquareQuote, Image as ImageIcon, ShieldCheck 
+  MessageSquareQuote, Image as ImageIcon, ShieldCheck, Sparkles 
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
@@ -58,6 +58,28 @@ export function ReviewsTableClient({ initialReviews, counts, currentStatus, curr
   const showNotification = (msg: string) => {
     setFeedbackMsg(msg);
     setTimeout(() => setFeedbackMsg(''), 4000);
+  };
+
+  const [isCleaning, setIsCleaning] = useState(false);
+
+  const handleCleanupBrokenImages = async () => {
+    if (!confirm('Sunucuda fiziksel dosyası bulunmayan kırık yorum görsellerini temizlemek istiyor musunuz? Yorumların kendisi ve puanları korunacaktır.')) {
+      return;
+    }
+    setIsCleaning(true);
+    try {
+      const res = await fetch('/api/admin/reviews/cleanup', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Temizleme işlemi tamamlanamadı.');
+      showNotification(data.message || 'Kayıp görseller başarıyla temizlendi.');
+      setTimeout(() => {
+        router.refresh();
+      }, 1200);
+    } catch (err: any) {
+      alert('Hata: ' + err.message);
+    } finally {
+      setIsCleaning(false);
+    }
   };
 
   const toggleSelectAll = () => {
@@ -239,18 +261,35 @@ export function ReviewsTableClient({ initialReviews, counts, currentStatus, curr
           })}
         </div>
 
-        {/* Search */}
-        <form method="GET" action="/admin/yorumlar" className="relative min-w-[240px]">
-          {currentStatus && <input type="hidden" name="status" value={currentStatus} />}
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            name="q"
-            defaultValue={currentQuery}
-            placeholder="Müşteri, ürün veya yorum ara..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-500"
-          />
-        </form>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleCleanupBrokenImages}
+            disabled={isCleaning}
+            className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl border border-amber-200 transition-colors cursor-pointer disabled:opacity-50"
+            title="Sunucuda fiziksel dosyası olmayan kırık görsel bağlantılarını temizler"
+          >
+            {isCleaning ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-700" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+            )}
+            <span>Bozuk Görselleri Temizle</span>
+          </button>
+
+          {/* Search */}
+          <form method="GET" action="/admin/yorumlar" className="relative min-w-[240px]">
+            {currentStatus && <input type="hidden" name="status" value={currentStatus} />}
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              name="q"
+              defaultValue={currentQuery}
+              placeholder="Müşteri, ürün veya yorum ara..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-500"
+            />
+          </form>
+        </div>
       </div>
 
       {/* Batch Actions Bar */}
@@ -429,7 +468,14 @@ export function ReviewsTableClient({ initialReviews, counts, currentStatus, curr
                                 className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 hover:border-brand-500 hover:scale-105 transition-all flex-shrink-0 cursor-pointer relative group"
                                 title="Büyütmek için tıklayın"
                               >
-                                <img src={imgUrl} alt="Yorum görseli" className="w-full h-full object-cover" />
+                                <img
+                                  src={imgUrl}
+                                  alt="Yorum görseli"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                  }}
+                                  className="w-full h-full object-cover"
+                                />
                                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                   <Eye className="w-3 h-3 text-white" />
                                 </div>

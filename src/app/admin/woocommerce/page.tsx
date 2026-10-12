@@ -2,6 +2,8 @@ import React from 'react';
 import { prisma } from '@/lib/prisma';
 import { WooCommerceMigrationClient } from './WooCommerceMigrationClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function WooCommercePage() {
   const [totalProducts, totalVariations, totalOrders, totalCategories, settings] = await Promise.all([
     prisma.product.count(),

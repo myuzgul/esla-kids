@@ -53,6 +53,12 @@ export function ProductReviewsSection({ productId, productTitle, initialReviews 
     if (breakdown[r.rating] !== undefined) breakdown[r.rating]++;
   });
 
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+
+  const handleImageError = (url: string) => {
+    setFailedImages((prev) => (prev[url] ? prev : { ...prev, [url]: true }));
+  };
+
   const parseImages = (jsonStr?: string): string[] => {
     if (!jsonStr) return [];
     try {
@@ -63,16 +69,20 @@ export function ProductReviewsSection({ productId, productTitle, initialReviews 
     }
   };
 
-  // Collect all photos from all approved reviews
+  const getValidImages = (jsonStr?: string): string[] => {
+    return parseImages(jsonStr).filter((url) => !failedImages[url]);
+  };
+
+  // Collect all valid photos from all approved reviews
   const allCustomerPhotos: string[] = [];
   reviews.forEach((r) => {
-    const imgs = parseImages(r.images);
+    const imgs = getValidImages(r.images);
     allCustomerPhotos.push(...imgs);
   });
 
   // Filter reviews
   const displayedReviews = activePhotoFilter
-    ? reviews.filter((r) => parseImages(r.images).length > 0)
+    ? reviews.filter((r) => getValidImages(r.images).length > 0)
     : reviews;
 
   // Handle Photo Upload
@@ -264,7 +274,12 @@ export function ProductReviewsSection({ productId, productTitle, initialReviews 
                   onClick={() => setLightboxPhoto(url)}
                   className="w-20 h-24 sm:w-24 sm:h-28 rounded-2xl overflow-hidden border border-cream-200 hover:border-brand-500 hover:scale-105 transition-all flex-shrink-0 cursor-pointer shadow-xs group relative"
                 >
-                  <img src={url} alt="Müşteri fotoğrafı" className="w-full h-full object-cover" />
+                  <img
+                    src={url}
+                    alt="Müşteri fotoğrafı"
+                    onError={() => handleImageError(url)}
+                    className="w-full h-full object-cover"
+                  />
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Camera className="w-4 h-4 text-white" />
                   </div>
@@ -492,7 +507,7 @@ export function ProductReviewsSection({ productId, productTitle, initialReviews 
               }`}
             >
               <Camera className="w-3.5 h-3.5" />
-              <span>Fotoğraflı Yorumlar ({reviews.filter((r) => parseImages(r.images).length > 0).length})</span>
+              <span>Fotoğraflı Yorumlar ({reviews.filter((r) => getValidImages(r.images).length > 0).length})</span>
             </button>
           )}
         </div>
@@ -521,7 +536,7 @@ export function ProductReviewsSection({ productId, productTitle, initialReviews 
             </div>
           ) : (
             displayedReviews.map((rev) => {
-              const reviewImages = parseImages(rev.images);
+              const reviewImages = getValidImages(rev.images);
               const initials = rev.customerName
                 .split(' ')
                 .map((n) => n[0])
@@ -580,7 +595,12 @@ export function ProductReviewsSection({ productId, productTitle, initialReviews 
                           onClick={() => setLightboxPhoto(imgUrl)}
                           className="w-16 h-20 sm:w-20 sm:h-24 rounded-xl overflow-hidden border border-cream-200 hover:border-brand-500 hover:scale-105 transition-all cursor-pointer relative group"
                         >
-                          <img src={imgUrl} alt="Müşteri görseli" className="w-full h-full object-cover" />
+                          <img
+                            src={imgUrl}
+                            alt="Müşteri görseli"
+                            onError={() => handleImageError(imgUrl)}
+                            className="w-full h-full object-cover"
+                          />
                           <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <Camera className="w-4 h-4 text-white" />
                           </div>
