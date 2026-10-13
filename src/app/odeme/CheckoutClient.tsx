@@ -113,6 +113,24 @@ export function CheckoutClient({ settings }: Props) {
   const [errorMsg, setErrorMsg] = useState('');
   const [paytrToken, setPaytrToken] = useState<string | null>(null);
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
+  const paytrContainerRef = useRef<HTMLDivElement>(null);
+
+  // Automatically scroll to the top when PayTR payment screen is opened
+  useEffect(() => {
+    if (paytrToken) {
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      }
+      paytrContainerRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+      const timer = setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        }
+        paytrContainerRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+      }, 80);
+      return () => clearTimeout(timer);
+    }
+  }, [paytrToken]);
 
   // Dynamic Calculations using real database settings
   const freeShippingThreshold = Number(settings.free_shipping_limit) || 750;
@@ -185,6 +203,9 @@ export function CheckoutClient({ settings }: Props) {
         setCreatedOrderNumber(data.orderNumber);
         setPaytrToken(data.paytrToken);
         setIsSubmitting(false);
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        }
         return;
       }
 
@@ -199,7 +220,7 @@ export function CheckoutClient({ settings }: Props) {
 
   if (paytrToken) {
     return (
-      <div className="max-w-3xl mx-auto px-3 sm:px-6 py-6 sm:py-10 space-y-4 sm:space-y-6">
+      <div ref={paytrContainerRef} className="max-w-3xl mx-auto px-3 sm:px-6 py-6 sm:py-10 space-y-4 sm:space-y-6">
         <Script
           src="https://www.paytr.com/js/iframeResizer.min.js"
           strategy="lazyOnload"
