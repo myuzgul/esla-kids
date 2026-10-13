@@ -4,7 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { formatPrice, formatDate, ORDER_STATUS_MAP } from '@/lib/utils';
 import { 
   TrendingUp, ShoppingCart, Clock, CheckCircle2, 
-  Package, AlertTriangle, ArrowRight, Printer, CheckSquare 
+  Package, AlertTriangle, ArrowRight, Printer, CheckSquare,
+  PackageCheck
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -24,9 +25,21 @@ export default async function AdminDashboardPage() {
     outOfStockCount,
     recentOrders,
     topProducts,
+    totalItemsSoldAgg,
+    todayItemsSoldAgg,
   ] = await Promise.all([
-    prisma.order.findMany({ where: { createdAt: { gte: startOfToday } } }),
-    prisma.order.findMany({ where: { createdAt: { gte: startOfMonth } } }),
+    prisma.order.findMany({ 
+      where: { 
+        createdAt: { gte: startOfToday },
+        status: { notIn: ['CANCELLED', 'REFUNDED'] } 
+      } 
+    }),
+    prisma.order.findMany({ 
+      where: { 
+        createdAt: { gte: startOfMonth },
+        status: { notIn: ['CANCELLED', 'REFUNDED'] } 
+      } 
+    }),
     prisma.order.count({ where: { status: 'NEW' } }),
     prisma.order.count({ where: { status: { in: ['APPROVED', 'PREPARING'] } } }),
     prisma.order.count({ where: { status: 'PACKED' } }),
@@ -41,8 +54,29 @@ export default async function AdminDashboardPage() {
       orderBy: { createdAt: 'desc' },
       include: { variations: true },
     }),
+    // İptal ve iade edilmemiş siparişlerdeki toplam satılan ürün adedi
+    prisma.orderItem.aggregate({
+      _sum: { quantity: true },
+      where: {
+        order: {
+          status: { notIn: ['CANCELLED', 'REFUNDED'] },
+        },
+      },
+    }),
+    // Bugünkü satılan ürün adedi
+    prisma.orderItem.aggregate({
+      _sum: { quantity: true },
+      where: {
+        order: {
+          createdAt: { gte: startOfToday },
+          status: { notIn: ['CANCELLED', 'REFUNDED'] },
+        },
+      },
+    }),
   ]);
 
+  const totalItemsSold = totalItemsSoldAgg._sum.quantity || 0;
+  const todayItemsSold = todayItemsSoldAgg._sum.quantity || 0;
   const todayRevenue = todayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
   const monthRevenue = monthOrders.reduce((sum, o) => sum + o.totalAmount, 0);
 
@@ -78,7 +112,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {/* Today Revenue */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-xs text-slate-500 font-semibold uppercase">
@@ -108,6 +142,22 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="text-xs text-slate-500">
             Bu ay toplam: <strong>{monthOrders.length}</strong> sipariş
+          </div>
+        </div>
+
+        {/* Total Items Sold */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-500 font-semibold uppercase">
+            <span>Toplam Satılan</span>
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <PackageCheck className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-heading font-black text-slate-900">
+            {totalItemsSold.toLocaleString('tr-TR')} <span className="text-sm font-normal text-slate-500">adet</span>
+          </div>
+          <div className="text-xs text-slate-500">
+            Bugün: <strong>{todayItemsSold}</strong> adet (İptal/iade hariç)
           </div>
         </div>
 
