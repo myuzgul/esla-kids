@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { 
   formatPrice, formatDate, ORDER_STATUS_MAP, formatPaymentMethod, isCodMethod, isHavaleMethod 
 } from '@/lib/utils';
+import { normalizePhone11Digits } from '@/lib/provinces';
 import { 
   Printer, CheckSquare, Search, Eye, MoreHorizontal, 
   CheckCircle2, Truck, XCircle, ArrowRight, Trash2,
@@ -683,7 +684,7 @@ export function OrdersTableClient({
                   <div className="flex items-center justify-between text-xs">
                     <div>
                       <div className="font-bold text-slate-900">{ord.guestName || ord.customer?.name || 'Misafir'}</div>
-                      <div className="text-[11px] text-slate-400">{ord.guestPhone || ord.customer?.phone || ''}</div>
+                      <div className="text-[11px] text-slate-400 font-mono">{normalizePhone11Digits(ord.guestPhone || ord.customer?.phone) || ''}</div>
                     </div>
                     <div className="text-[11px] text-slate-400 text-right">
                       {formatDate(ord.createdAt)}
@@ -913,7 +914,7 @@ export function OrdersTableClient({
 
                         <td className="py-3.5 px-3">
                           <div className="font-bold text-slate-900">{ord.guestName || ord.customer?.name || 'Misafir'}</div>
-                          <div className="text-[11px] text-slate-400">{ord.guestPhone || ord.customer?.phone || ''}</div>
+                          <div className="text-[11px] text-slate-400 font-mono">{normalizePhone11Digits(ord.guestPhone || ord.customer?.phone) || ''}</div>
                         </td>
 
                         <td className="py-3.5 px-3 text-slate-500 whitespace-nowrap">

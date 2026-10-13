@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentCustomer, hashPassword, comparePassword } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { normalizePhone11Digits } from '@/lib/provinces';
 
 export async function PUT(req: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function PUT(req: NextRequest) {
 
     const dataToUpdate: any = {};
     if (name && name.trim()) dataToUpdate.name = name.trim();
-    if (phone !== undefined) dataToUpdate.phone = phone ? phone.trim() : null;
+    if (phone !== undefined) dataToUpdate.phone = phone ? normalizePhone11Digits(phone) : null;
 
     if (newPassword) {
       if (!currentPassword) {

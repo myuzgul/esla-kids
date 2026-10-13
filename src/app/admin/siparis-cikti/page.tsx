@@ -2,6 +2,7 @@ import React from 'react';
 import { prisma } from '@/lib/prisma';
 import { formatPrice, formatDate, formatPaymentMethod, formatVariationLabel } from '@/lib/utils';
 import { generateQrDataUrl } from '@/lib/qr';
+import { normalizePhone11Digits } from '@/lib/provinces';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { PrintButton } from '@/components/PrintButton';
@@ -214,7 +215,7 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
                   Müşteri & İletişim Bilgileri
                 </span>
                 <div className="font-bold text-sm text-slate-900">{ord.guestName}</div>
-                <div className="text-slate-700">Telefon: {ord.guestPhone}</div>
+                <div className="text-slate-700">Telefon: {normalizePhone11Digits(ord.guestPhone || ord.shippingAddr?.phone)}</div>
                 <div className="text-slate-700">E-posta: {ord.guestEmail}</div>
                 {ord.customerNote && (
                   <div className="mt-2 bg-amber-50 p-2 rounded border border-amber-200 text-amber-900">

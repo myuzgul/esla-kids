@@ -11,18 +11,7 @@ import {
   ChevronRight, Phone, Mail, ShoppingBag, Loader2, Home, Building
 } from 'lucide-react';
 
-const TURKISH_CITIES = [
-  'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Amasya', 'Ankara', 'Antalya', 'Artvin',
-  'Aydın', 'Balıkesir', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa',
-  'Çanakkale', 'Çankırı', 'Çorum', 'Denizli', 'Diyarbakır', 'Edirne', 'Elazığ', 'Erzincan',
-  'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun', 'Gümüşhane', 'Hakkari', 'Hatay', 'Isparta',
-  'Mersin', 'İstanbul', 'İzmir', 'Kars', 'Kastamonu', 'Kayseri', 'Kırklareli', 'Kırşehir',
-  'Kocaeli', 'Konya', 'Kütahya', 'Malatya', 'Manisa', 'Kahramanmaraş', 'Mardin', 'Muğla',
-  'Muş', 'Nevşehir', 'Niğde', 'Ordu', 'Rize', 'Sakarya', 'Samsun', 'Siirt',
-  'Sinop', 'Sivas', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Şanlıurfa', 'Uşak',
-  'Van', 'Yozgat', 'Zonguldak', 'Aksaray', 'Bayburt', 'Karaman', 'Kırıkkale', 'Batman',
-  'Şırnak', 'Bartın', 'Ardahan', 'Iğdır', 'Yalova', 'Karabük', 'Kilis', 'Osmaniye', 'Düzce'
-];
+import { TURKEY_CITIES, formatPhoneInput } from '@/lib/provinces';
 
 export function HesabimClient() {
   const router = useRouter();
@@ -62,7 +51,7 @@ export function HesabimClient() {
   useEffect(() => {
     if (user) {
       setProfileName(user.name || '');
-      setProfilePhone(user.phone || '');
+      setProfilePhone(formatPhoneInput(user.phone || ''));
       loadAddresses();
     }
   }, [user]);
@@ -85,7 +74,7 @@ export function HesabimClient() {
       const res = await fetch('/api/customer/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: profileName, phone: profilePhone }),
+        body: JSON.stringify({ name: profileName, phone: formatPhoneInput(profilePhone) }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Profil güncellenemedi.');
@@ -133,7 +122,7 @@ export function HesabimClient() {
       setAddressForm({
         title: addr.title || 'Ev',
         fullName: addr.fullName || '',
-        phone: addr.phone || '',
+        phone: formatPhoneInput(addr.phone || ''),
         city: addr.city || 'Bursa',
         district: addr.district || '',
         addressDetail: addr.addressDetail || '',
@@ -145,7 +134,7 @@ export function HesabimClient() {
       setAddressForm({
         title: 'Ev',
         fullName: user?.name || '',
-        phone: user?.phone || '',
+        phone: formatPhoneInput(user?.phone || ''),
         city: 'Bursa',
         district: '',
         addressDetail: '',
@@ -625,10 +614,12 @@ export function HesabimClient() {
                   </label>
                   <input
                     type="tel"
+                    inputMode="numeric"
+                    maxLength={11}
                     value={profilePhone}
-                    onChange={(e) => setProfilePhone(e.target.value)}
-                    placeholder="05XX XXX XX XX"
-                    className="w-full bg-cream-50 border border-cream-200 rounded-xl px-4 py-2.5 text-xs text-charcoal-900 focus:outline-none focus:border-brand-500"
+                    onChange={(e) => setProfilePhone(formatPhoneInput(e.target.value))}
+                    placeholder="05541981196"
+                    className="w-full bg-cream-50 border border-cream-200 rounded-xl px-4 py-2.5 text-xs text-charcoal-900 focus:outline-none focus:border-brand-500 font-mono tracking-wider"
                   />
                 </div>
 
@@ -776,11 +767,13 @@ export function HesabimClient() {
                 <label className="font-bold text-charcoal-700 block mb-1">Telefon Numarası *</label>
                 <input
                   type="tel"
+                  inputMode="numeric"
                   required
-                  placeholder="05XX XXX XX XX"
+                  maxLength={11}
+                  placeholder="05541981196"
                   value={addressForm.phone}
-                  onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
-                  className="w-full bg-cream-50 border border-cream-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500"
+                  onChange={(e) => setAddressForm({ ...addressForm, phone: formatPhoneInput(e.target.value) })}
+                  className="w-full bg-cream-50 border border-cream-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500 font-mono tracking-wider"
                 />
               </div>
 
@@ -792,7 +785,7 @@ export function HesabimClient() {
                     onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
                     className="w-full bg-cream-50 border border-cream-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500 font-semibold"
                   >
-                    {TURKISH_CITIES.map((c) => (
+                    {TURKEY_CITIES.map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>

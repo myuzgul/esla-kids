@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentCustomer } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { normalizePhone11Digits } from '@/lib/provinces';
 
 export async function GET(req: NextRequest) {
   try {
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
         customerId: current.id,
         title: title || 'Ev',
         fullName: fullName.trim(),
-        phone: phone.trim(),
+        phone: normalizePhone11Digits(phone),
         city: city.trim(),
         district: district.trim(),
         addressDetail: addressDetail.trim(),
@@ -97,7 +98,7 @@ export async function PUT(req: NextRequest) {
       data: {
         title: title || existing.title,
         fullName: fullName ? fullName.trim() : existing.fullName,
-        phone: phone ? phone.trim() : existing.phone,
+        phone: phone ? normalizePhone11Digits(phone) : existing.phone,
         city: city ? city.trim() : existing.city,
         district: district ? district.trim() : existing.district,
         addressDetail: addressDetail ? addressDetail.trim() : existing.addressDetail,

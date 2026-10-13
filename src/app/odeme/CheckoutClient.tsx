@@ -14,18 +14,7 @@ import {
   AlertCircle, ChevronRight, Lock, Sparkles, X, ShoppingBag 
 } from 'lucide-react';
 
-const TURKISH_CITIES = [
-  'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Amasya', 'Ankara', 'Antalya', 'Artvin',
-  'Aydın', 'Balıkesir', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa',
-  'Çanakkale', 'Çankırı', 'Çorum', 'Denizli', 'Diyarbakır', 'Edirne', 'Elazığ', 'Erzincan',
-  'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun', 'Gümüşhane', 'Hakkari', 'Hatay', 'Isparta',
-  'Mersin', 'İstanbul', 'İzmir', 'Kars', 'Kastamonu', 'Kayseri', 'Kırklareli', 'Kırşehir',
-  'Kocaeli', 'Konya', 'Kütahya', 'Malatya', 'Manisa', 'Kahramanmaraş', 'Mardin', 'Muğla',
-  'Muş', 'Nevşehir', 'Niğde', 'Ordu', 'Rize', 'Sakarya', 'Samsun', 'Siirt',
-  'Sinop', 'Sivas', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Şanlıurfa', 'Uşak',
-  'Van', 'Yozgat', 'Zonguldak', 'Aksaray', 'Bayburt', 'Karaman', 'Kırıkkale', 'Batman',
-  'Şırnak', 'Bartın', 'Ardahan', 'Iğdır', 'Yalova', 'Karabük', 'Kilis', 'Osmaniye', 'Düzce'
-];
+import { TURKEY_CITIES, formatPhoneInput } from '@/lib/provinces';
 
 interface Props {
   settings: SiteSettings;
@@ -56,7 +45,7 @@ export function CheckoutClient({ settings }: Props) {
         ...prev,
         guestName: prev.guestName || user.name || '',
         guestEmail: prev.guestEmail || user.email || '',
-        guestPhone: prev.guestPhone || user.phone || '',
+        guestPhone: formatPhoneInput(prev.guestPhone || user.phone || ''),
       }));
 
       if (user.addresses && user.addresses.length > 0) {
@@ -66,7 +55,7 @@ export function CheckoutClient({ settings }: Props) {
           setFormData((prev) => ({
             ...prev,
             guestName: defaultAddr.fullName || user.name || prev.guestName,
-            guestPhone: defaultAddr.phone || user.phone || prev.guestPhone,
+            guestPhone: formatPhoneInput(defaultAddr.phone || user.phone || prev.guestPhone),
             city: defaultAddr.city || prev.city,
             district: defaultAddr.district || prev.district,
             address: defaultAddr.addressDetail || prev.address,
@@ -105,7 +94,7 @@ export function CheckoutClient({ settings }: Props) {
     setFormData((prev) => ({
       ...prev,
       guestName: addr.fullName,
-      guestPhone: addr.phone,
+      guestPhone: formatPhoneInput(addr.phone),
       city: addr.city,
       district: addr.district,
       address: addr.addressDetail,
@@ -136,12 +125,22 @@ export function CheckoutClient({ settings }: Props) {
   const grandTotal = Math.max(0, subtotal - havaleDiscountAmount + shippingFee + codFee);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    if (name === 'guestPhone') {
+      setFormData((prev) => ({ ...prev, guestPhone: formatPhoneInput(value) }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+
+    if (!formData.guestPhone || formData.guestPhone.length < 10 || !formData.guestPhone.startsWith('05')) {
+      setErrorMsg('Lütfen geçerli bir cep telefonu numarası giriniz (Örn: 05541981196).');
+      return;
+    }
 
     if (!agreeTerms) {
       setErrorMsg('Lütfen Mesafeli Satış Sözleşmesi ve Ön Bilgilendirme Formunu onaylayınız.');
@@ -391,14 +390,15 @@ export function CheckoutClient({ settings }: Props) {
                 </label>
                 <input
                   type="tel"
-                  inputMode="tel"
+                  inputMode="numeric"
                   autoComplete="tel"
                   name="guestPhone"
                   required
-                  placeholder="05XX XXX XX XX"
+                  maxLength={11}
+                  placeholder="05541981196"
                   value={formData.guestPhone}
                   onChange={handleChange}
-                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-base sm:text-sm focus:outline-none focus:border-brand-500"
+                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-base sm:text-sm focus:outline-none focus:border-brand-500 font-mono tracking-wider"
                 />
               </div>
 
@@ -429,9 +429,9 @@ export function CheckoutClient({ settings }: Props) {
                   required
                   value={formData.city}
                   onChange={handleChange}
-                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-base sm:text-sm focus:outline-none focus:border-brand-500"
+                  className="w-full bg-cream-50/50 border border-cream-300 rounded-xl p-3 text-base sm:text-sm focus:outline-none focus:border-brand-500 font-medium"
                 >
-                  {TURKISH_CITIES.map((c) => (
+                  {TURKEY_CITIES.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>

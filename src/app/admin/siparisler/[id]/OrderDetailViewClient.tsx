@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { 
   formatPrice, formatDate, ORDER_STATUS_MAP, formatVariationLabel, formatPaymentMethod 
 } from '@/lib/utils';
-import { TURKEY_CITIES } from '@/lib/provinces';
+import { TURKEY_CITIES, formatPhoneInput } from '@/lib/provinces';
 import { 
   ArrowLeft, Printer, User, MapPin, CreditCard, Truck, 
   CheckCircle, Save, AlertCircle, Trash2, AlertTriangle, 
@@ -1353,12 +1353,17 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                     Telefon Numarası *
                   </label>
                   <input
-                    type="text"
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={11}
                     required
                     value={addressForm.phone}
-                    onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value, guestPhone: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-500"
-                    placeholder="05xxxxxxxxx"
+                    onChange={(e) => {
+                      const formatted = formatPhoneInput(e.target.value);
+                      setAddressForm({ ...addressForm, phone: formatted, guestPhone: formatted });
+                    }}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono font-semibold focus:outline-none focus:border-brand-500 tracking-wider"
+                    placeholder="05541981196"
                   />
                 </div>
               </div>

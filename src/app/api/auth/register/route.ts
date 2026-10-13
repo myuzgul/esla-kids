@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, createSessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
+import { normalizePhone11Digits } from '@/lib/provinces';
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
       data: {
         name: name.trim(),
         email: cleanEmail,
-        phone: phone ? phone.trim() : null,
+        phone: phone ? normalizePhone11Digits(phone) : null,
         passwordHash,
         role: 'CUSTOMER',
         emailVerified: false,

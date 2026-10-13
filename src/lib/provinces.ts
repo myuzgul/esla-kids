@@ -32,32 +32,153 @@ export function getProvinceStateId(cityName?: string): number {
   return TURKEY_PROVINCE_CODES[normalized] || 34;
 }
 
-export function normalizePhone10Digits(phone?: string): string {
+export function formatPhoneInput(val?: string | null): string {
+  if (!val) return '';
+  let digits = val.replace(/\D/g, '');
+  if (!digits) return '';
+
+  // Baştaki uluslararası kodları (+90, 0090, 90) temizle
+  if (digits.startsWith('0090') && digits.length > 4) {
+    digits = digits.slice(4);
+  } else if (digits.startsWith('90') && digits.length >= 3) {
+    digits = digits.slice(2);
+  }
+
+  // 5 ile başlıyorsa otomatik 0 ekle (örn: 554... -> 0554...)
+  if (!digits.startsWith('0')) {
+    digits = '0' + digits;
+  }
+
+  // En fazla 11 hane (05541981196 gibi boşluksuz standart cep)
+  return digits.slice(0, 11);
+}
+
+export function normalizePhone11Digits(phone?: string | null): string {
+  if (!phone) return '';
+  let cleaned = phone.replace(/\D/g, '');
+  if (!cleaned) return '';
+
+  if (cleaned.startsWith('0090')) {
+    cleaned = cleaned.slice(4);
+  } else if (cleaned.startsWith('90') && cleaned.length >= 12) {
+    cleaned = cleaned.slice(2);
+  }
+
+  if (!cleaned.startsWith('0')) {
+    cleaned = '0' + cleaned;
+  }
+
+  return cleaned.slice(0, 11);
+}
+
+export function normalizePhone10Digits(phone?: string | null): string {
   if (!phone) return '5555555555';
   let cleaned = phone.replace(/\D/g, '');
-  if (cleaned.startsWith('90') && cleaned.length === 12) {
-    cleaned = cleaned.substring(2);
-  } else if (cleaned.startsWith('0') && cleaned.length === 11) {
-    cleaned = cleaned.substring(1);
+  if (!cleaned) return '5555555555';
+
+  if (cleaned.startsWith('0090')) {
+    cleaned = cleaned.slice(4);
+  } else if (cleaned.startsWith('90') && cleaned.length >= 12) {
+    cleaned = cleaned.slice(2);
   }
+
+  if (cleaned.startsWith('0')) {
+    cleaned = cleaned.slice(1);
+  }
+
   if (cleaned.length > 10) {
     cleaned = cleaned.slice(-10);
   } else if (cleaned.length < 10) {
     cleaned = cleaned.padEnd(10, '0');
   }
+
   return cleaned;
 }
 
+// Türkiye 81 İl - Alfabetik Sıralı (A'dan Z'ye Türkçe Karakter Uyumlu)
 export const TURKEY_CITIES = [
-  'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Amasya', 'Ankara', 'Antalya', 'Artvin',
-  'Aydın', 'Balıkesir', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa',
-  'Çanakkale', 'Çankırı', 'Çorum', 'Denizli', 'Diyarbakır', 'Edirne', 'Elazığ', 'Erzincan',
-  'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun', 'Gümüşhane', 'Hakkari', 'Hatay', 'Isparta',
-  'Mersin', 'İstanbul', 'İzmir', 'Kars', 'Kastamonu', 'Kayseri', 'Kırklareli', 'Kırşehir',
-  'Kocaeli', 'Konya', 'Kütahya', 'Malatya', 'Manisa', 'Kahramanmaraş', 'Mardin', 'Muğla',
-  'Muş', 'Nevşehir', 'Niğde', 'Ordu', 'Rize', 'Sakarya', 'Samsun', 'Siirt',
-  'Sinop', 'Sivas', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Şanlıurfa', 'Uşak',
-  'Van', 'Yozgat', 'Zonguldak', 'Aksaray', 'Bayburt', 'Karaman', 'Kırıkkale', 'Batman',
-  'Şırnak', 'Bartın', 'Ardahan', 'Iğdır', 'Yalova', 'Karabük', 'Kilis', 'Osmaniye', 'Düzce'
+  'Adana',
+  'Adıyaman',
+  'Afyonkarahisar',
+  'Ağrı',
+  'Aksaray',
+  'Amasya',
+  'Ankara',
+  'Antalya',
+  'Ardahan',
+  'Artvin',
+  'Aydın',
+  'Balıkesir',
+  'Bartın',
+  'Batman',
+  'Bayburt',
+  'Bilecik',
+  'Bingöl',
+  'Bitlis',
+  'Bolu',
+  'Burdur',
+  'Bursa',
+  'Çanakkale',
+  'Çankırı',
+  'Çorum',
+  'Denizli',
+  'Diyarbakır',
+  'Düzce',
+  'Edirne',
+  'Elazığ',
+  'Erzincan',
+  'Erzurum',
+  'Eskişehir',
+  'Gaziantep',
+  'Giresun',
+  'Gümüşhane',
+  'Hakkari',
+  'Hatay',
+  'Iğdır',
+  'Isparta',
+  'İstanbul',
+  'İzmir',
+  'Kahramanmaraş',
+  'Karabük',
+  'Karaman',
+  'Kars',
+  'Kastamonu',
+  'Kayseri',
+  'Kilis',
+  'Kırıkkale',
+  'Kırklareli',
+  'Kırşehir',
+  'Kocaeli',
+  'Konya',
+  'Kütahya',
+  'Malatya',
+  'Manisa',
+  'Mardin',
+  'Mersin',
+  'Muğla',
+  'Muş',
+  'Nevşehir',
+  'Niğde',
+  'Ordu',
+  'Osmaniye',
+  'Rize',
+  'Sakarya',
+  'Samsun',
+  'Siirt',
+  'Sinop',
+  'Sivas',
+  'Şanlıurfa',
+  'Şırnak',
+  'Tekirdağ',
+  'Tokat',
+  'Trabzon',
+  'Tunceli',
+  'Uşak',
+  'Van',
+  'Yalova',
+  'Yozgat',
+  'Zonguldak'
 ];
+
+export const TURKISH_CITIES = TURKEY_CITIES;
 

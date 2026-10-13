@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { normalizePhone11Digits } from '@/lib/provinces';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,6 +19,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Sipariş bulunamadı.' }, { status: 404 });
     }
 
+    const cleanPhone = normalizePhone11Digits(shippingAddress?.phone || guestPhone);
+
     // Format and validate shipping address
     let formattedShippingAddress = '';
     if (typeof shippingAddress === 'string') {
@@ -25,7 +28,7 @@ export async function POST(req: NextRequest) {
     } else if (shippingAddress && typeof shippingAddress === 'object') {
       formattedShippingAddress = JSON.stringify({
         fullName: (shippingAddress.fullName || guestName || '').trim(),
-        phone: (shippingAddress.phone || guestPhone || '').trim(),
+        phone: cleanPhone || (shippingAddress.phone || guestPhone || '').trim(),
         address: (shippingAddress.address || '').trim(),
         city: (shippingAddress.city || '').trim(),
         district: (shippingAddress.district || '').trim(),
@@ -37,7 +40,7 @@ export async function POST(req: NextRequest) {
       where: { id: orderId },
       data: {
         ...(guestName !== undefined ? { guestName: guestName.trim() } : {}),
-        ...(guestPhone !== undefined ? { guestPhone: guestPhone.trim() } : {}),
+        ...(guestPhone !== undefined || cleanPhone ? { guestPhone: cleanPhone || guestPhone } : {}),
         ...(guestEmail !== undefined ? { guestEmail: guestEmail.trim() } : {}),
         ...(formattedShippingAddress ? { shippingAddress: formattedShippingAddress } : {}),
       },

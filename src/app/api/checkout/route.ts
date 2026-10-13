@@ -6,6 +6,7 @@ import { createPayTRToken } from '@/lib/paytr';
 import { getCurrentCustomer } from '@/lib/auth';
 import { formatVariationLabel } from '@/lib/utils';
 import { sendMetaServerEvent } from '@/lib/metaCapiServer';
+import { normalizePhone11Digits } from '@/lib/provinces';
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,8 +35,13 @@ export async function POST(req: NextRequest) {
       } catch (e) {}
     }
 
-    if (!guestName || !guestEmail || !guestPhone || !city || !district || !address) {
+    const cleanPhone = normalizePhone11Digits(guestPhone);
+    if (!guestName || !guestEmail || !cleanPhone || !city || !district || !address) {
       return NextResponse.json({ error: 'Lütfen tüm zorunlu adres ve iletişim alanlarını doldurunuz.' }, { status: 400 });
+    }
+
+    if (cleanPhone.length < 10 || !cleanPhone.startsWith('05')) {
+      return NextResponse.json({ error: 'Lütfen geçerli bir cep telefonu numarası giriniz (Örn: 05541981196).' }, { status: 400 });
     }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -323,7 +329,7 @@ export async function POST(req: NextRequest) {
 
       const shippingAddressObj = {
         fullName: guestName,
-        phone: guestPhone,
+        phone: cleanPhone,
         city,
         district,
         address,
@@ -336,7 +342,7 @@ export async function POST(req: NextRequest) {
           customerId: finalCustomerId,
           guestName,
           guestEmail,
-          guestPhone,
+          guestPhone: cleanPhone,
           shippingAddress: JSON.stringify(shippingAddressObj),
           billingAddress: JSON.stringify(shippingAddressObj),
           status: 'CONFIRMED',

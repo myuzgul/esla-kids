@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Lock, Mail, User, Phone, ArrowRight, ShieldCheck, UserPlus, AlertCircle, Loader2 } from 'lucide-react';
+import { formatPhoneInput } from '@/lib/provinces';
 
 export function KayitClient() {
   const router = useRouter();
@@ -115,10 +116,12 @@ export function KayitClient() {
             <div className="relative">
               <input
                 type="tel"
+                inputMode="numeric"
+                maxLength={11}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="05XX XXX XX XX"
-                className="w-full bg-cream-50 border border-cream-200 rounded-xl px-4 py-3 pl-10 text-xs text-charcoal-900 focus:outline-none focus:border-brand-500 focus:bg-white transition-colors"
+                onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
+                placeholder="05541981196"
+                className="w-full bg-cream-50 border border-cream-200 rounded-xl px-4 py-3 pl-10 text-xs text-charcoal-900 focus:outline-none focus:border-brand-500 focus:bg-white transition-colors font-mono tracking-wider"
               />
               <Phone className="w-4 h-4 text-charcoal-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
