@@ -572,6 +572,15 @@ export function Navbar() {
               </Link>
             </li>
 
+            <li>
+              <Link 
+                href="/urunler" 
+                className={`inline-block py-2.5 px-3 rounded-lg hover:text-brand-600 transition-colors ${pathname === '/urunler' ? 'text-brand-600 font-bold' : ''}`}
+              >
+                Tüm Ürünler
+              </Link>
+            </li>
+
             {menuCategories.map((cat) => (
               <li key={cat.slug} className="relative group">
                 <Link
@@ -725,9 +734,17 @@ export function Navbar() {
               <Link
                 href="/"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-2.5 px-3 font-medium text-charcoal-800 rounded-lg hover:bg-cream-50"
+                className={`block py-2.5 px-3 font-medium rounded-lg hover:bg-cream-50 ${pathname === '/' ? 'text-brand-600 font-bold bg-brand-50/50' : 'text-charcoal-800'}`}
               >
                 Anasayfa
+              </Link>
+
+              <Link
+                href="/urunler"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block py-2.5 px-3 font-semibold rounded-lg hover:bg-cream-50 ${pathname === '/urunler' ? 'text-brand-600 font-bold bg-brand-50/50' : 'text-charcoal-800'}`}
+              >
+                Tüm Ürünlerimiz
               </Link>
 
               {menuCategories.map((cat) => (
