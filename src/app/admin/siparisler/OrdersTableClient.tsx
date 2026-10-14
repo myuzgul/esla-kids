@@ -11,7 +11,8 @@ import {
   Printer, CheckSquare, Search, Eye, MoreHorizontal, 
   CheckCircle2, Truck, XCircle, ArrowRight, Trash2,
   AlertTriangle, Loader2, Check, FileText, StickyNote,
-  X, RefreshCw, ChevronLeft, ChevronRight, Globe
+  X, RefreshCw, ChevronLeft, ChevronRight, Globe,
+  CreditCard, Banknote, Landmark
 } from 'lucide-react';
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
   pageSize: number;
   currentStatus: string;
   currentPrintStatus: string;
+  currentPaymentMethod?: string;
   initialQuery: string;
   unprintedCount: number;
   printedCount: number;
@@ -33,6 +35,7 @@ export function OrdersTableClient({
   pageSize = 30,
   currentStatus = 'ALL',
   currentPrintStatus = 'ALL',
+  currentPaymentMethod = 'ALL',
   initialQuery = '',
   unprintedCount = 0,
   printedCount = 0,
@@ -48,6 +51,7 @@ export function OrdersTableClient({
   // Filters State
   const [statusFilter, setStatusFilter] = useState<string>(currentStatus || 'ALL');
   const [printFilter, setPrintFilter] = useState<string>(currentPrintStatus || 'ALL');
+  const [paymentFilter, setPaymentFilter] = useState<string>(currentPaymentMethod || 'ALL');
   const [searchQuery, setSearchQuery] = useState<string>(initialQuery || '');
   const [searchAllStatuses, setSearchAllStatuses] = useState<boolean>(true);
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -69,8 +73,9 @@ export function OrdersTableClient({
     setPage(initialPage);
     setStatusFilter(currentStatus || 'ALL');
     setPrintFilter(currentPrintStatus || 'ALL');
+    setPaymentFilter(currentPaymentMethod || 'ALL');
     setSearchQuery(initialQuery || '');
-  }, [initialOrders, initialTotalCount, initialPage, currentStatus, currentPrintStatus, initialQuery]);
+  }, [initialOrders, initialTotalCount, initialPage, currentStatus, currentPrintStatus, currentPaymentMethod, initialQuery]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
@@ -84,6 +89,7 @@ export function OrdersTableClient({
     q: string, 
     status: string, 
     printStatus: string, 
+    paymentMethod: string,
     targetPage: number, 
     searchAll: boolean
   ) => {
@@ -94,6 +100,7 @@ export function OrdersTableClient({
       if (trimmed) params.set('q', trimmed);
       if (status && status !== 'ALL') params.set('status', status);
       if (printStatus && printStatus !== 'ALL') params.set('printStatus', printStatus);
+      if (paymentMethod && paymentMethod !== 'ALL') params.set('paymentMethod', paymentMethod);
       params.set('page', String(targetPage));
       params.set('pageSize', String(pageSize));
       if (trimmed && searchAll) params.set('searchAll', 'true');
@@ -109,6 +116,7 @@ export function OrdersTableClient({
         const urlParams = new URLSearchParams();
         if (status && status !== 'ALL') urlParams.set('status', status);
         if (printStatus && printStatus !== 'ALL') urlParams.set('printStatus', printStatus);
+        if (paymentMethod && paymentMethod !== 'ALL') urlParams.set('paymentMethod', paymentMethod);
         if (trimmed) urlParams.set('q', trimmed);
         if (targetPage > 1) urlParams.set('page', String(targetPage));
         const newUrl = `/admin/siparisler${urlParams.toString() ? `?${urlParams.toString()}` : ''}`;
@@ -130,7 +138,7 @@ export function OrdersTableClient({
       clearTimeout(searchTimeoutRef.current);
     }
     searchTimeoutRef.current = setTimeout(() => {
-      fetchOrders(val, statusFilter, printFilter, 1, searchAllStatuses);
+      fetchOrders(val, statusFilter, printFilter, paymentFilter, 1, searchAllStatuses);
     }, 250);
   };
 
@@ -141,19 +149,25 @@ export function OrdersTableClient({
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    fetchOrders('', statusFilter, printFilter, 1, searchAllStatuses);
+    fetchOrders('', statusFilter, printFilter, paymentFilter, 1, searchAllStatuses);
   };
 
   // Switch Status Tab
   const handleStatusTab = (newStatus: string) => {
     setStatusFilter(newStatus);
-    fetchOrders(searchQuery, newStatus, printFilter, 1, false);
+    fetchOrders(searchQuery, newStatus, printFilter, paymentFilter, 1, false);
   };
 
   // Switch Print Status Tab
   const handlePrintTab = (newPrintStatus: string) => {
     setPrintFilter(newPrintStatus);
-    fetchOrders(searchQuery, statusFilter, newPrintStatus, 1, searchAllStatuses);
+    fetchOrders(searchQuery, statusFilter, newPrintStatus, paymentFilter, 1, searchAllStatuses);
+  };
+
+  // Switch Payment Method Tab
+  const handlePaymentTab = (newPaymentMethod: string) => {
+    setPaymentFilter(newPaymentMethod);
+    fetchOrders(searchQuery, statusFilter, printFilter, newPaymentMethod, 1, searchAllStatuses);
   };
 
   // Toggle Search Across All
@@ -161,14 +175,14 @@ export function OrdersTableClient({
     const nextVal = !searchAllStatuses;
     setSearchAllStatuses(nextVal);
     if (searchQuery.trim()) {
-      fetchOrders(searchQuery, statusFilter, printFilter, 1, nextVal);
+      fetchOrders(searchQuery, statusFilter, printFilter, paymentFilter, 1, nextVal);
     }
   };
 
   // Pagination Change
   const handlePageChange = (targetPage: number) => {
     if (targetPage < 1 || targetPage > totalPages || targetPage === page) return;
-    fetchOrders(searchQuery, statusFilter, printFilter, targetPage, searchAllStatuses);
+    fetchOrders(searchQuery, statusFilter, printFilter, paymentFilter, targetPage, searchAllStatuses);
     if (tableTopRef.current) {
       tableTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -532,6 +546,60 @@ export function OrdersTableClient({
                   >
                     {tab.count}
                   </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Ödeme Yöntemi Sekmesi */}
+        <div className="pt-3 border-t border-slate-100">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+            <CreditCard className="w-3.5 h-3.5 text-brand-600" />
+            <span>Ödeme Yöntemi:</span>
+          </div>
+          <div className="flex overflow-x-auto pb-1 no-scrollbar gap-1.5 sm:gap-2 sm:flex-wrap">
+            {[
+              {
+                key: 'ALL',
+                label: 'Tümü',
+                icon: null,
+                activeClass: 'bg-brand-500 text-white shadow-sm',
+              },
+              {
+                key: 'PAYTR',
+                label: 'Kredi Kartı',
+                icon: CreditCard,
+                activeClass: 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300',
+              },
+              {
+                key: 'HAVALE',
+                label: 'Havale / EFT',
+                icon: Landmark,
+                activeClass: 'bg-sky-600 text-white shadow-sm ring-2 ring-sky-300',
+              },
+              {
+                key: 'COD',
+                label: 'Kapıda Nakit Ödeme',
+                icon: Banknote,
+                activeClass: 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300',
+              },
+            ].map((tab) => {
+              const isActive = paymentFilter === tab.key;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => handlePaymentTab(tab.key)}
+                  className={`text-xs px-3.5 py-2 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    isActive
+                      ? tab.activeClass
+                      : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {Icon && <Icon className="w-3.5 h-3.5" />}
+                  <span>{tab.label}</span>
                 </button>
               );
             })}

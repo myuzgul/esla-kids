@@ -4,12 +4,14 @@ export interface OrderSearchOptions {
   q?: string | null;
   status?: string | null;
   printStatus?: string | null;
+  paymentMethod?: string | null;
   searchAllStatusesIfQuery?: boolean;
 }
 
 export function buildOrderSearchWhere(options: OrderSearchOptions): Prisma.OrderWhereInput {
-  const { q, status, printStatus, searchAllStatusesIfQuery } = options;
+  const { q, status, printStatus, paymentMethod, searchAllStatusesIfQuery } = options;
   const where: any = {};
+  const andConditions: any[] = [];
 
   const hasQuery = Boolean(q && q.trim().length > 0);
 
@@ -29,6 +31,44 @@ export function buildOrderSearchWhere(options: OrderSearchOptions): Prisma.Order
     where.isPrinted = false;
   } else if (printStatus === 'printed') {
     where.isPrinted = true;
+  }
+
+  // Payment method filter (Kredi Kartı, Havale, Kapıda Nakit)
+  if (paymentMethod && paymentMethod !== 'ALL') {
+    const p = paymentMethod.toUpperCase();
+    if (p === 'PAYTR' || p === 'CREDIT_CARD' || p.includes('KREDI') || p.includes('CARD')) {
+      andConditions.push({
+        OR: [
+          { paymentMethod: 'PAYTR' },
+          { paymentMethod: 'credit_card' },
+          { paymentMethod: 'CREDIT_CARD' },
+          { paymentMethod: { contains: 'KREDI', mode: 'insensitive' } },
+          { paymentMethod: { contains: 'CARD', mode: 'insensitive' } },
+          { paymentMethod: { contains: 'PAYTR', mode: 'insensitive' } },
+        ],
+      });
+    } else if (p === 'HAVALE' || p === 'BANK_TRANSFER' || p.includes('EFT') || p.includes('TRANSFER')) {
+      andConditions.push({
+        OR: [
+          { paymentMethod: 'HAVALE' },
+          { paymentMethod: 'BANK_TRANSFER' },
+          { paymentMethod: 'bacs' },
+          { paymentMethod: { contains: 'HAVALE', mode: 'insensitive' } },
+          { paymentMethod: { contains: 'EFT', mode: 'insensitive' } },
+          { paymentMethod: { contains: 'TRANSFER', mode: 'insensitive' } },
+        ],
+      });
+    } else if (p === 'COD' || p.includes('KAPIDA') || p.includes('CASH')) {
+      andConditions.push({
+        OR: [
+          { paymentMethod: 'COD' },
+          { paymentMethod: 'cod' },
+          { paymentMethod: { contains: 'KAPIDA', mode: 'insensitive' } },
+          { paymentMethod: { contains: 'COD', mode: 'insensitive' } },
+          { paymentMethod: { contains: 'CASH', mode: 'insensitive' } },
+        ],
+      });
+    }
   }
 
   if (hasQuery) {
@@ -111,7 +151,14 @@ export function buildOrderSearchWhere(options: OrderSearchOptions): Prisma.Order
       }
     }
 
-    where.OR = orConditions;
+    if (andConditions.length > 0) {
+      andConditions.push({ OR: orConditions });
+      where.AND = andConditions;
+    } else {
+      where.OR = orConditions;
+    }
+  } else if (andConditions.length > 0) {
+    where.AND = andConditions;
   }
 
   return where;

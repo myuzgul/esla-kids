@@ -6,7 +6,7 @@ import { buildOrderSearchWhere } from '@/lib/orderSearch';
 import { Printer } from 'lucide-react';
 
 interface Props {
-  searchParams: { status?: string; q?: string; printStatus?: string; page?: string };
+  searchParams: { status?: string; q?: string; printStatus?: string; paymentMethod?: string; page?: string };
 }
 
 export const dynamic = 'force-dynamic';
@@ -14,18 +14,20 @@ export const dynamic = 'force-dynamic';
 const PAGE_SIZE = 30;
 
 export default async function AdminOrdersPage({ searchParams }: Props) {
-  const { status, q, printStatus } = searchParams;
+  const { status, q, printStatus, paymentMethod } = searchParams;
   const page = Math.max(1, parseInt(searchParams.page || '1', 10) || 1);
 
   const where = buildOrderSearchWhere({
     q,
     status,
     printStatus,
+    paymentMethod,
   });
 
   const baseWhereWithoutPrint = buildOrderSearchWhere({
     q,
     status,
+    paymentMethod,
   });
 
   const [totalCount, orders, unprintedCount, printedCount] = await Promise.all([
@@ -88,6 +90,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
         pageSize={PAGE_SIZE}
         currentStatus={status || 'ALL'}
         currentPrintStatus={printStatus || 'ALL'}
+        currentPaymentMethod={paymentMethod || 'ALL'}
         initialQuery={q || ''}
         unprintedCount={unprintedCount}
         printedCount={printedCount}

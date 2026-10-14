@@ -6,6 +6,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const statusParam = searchParams.get('status');
   const printStatusParam = searchParams.get('printStatus');
+  const paymentMethodParam = searchParams.get('paymentMethod');
   const q = searchParams.get('q')?.trim() || '';
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
   const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get('pageSize') || '30', 10) || 30));
@@ -15,6 +16,7 @@ export async function GET(req: NextRequest) {
     q,
     status: statusParam,
     printStatus: printStatusParam,
+    paymentMethod: paymentMethodParam,
     searchAllStatusesIfQuery: searchAll,
   });
 
