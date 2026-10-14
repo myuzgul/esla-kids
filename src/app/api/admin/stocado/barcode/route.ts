@@ -21,6 +21,15 @@ export async function GET(req: NextRequest) {
 
   const settings = await getSettings();
 
+  // Eğer doğrudan PDF istenmişse veya redirect istenmişse Navlungo resmi PDF'ine yönlendir
+  const directPdf = searchParams.get('pdf') === '1' || searchParams.get('direct') === '1';
+  if (directPdf && order.trackingNumber) {
+    const baseUrlBarcode = settings.navlungo_test_mode
+      ? 'https://domestic-qa-barcode.navlungo.com'
+      : 'https://domestic-barcode.navlungo.com';
+    return NextResponse.redirect(`${baseUrlBarcode}/${encodeURIComponent(order.trackingNumber)}.pdf`);
+  }
+
   let shippingAddr: any = {};
   try {
     shippingAddr = typeof order.shippingAddress === 'string'
@@ -29,16 +38,16 @@ export async function GET(req: NextRequest) {
   } catch (e) {}
 
   const trackingNum = order.trackingNumber || `KP${Math.floor(1000000000 + Math.random() * 9000000000)}TR`;
-  const carrier = order.trackingCompany || 'PTT Kargo';
+  const carrier = order.trackingCompany || (settings.navlungo_default_carrier === '14' ? 'PTT Kargo' : 'Aras Kargo');
   const paymentMethodUpper = (order.paymentMethod || '').toUpperCase();
   const isCod = paymentMethodUpper === 'COD' || paymentMethodUpper.includes('KAPIDA') || paymentMethodUpper.includes('CASH');
   const codAmount = Number((order as any).totalAmount || (order as any).total || 0);
 
-  const senderName = settings.stocado_sender_name || 'Esla Kids Bebek & Çocuk Giyim';
-  const senderPhone = settings.stocado_sender_phone || '0538 920 92 16';
-  const senderCity = settings.stocado_sender_city || 'Bursa';
-  const senderDistrict = settings.stocado_sender_district || 'Osmangazi';
-  const senderAddress = settings.stocado_sender_address || 'Osmangazi / Bursa';
+  const senderName = 'Esla Kids Bebek & Çocuk Giyim';
+  const senderPhone = '0554 198 11 96';
+  const senderCity = 'Bursa';
+  const senderDistrict = 'Yıldırım';
+  const senderAddress = 'DUAÇINARI MAH. 1.İNAN SK. NO: 6 A YILDIRIM/ BURSA';
 
   const html = `<!DOCTYPE html>
 <html lang="tr">
@@ -253,7 +262,7 @@ export async function GET(req: NextRequest) {
     <div class="footer">
       <span>İçerik: Bebek & Çocuk Tekstil</span>
       <span>Paket: 1 Desi</span>
-      <span>Stocado v1</span>
+      <span>Navlungo Kargo</span>
     </div>
   </div>
 

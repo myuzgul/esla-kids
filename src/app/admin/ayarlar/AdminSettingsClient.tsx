@@ -280,99 +280,72 @@ export function AdminSettingsClient({ initialSettings }: Props) {
         </div>
       </div>
 
-      {/* 4. Stocado Kargo Paneli Entegrasyonu */}
+      {/* 4. Navlungo Kargo Entegrasyonu (Aras Kargo & PTT Kargo) */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
             <Zap className="w-4 h-4 text-brand-600" />
-            <span>4. Stocado (Kargo Paneli) Entegrasyonu</span>
+            <span>4. Navlungo Kargo Entegrasyonu (Aras & PTT Kargo)</span>
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              name="stocado_enabled"
-              checked={Boolean(form.stocado_enabled)}
+              name="navlungo_enabled"
+              checked={form.navlungo_enabled !== false}
               onChange={handleChange}
               className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-slate-300"
             />
-            <span className="text-xs font-bold text-slate-700">Stocado'yu Aktif Et</span>
+            <span className="text-xs font-bold text-slate-700">Navlungo'yu Aktif Et</span>
           </label>
         </div>
 
         <p className="text-xs text-slate-500">
-          Stocado (api.kargopaneli.com) hesabınız üzerinden PTT Kargo, Yurtiçi, Sürat ve HepsiJET kargolarına tek tıkla kargo fişi oluşturabilir, barkod yazdırabilir ve kargo durumunu anlık takip edebilirsiniz.
+          Navlungo Domestic (domestic.navlungo.com) sistemi ile siparişlerinize <strong>Aras Kargo</strong> ve <strong>PTT Kargo</strong> için tek tıkla kargo fişi oluşturabilir, resmi PDF barkodu yazdırabilir ve anlık kargo takibi yapabilirsiniz.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Stocado Giriş E-Posta
+              Navlungo API Kullanıcı Adı
             </label>
             <input
-              type="email"
-              name="stocado_email"
-              placeholder="info@eslakids.com"
-              value={form.stocado_email || ''}
+              type="text"
+              name="navlungo_username"
+              placeholder="eAYkAnMtnxerITZ"
+              value={form.navlungo_username || ''}
               onChange={handleChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-500 font-mono"
             />
           </div>
 
           <div>
             <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Stocado Giriş Şifresi
+              Navlungo API Şifresi
             </label>
             <input
               type="password"
-              name="stocado_password"
+              name="navlungo_password"
               placeholder="••••••••"
-              value={form.stocado_password || ''}
+              value={form.navlungo_password || ''}
               onChange={handleChange}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-brand-500"
             />
           </div>
 
-          <div className="bg-amber-50/80 border border-amber-200 text-amber-900 rounded-xl p-3 text-xs leading-relaxed space-y-1">
-            <div className="font-bold flex items-center gap-1.5">
-              <span>📮</span>
-              <span>Otomatik API Girişi:</span>
-            </div>
-            <p className="text-[11px] text-amber-800">
-              E-posta ve şifreniz girildiğinde sistem Stocado API'sine otomatik oturum açar (JWT Bearer Token üretir).
-            </p>
-          </div>
-
           <div>
             <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Stocado Hesap ID (Account ID - ULID)
+              Gönderici / Depo Adres No
             </label>
             <input
               type="text"
-              name="stocado_account_id"
-              placeholder="Örn: 01JTKX1J501BSD8DAG1A6ZPBPM"
-              value={form.stocado_account_id || ''}
+              name="navlungo_sender_address_id"
+              placeholder="111945"
+              value={form.navlungo_sender_address_id || '111945'}
               onChange={handleChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono font-bold text-slate-800"
             />
             <p className="text-[11px] text-slate-400 mt-1">
-              Stocado profil veya hesap ayarlarınızda görünen hesap kimliğiniz.
-            </p>
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Gönderici / Depo Adres ID (Local ID - ULID)
-            </label>
-            <input
-              type="text"
-              name="stocado_sender_address_id"
-              placeholder="Örn: 01JTKX24X2GCVNHST3HJGJC8JP"
-              value={form.stocado_sender_address_id || ''}
-              onChange={handleChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono"
-            />
-            <p className="text-[11px] text-slate-400 mt-1">
-              Stocado adres defterinizde kayıtlı depo veya çıkış adresinizin ULID tanımlayıcısı.
+              Navlungo Adres Defterinizdeki Ana Depo No: <strong>111945</strong> (Bursa Yıldırım)
             </p>
           </div>
 
@@ -381,95 +354,45 @@ export function AdminSettingsClient({ initialSettings }: Props) {
               Varsayılan Kargo Taşıyıcısı
             </label>
             <select
-              name="stocado_default_carrier"
-              value={form.stocado_default_carrier || 'ptt-kargo'}
+              name="navlungo_default_carrier"
+              value={form.navlungo_default_carrier || '13'}
               onChange={handleChange}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-500"
             >
-              <option value="ptt-kargo">PTT Kargo (Aktif / Önerilen)</option>
-              <option value="yurtici-kargo">Yurtiçi Kargo</option>
-              <option value="surat-kargo">Sürat Kargo</option>
-              <option value="hepsijet">HepsiJET</option>
-              <option value="ups">UPS Kargo</option>
-              <option value="kolay-gelsin">Kolay Gelsin</option>
+              <option value="13">Aras Kargo (Önerilen)</option>
+              <option value="14">PTT Kargo</option>
+              <option value="18">Yurtiçi Kargo</option>
+              <option value="10">HepsiJet</option>
+              <option value="9">Sürat Kargo</option>
+              <option value="1">Otomatik Seçim</option>
             </select>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Sipariş sayfasında Aras ve PTT arasında serbestçe seçim yapabilirsiniz.
+            </p>
           </div>
 
-          <div>
-            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Gönderici / Mağaza Adı
-            </label>
-            <input
-              type="text"
-              name="stocado_sender_name"
-              value={form.stocado_sender_name || 'Esla Kids Bebek & Çocuk'}
-              onChange={handleChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Gönderici Telefonu
-            </label>
-            <input
-              type="text"
-              name="stocado_sender_phone"
-              value={form.stocado_sender_phone || '0538 920 92 16'}
-              onChange={handleChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Gönderici Şehir / İlçe
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="text"
-                placeholder="İl (Örn: Bursa)"
-                name="stocado_sender_city"
-                value={form.stocado_sender_city || 'Bursa'}
-                onChange={handleChange}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs"
-              />
-              <input
-                type="text"
-                placeholder="İlçe (Örn: Osmangazi)"
-                name="stocado_sender_district"
-                value={form.stocado_sender_district || 'Osmangazi'}
-                onChange={handleChange}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs"
-              />
+          <div className="bg-emerald-50/80 border border-emerald-200 text-emerald-900 rounded-xl p-3 text-xs leading-relaxed space-y-1">
+            <div className="font-bold flex items-center gap-1.5">
+              <span>✅</span>
+              <span>Navlungo API Bağlantısı:</span>
             </div>
+            <p className="text-[11px] text-emerald-800">
+              API kullanıcı ve şifreniz sisteme entegre edildi ve doğrulaması yapıldı. Kargo kesildiğinde takip numarası ve resmi barkod PDF anında üretilir.
+            </p>
           </div>
 
-          <div className="sm:col-span-2">
-            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">
-              Depo / Çıkış Adresi
-            </label>
-            <input
-              type="text"
-              name="stocado_sender_address"
-              value={form.stocado_sender_address || 'Osmangazi / Bursa'}
-              onChange={handleChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs"
-            />
-          </div>
-
-          <div className="flex items-center pt-6">
+          <div className="flex items-center pt-2">
             <label className="flex items-center gap-2 cursor-pointer bg-slate-50 p-2.5 rounded-xl border border-slate-200 w-full">
               <input
                 type="checkbox"
-                name="stocado_test_mode"
-                checked={Boolean(form.stocado_test_mode)}
+                name="navlungo_test_mode"
+                checked={Boolean(form.navlungo_test_mode)}
                 onChange={handleChange}
                 className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300"
               />
               <div>
-                <span className="text-xs font-bold text-slate-800 block">Test / Simülasyon Modu</span>
-                <span className="text-[10px] text-slate-400">Canlı API anahtarı girilene kadar test kargo barkodu üretir</span>
+                <span className="text-xs font-bold text-slate-800 block">Navlungo QA Test Modu</span>
+                <span className="text-[10px] text-slate-400">Yalnızca QA test sunucusuna istek atılmak istendiğinde açılır</span>
               </div>
             </label>
           </div>

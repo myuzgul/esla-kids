@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { createStocadoShipment, queryStocadoStatus } from '@/lib/stocado';
+import { createNavlungoShipment, queryNavlungoStatus } from '@/lib/navlungo';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { action, orderId } = body;
+    const { action, orderId, carrierId } = body;
 
     if (!orderId) {
       return NextResponse.json({ error: 'Sipariş ID gereklidir.' }, { status: 400 });
@@ -21,12 +21,12 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'create_shipment') {
-      const result = await createStocadoShipment(order);
+      const result = await createNavlungoShipment(order, carrierId ? Number(carrierId) : undefined);
       return NextResponse.json(result);
     }
 
     if (action === 'track_shipment') {
-      const result = await queryStocadoStatus(order);
+      const result = await queryNavlungoStatus(order);
       return NextResponse.json({ success: true, ...result });
     }
 

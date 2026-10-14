@@ -38,6 +38,12 @@ export interface SiteSettings {
   stocado_sender_city?: string;
   stocado_sender_district?: string;
   stocado_test_mode?: boolean;
+  navlungo_enabled?: boolean;
+  navlungo_username?: string;
+  navlungo_password?: string;
+  navlungo_sender_address_id?: string;
+  navlungo_default_carrier?: string;
+  navlungo_test_mode?: boolean;
 }
 
 let cachedSettings: SiteSettings | null = null;
@@ -95,6 +101,12 @@ export async function getSettings(forceFresh = false): Promise<SiteSettings> {
       stocado_sender_city: map['stocado_sender_city'] || 'Bursa',
       stocado_sender_district: map['stocado_sender_district'] || 'Osmangazi',
       stocado_test_mode: map['stocado_test_mode'] === 'true',
+      navlungo_enabled: map['navlungo_enabled'] !== 'false', // Varsayılan açık
+      navlungo_username: map['navlungo_username'] || 'eAYkAnMtnxerITZ',
+      navlungo_password: map['navlungo_password'] || 'yETzPX[B0K?bL*s.3Wp.',
+      navlungo_sender_address_id: map['navlungo_sender_address_id'] || '111945',
+      navlungo_default_carrier: map['navlungo_default_carrier'] || '13', // 13: Aras Kargo, 14: PTT Kargo
+      navlungo_test_mode: map['navlungo_test_mode'] === 'true',
     };
     lastFetch = now;
     return cachedSettings;

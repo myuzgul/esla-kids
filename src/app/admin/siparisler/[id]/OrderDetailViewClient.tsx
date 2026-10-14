@@ -46,7 +46,8 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Stocado State
+  // Navlungo Kargo State
+  const [selectedCarrierId, setSelectedCarrierId] = useState<number>(13); // 13: Aras Kargo, 14: PTT Kargo
   const [isCreatingShipment, setIsCreatingShipment] = useState(false);
   const [isTrackingStocado, setIsTrackingStocado] = useState(false);
   const [stocadoMsg, setStocadoMsg] = useState('');
@@ -406,18 +407,20 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
     await handleSave('PACKED', true);
   };
 
-  // --- STOCADO'YA GÖNDER & KARGO OLUŞTUR ---
-  const handleCreateStocadoShipment = async () => {
+  // --- NAVLUNGO İLE KARGO OLUŞTUR (ARAS / PTT) ---
+  const handleCreateShipment = async (carrierIdToUse?: number) => {
+    const finalCarrierId = carrierIdToUse || selectedCarrierId;
     setIsCreatingShipment(true);
     setStocadoMsg('');
 
     try {
-      const res = await fetch('/api/admin/stocado', {
+      const res = await fetch('/api/admin/cargo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'create_shipment',
           orderId: order.id,
+          carrierId: finalCarrierId,
         }),
       });
 
@@ -426,31 +429,32 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
         throw new Error(data.error || 'Kargo oluşturulamadı.');
       }
 
-      setCarrier(data.trackingCompany);
+      setCarrier(data.carrierName || data.trackingCompany);
       setTrackingNumber(data.trackingNumber);
       setStatus('SHIPPED');
       setOrder((prev: any) => ({
         ...prev,
-        trackingCompany: data.trackingCompany,
+        trackingCompany: data.carrierName || data.trackingCompany,
         trackingNumber: data.trackingNumber,
+        barcodeUrl: data.barcodeUrl,
         status: 'SHIPPED',
       }));
       setStocadoMsg(data.message || 'Kargo başarıyla oluşturuldu ve kargolandı durumuna alındı!');
       router.refresh();
     } catch (err: any) {
-      alert('Stocado Hatası: ' + err.message);
+      alert('Kargo Hatası: ' + err.message);
     } finally {
       setIsCreatingShipment(false);
     }
   };
 
-  // --- STOCADO DURUM SORGULA ---
-  const handleTrackStocado = async () => {
+  // --- NAVLUNGO DURUM SORGULA ---
+  const handleTrackShipment = async () => {
     setIsTrackingStocado(true);
     setStocadoMsg('');
 
     try {
-      const res = await fetch('/api/admin/stocado', {
+      const res = await fetch('/api/admin/cargo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -973,17 +977,17 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
             </div>
           )}
 
-          {/* 2. Stocado Entegrasyon Kartı */}
-          <div className="bg-gradient-to-br from-indigo-50/80 via-white to-brand-50/80 rounded-2xl border-2 border-indigo-200/90 shadow-sm p-5 space-y-4">
+          {/* 2. Navlungo Kargo Entegrasyon Kartı (Aras & PTT) */}
+          <div className="bg-gradient-to-br from-indigo-50/80 via-white to-blue-50/80 rounded-2xl border-2 border-indigo-200/90 shadow-sm p-5 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-indigo-100">
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-indigo-600" />
                 <h3 className="font-heading font-black text-sm text-slate-900">
-                  Stocado (Kargo Paneli)
+                  Navlungo Kargo Entegrasyonu
                 </h3>
               </div>
               <span className="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-2.5 py-0.5 rounded-full">
-                Otomatik Kargo
+                Aras & PTT
               </span>
             </div>
 
@@ -1013,26 +1017,30 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                 <div className="bg-white p-3.5 rounded-xl border border-indigo-100 space-y-1">
                   <div className="text-[11px] text-slate-400 font-bold uppercase">Kargo Bilgileri</div>
                   <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                    <span>{carrier || order.trackingCompany || 'PTT Kargo'}</span>
-                    <span className="font-mono text-indigo-700 font-black">{trackingNumber || order.trackingNumber}</span>
+                    <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-black">
+                      {carrier || order.trackingCompany || 'Kargo'}
+                    </span>
+                    <span className="font-mono text-indigo-700 font-black text-sm">
+                      {trackingNumber || order.trackingNumber}
+                    </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <a
-                    href={`/api/admin/stocado/barcode?orderNumber=${encodeURIComponent(order.orderNumber)}&autoprint=true`}
+                    href={`/api/admin/stocado/barcode?orderNumber=${encodeURIComponent(order.orderNumber)}&pdf=1`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all"
                   >
                     <Printer className="w-4 h-4" />
-                    <span>Barkod Yazdır</span>
+                    <span>PDF Barkod Yazdır</span>
                   </a>
 
                   <button
                     type="button"
                     disabled={isTrackingStocado}
-                    onClick={handleTrackStocado}
+                    onClick={handleTrackShipment}
                     className="py-2.5 px-3 bg-white hover:bg-slate-50 border border-indigo-200 text-indigo-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isTrackingStocado ? 'animate-spin' : ''}`} />
@@ -1040,41 +1048,88 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                   </button>
                 </div>
 
-                {/* Bilgiler Değiştiyse Stocado'ya Yeniden Gönderme Seçeneği */}
-                <button
-                  type="button"
-                  disabled={isCreatingShipment}
-                  onClick={() => {
-                    if (confirm('Adres veya ürünlerde yapılan değişikliklerle Stocado sistemine yeni kargo kaydı gönderilecek. Devam edilsin mi?')) {
-                      handleCreateStocadoShipment();
-                    }
-                  }}
-                  className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center"
-                >
-                  <RefreshCcw className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Bilgiler Değişti: Stocado'ya Tekrar Gönder</span>
-                </button>
+                {/* Farklı kargo ile yeniden kesme */}
+                <div className="pt-2 border-t border-slate-100">
+                  <span className="text-[11px] font-bold text-slate-500 block mb-1.5">Farklı Kargo ile Yeniden Kes:</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={isCreatingShipment}
+                      onClick={() => handleCreateShipment(13)}
+                      className="py-2 px-2 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <span>📦 Aras Kargo</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isCreatingShipment}
+                      onClick={() => handleCreateShipment(14)}
+                      className="py-2 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <span>📮 PTT Kargo</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="space-y-2">
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Müşteri adresi ve kapıda ödeme tutarı Stocado üzerinden PTT Kargo'ya aktarılır ve kargo barkodu oluşturulur.
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 uppercase mb-1.5 block">
+                    Kargo Firmasını Seçin:
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCarrierId(13)}
+                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                        selectedCarrierId === 13
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="text-sm">📦</span>
+                      <span>Aras Kargo</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCarrierId(14)}
+                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                        selectedCarrierId === 14
+                          ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="text-sm">📮</span>
+                      <span>PTT Kargo</span>
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Sipariş bilgileri Navlungo üzerinden seçtiğiniz firmaya iletilecek, kargo takip numarası ve resmi PDF barkodu anında oluşturulacaktır.
                 </p>
+
                 <button
                   type="button"
                   disabled={isCreatingShipment}
-                  onClick={handleCreateStocadoShipment}
-                  className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
+                  onClick={() => handleCreateShipment()}
+                  className={`w-full py-3 px-4 disabled:opacity-50 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer ${
+                    selectedCarrierId === 13
+                      ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/25'
+                      : 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25'
+                  }`}
                 >
                   {isCreatingShipment ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Kargo Oluşturuluyor...</span>
+                      <span>Kargo Kesiliyor...</span>
                     </>
                   ) : (
                     <>
                       <Zap className="w-4 h-4" />
-                      <span>Stocado'ya Gönder & Kargo Oluştur</span>
+                      <span>
+                        {selectedCarrierId === 13 ? 'Aras Kargo' : 'PTT Kargo'} ile Kargo Kes & Fiş Al
+                      </span>
                     </>
                   )}
                 </button>
