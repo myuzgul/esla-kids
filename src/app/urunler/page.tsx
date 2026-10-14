@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { AllProductsClient } from '@/components/AllProductsClient';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: 'Tüm Ürünlerimiz | Esla Kids Bebek ve Çocuk Giyim',

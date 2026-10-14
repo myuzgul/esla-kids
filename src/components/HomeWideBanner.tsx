@@ -88,6 +88,9 @@ export function HomeWideBanner({ banners }: Props) {
                     <img
                       src={banner.image}
                       alt={banner.title}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={index === 0 ? 'high' : 'low'}
+                      decoding={index === 0 ? 'sync' : 'async'}
                       className="w-full h-full object-cover object-center transform scale-100 transition-transform duration-7000 ease-out"
                       style={{ transform: isActive ? 'scale(1.02)' : 'scale(1)' }}
                     />
@@ -101,6 +104,9 @@ export function HomeWideBanner({ banners }: Props) {
                   <img
                     src={banner.image}
                     alt={banner.title}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    fetchPriority={index === 0 ? 'high' : 'low'}
+                    decoding={index === 0 ? 'sync' : 'async'}
                     className="w-full h-full object-cover object-center transform scale-100 transition-transform duration-7000 ease-out"
                     style={{ transform: isActive ? 'scale(1.02)' : 'scale(1)' }}
                   />

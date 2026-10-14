@@ -5,7 +5,7 @@ import { ProductCard } from '@/components/ProductCard';
 import { HomeWideBanner } from '@/components/HomeWideBanner';
 import { ArrowRight, Sparkles, Star, ShieldCheck, Heart, Truck, RefreshCw } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function HomePage() {
   let products: any[] = [];

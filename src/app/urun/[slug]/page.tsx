@@ -8,6 +8,9 @@ import { ProductCard } from '@/components/ProductCard';
 import { ChevronRight } from 'lucide-react';
 import type { Metadata } from 'next';
 
+export const revalidate = 60;
+export const dynamicParams = true;
+
 interface Props {
   params: { slug: string };
 }

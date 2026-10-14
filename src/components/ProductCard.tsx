@@ -69,6 +69,8 @@ export function ProductCard({ product }: ProductCardProps) {
           src={displayImage}
           alt=""
           aria-hidden="true"
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-15 scale-110 pointer-events-none"
           onError={(e) => {
             (e.target as HTMLElement).style.display = 'none';
@@ -79,8 +81,9 @@ export function ProductCard({ product }: ProductCardProps) {
         <img
           src={displayImage}
           alt={product.title}
-          className="relative z-10 w-full h-full object-contain object-center p-1.5 sm:p-2 group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
+          decoding="async"
+          className="relative z-10 w-full h-full object-contain object-center p-1.5 sm:p-2 group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             (e.target as HTMLImageElement).src = '/uploads/eslasiyahlogo.png';
           }}
