@@ -158,12 +158,8 @@ export async function createNavlungoShipment(
 
   const codAmount = Number((order as any).totalAmount || (order as any).total || 0);
 
-  // 3. Desi hesabı
-  let totalDesi = 1.5;
-  if (Array.isArray(order.items) && order.items.length > 0) {
-    const calculated = order.items.reduce((sum: number, it: any) => sum + (it.quantity || 1) * 0.4, 0);
-    totalDesi = Math.max(1.0, Math.min(30.0, Number(calculated.toFixed(1))));
-  }
+  // 3. Desi hesabı - Tüm kargolar sabit 1 desi olarak iletilir
+  const totalDesi = 1;
 
   // 4. API Token al
   const token = await getNavlungoToken(settings);
