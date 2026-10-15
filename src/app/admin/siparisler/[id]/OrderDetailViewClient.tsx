@@ -208,7 +208,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
       }));
 
       setShowAddressModal(false);
-      showToast('✓ Teslimat adresi ve müşteri bilgileri güncellendi! Stocado bildirimlerinde yeni adres geçerli olacaktır.');
+      showToast('✓ Teslimat adresi ve müşteri bilgileri güncellendi!');
       router.refresh();
     } catch (err: any) {
       alert('Hata: ' + err.message);
@@ -977,42 +977,34 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
             </div>
           )}
 
-          {/* Kargo Entegrasyon Kartı (Stocado vs Navlungo Ayrımı) */}
+          {/* Kargo Entegrasyon Kartı (Navlungo Aktif Entegrasyon) */}
           {(() => {
             const effectiveTracking = trackingNumber || order.trackingNumber || '';
-            const isStocadoShipment = Boolean(
-              effectiveTracking && (
-                rawNote.includes('[Stocado') ||
-                /^\d{11,14}$/.test(effectiveTracking.trim()) ||
-                (new Date(order.createdAt).getTime() < new Date('2026-10-15T06:00:00Z').getTime() && !rawNote.includes('[Navlungo]'))
-              )
+            const isLegacyStocadoShipment = Boolean(
+              effectiveTracking && rawNote.includes('[Stocado')
             );
 
             return (
               <div className={`rounded-2xl border-2 shadow-sm p-5 space-y-4 ${
-                isStocadoShipment
+                isLegacyStocadoShipment
                   ? 'bg-gradient-to-br from-amber-50/70 via-white to-slate-50 border-amber-200'
                   : 'bg-gradient-to-br from-indigo-50/80 via-white to-blue-50/80 border-indigo-200/90'
               }`}>
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2">
-                    {isStocadoShipment ? (
-                      <Package className="w-5 h-5 text-amber-600" />
-                    ) : (
-                      <Zap className="w-5 h-5 text-indigo-600" />
-                    )}
+                    <Zap className="w-5 h-5 text-indigo-600" />
                     <h3 className="font-heading font-black text-sm text-slate-900">
-                      {isStocadoShipment ? 'Stocado Kargo Entegrasyonu' : 'Navlungo Kargo Entegrasyonu'}
+                      Navlungo Kargo Entegrasyonu
                     </h3>
                   </div>
                   <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                    isStocadoShipment
+                    isLegacyStocadoShipment
                       ? 'bg-amber-100 text-amber-900 border border-amber-300'
                       : hasTracking
                       ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                       : 'bg-indigo-100 text-indigo-700'
                   }`}>
-                    {isStocadoShipment ? '📦 Eski Sistem (Stocado)' : hasTracking ? '🚀 Aktif (Navlungo)' : 'Yeni Sistem (Aras & PTT)'}
+                    {isLegacyStocadoShipment ? '📦 Eski PTT Kaydı' : hasTracking ? '🚀 Aktif (Navlungo)' : 'Aras & PTT'}
                   </span>
                 </div>
 
@@ -1039,20 +1031,16 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
 
                 {hasTracking ? (
                   <div className="space-y-3">
-                    <div className={`p-3.5 rounded-xl border space-y-1 ${
-                      isStocadoShipment ? 'bg-amber-50/60 border-amber-200' : 'bg-white border-indigo-100'
-                    }`}>
+                    <div className="bg-white p-3.5 rounded-xl border border-indigo-100 space-y-1">
                       <div className="text-[11px] text-slate-400 font-bold uppercase flex items-center justify-between">
                         <span>Kargo Bilgileri</span>
                         <span className="text-[10px] font-bold text-slate-500">
-                          {isStocadoShipment ? 'Stocado PTT Kaydı' : 'Navlungo Kaydı'}
+                          {isLegacyStocadoShipment ? 'Eski PTT Kaydı (Stocado)' : 'Navlungo Kaydı'}
                         </span>
                       </div>
                       <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                        <span className={`px-2 py-0.5 rounded font-black ${
-                          isStocadoShipment ? 'bg-amber-100 text-amber-900' : 'bg-indigo-50 text-indigo-700'
-                        }`}>
-                          {carrier || order.trackingCompany || (isStocadoShipment ? 'PTT Kargo' : 'Kargo')}
+                        <span className="px-2 py-0.5 rounded font-black bg-indigo-50 text-indigo-700">
+                          {carrier || order.trackingCompany || 'Kargo'}
                         </span>
                         <span className="font-mono text-indigo-700 font-black text-sm">
                           {effectiveTracking}
@@ -1065,15 +1053,13 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                         href={`/api/admin/stocado/barcode?orderNumber=${encodeURIComponent(order.orderNumber)}&pdf=1`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`py-2.5 px-3 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all ${
-                          isStocadoShipment ? 'bg-slate-700 hover:bg-slate-800' : 'bg-indigo-600 hover:bg-indigo-700'
-                        }`}
+                        className="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all"
                       >
                         <Printer className="w-4 h-4" />
-                        <span>{isStocadoShipment ? 'Termal Barkod Yazdır' : 'PDF Barkod Yazdır'}</span>
+                        <span>Kargo Barkodu Yazdır</span>
                       </a>
 
-                      {isStocadoShipment ? (
+                      {isLegacyStocadoShipment ? (
                         <a
                           href={`https://gonderitakip.ptt.gov.tr/Track/Verify?q=${encodeURIComponent(effectiveTracking)}`}
                           target="_blank"
@@ -1096,16 +1082,16 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                       )}
                     </div>
 
-                    {isStocadoShipment && (
+                    {isLegacyStocadoShipment && (
                       <div className="text-[11px] text-slate-600 bg-white/80 p-2.5 rounded-xl border border-slate-200 leading-relaxed">
-                        ℹ️ Bu gönderi eski <strong>Stocado</strong> entegrasyonu ile oluşturulmuştur. Dilerseniz aşağıdan <strong>yeni sistem (Navlungo)</strong> ile Aras veya PTT kargosu olarak yeniden kargo kesebilirsiniz.
+                        ℹ️ Bu gönderi eski PTT (Stocado) kaydı içermektedir. Dilerseniz aşağıdan <strong>Navlungo</strong> ile Aras veya PTT kargosu olarak yeniden kargo kesebilirsiniz.
                       </div>
                     )}
 
                     {/* Farklı kargo ile yeniden kesme */}
                     <div className="pt-2 border-t border-slate-100">
                       <span className="text-[11px] font-bold text-slate-500 block mb-1.5">
-                        {isStocadoShipment ? 'Yeni Sistem (Navlungo) ile Kargo Kes:' : 'Farklı Kargo ile Yeniden Kes:'}
+                        {isLegacyStocadoShipment ? 'Navlungo ile Kargo Kes:' : 'Farklı Kargo ile Yeniden Kes:'}
                       </span>
                       <div className="grid grid-cols-2 gap-2">
                         <button
@@ -1441,7 +1427,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
               <div className="bg-blue-50/70 p-3 rounded-xl border border-blue-200 text-xs text-blue-900 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                 <span>
-                  Burada yapacağınız adres ve telefon değişiklikleri kaydedilir ve Stocado (PTT Kargo) sistemine güncel olarak aktarılır.
+                  Burada yapacağınız adres ve telefon değişiklikleri kaydedilir ve kargo sistemine güncel olarak aktarılır.
                 </span>
               </div>
 
@@ -1654,7 +1640,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
 
               {isCod && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
-                  <strong>Kapıda Ödeme Uyarısı:</strong> Sipariş kapıda ödemeli olduğundan, ürün çıkarıldığında Stocado'ya bildirilecek tahsilat tutarı otomatik olarak <strong>{formatPrice(Math.max(0, order.totalAmount - itemToDelete.total))}</strong> değerine inecektir.
+                  <strong>Kapıda Ödeme Uyarısı:</strong> Sipariş kapıda ödemeli olduğundan, ürün çıkarıldığında kargo sistemine bildirilecek tahsilat tutarı otomatik olarak <strong>{formatPrice(Math.max(0, order.totalAmount - itemToDelete.total))}</strong> değerine inecektir.
                 </div>
               )}
 

@@ -84,15 +84,11 @@ export function OrdersTableClient({
     setTimeout(() => setFeedbackMsg(''), 4000);
   };
 
-  const isStocadoShipment = (ord: any) => {
+  const isLegacyStocadoShipment = (ord: any) => {
     const tracking = (ord.trackingNumber || '').trim();
     if (!tracking) return false;
     const rawNote = (ord.internalNote || '').trim();
-    return (
-      rawNote.includes('[Stocado') ||
-      /^\d{11,14}$/.test(tracking) ||
-      (new Date(ord.createdAt).getTime() < new Date('2026-10-15T06:00:00Z').getTime() && !rawNote.includes('[Navlungo]'))
-    );
+    return rawNote.includes('[Stocado');
   };
 
   // Fetch orders from API with current params
@@ -760,14 +756,14 @@ export function OrdersTableClient({
                       </span>
                       {ord.trackingNumber && (
                         <div>
-                          {isStocadoShipment(ord) ? (
+                          {isLegacyStocadoShipment(ord) ? (
                             <a
                               href={`https://gonderitakip.ptt.gov.tr/Track/Verify?q=${encodeURIComponent(ord.trackingNumber)}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200"
+                              className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200"
                             >
-                              <span>📦 Stocado: {ord.trackingNumber}</span>
+                              <span>📦 Eski PTT: {ord.trackingNumber}</span>
                             </a>
                           ) : (
                             <a
@@ -776,7 +772,7 @@ export function OrdersTableClient({
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200"
                             >
-                              <span>🚀 {ord.trackingCompany || 'Navlungo'}: {ord.trackingNumber}</span>
+                              <span>🚀 {ord.trackingCompany || 'Kargo'}: {ord.trackingNumber}</span>
                             </a>
                           )}
                         </div>
@@ -931,14 +927,10 @@ export function OrdersTableClient({
                         href={`/api/admin/stocado/barcode?orderNumber=${encodeURIComponent(ord.orderNumber)}&pdf=1`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`w-full py-2 px-3 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-2xs ${
-                          isStocadoShipment(ord)
-                            ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200'
-                            : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
-                        }`}
+                        className="w-full py-2 px-3 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-2xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200"
                       >
                         <FileText className="w-3.5 h-3.5" />
-                        <span>{isStocadoShipment(ord) ? '📦 Stocado Termal Barkod Yazdır' : '🚀 Navlungo Kargo Barkodu Yazdır'}</span>
+                        <span>Kargo Barkodu Yazdır</span>
                       </a>
                     )}
                     <div className="grid grid-cols-3 gap-2">
@@ -1133,25 +1125,25 @@ export function OrdersTableClient({
                             </span>
                             {ord.trackingNumber && (
                               <div>
-                                {isStocadoShipment(ord) ? (
+                                {isLegacyStocadoShipment(ord) ? (
                                   <a
                                     href={`https://gonderitakip.ptt.gov.tr/Track/Verify?q=${encodeURIComponent(ord.trackingNumber)}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    title="Eski Sistem (Stocado PTT) - PTT Takip Sayfasına Git"
-                                    className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition-colors"
+                                    title="Eski PTT Kargo Gönderisi"
+                                    className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors"
                                   >
-                                    <span>📦 Stocado: {ord.trackingNumber}</span>
+                                    <span>📦 Eski PTT: {ord.trackingNumber}</span>
                                   </a>
                                 ) : (
                                   <a
                                     href={`/siparis-takip?orderNumber=${encodeURIComponent(ord.orderNumber)}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    title="Yeni Sistem (Navlungo) - Canlı Kargo Takibi"
+                                    title="Navlungo Canlı Kargo Takibi"
                                     className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100 transition-colors"
                                   >
-                                    <span>🚀 {ord.trackingCompany || 'Navlungo'}: {ord.trackingNumber}</span>
+                                    <span>🚀 {ord.trackingCompany || 'Kargo'}: {ord.trackingNumber}</span>
                                   </a>
                                 )}
                               </div>
@@ -1218,12 +1210,8 @@ export function OrdersTableClient({
                               href={`/api/admin/stocado/barcode?orderNumber=${encodeURIComponent(ord.orderNumber)}&pdf=1`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`p-1.5 rounded-lg inline-block transition-colors ${
-                                isStocadoShipment(ord) 
-                                  ? 'text-amber-700 hover:text-amber-900 hover:bg-amber-100' 
-                                  : 'text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50'
-                              }`}
-                              title={isStocadoShipment(ord) ? 'Stocado Termal Kargo Barkodunu Yazdır' : 'Navlungo PDF Kargo Barkodunu Yazdır'}
+                              className="p-1.5 rounded-lg inline-block transition-colors text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50"
+                              title="Kargo Barkodunu Yazdır (PDF / Fiş)"
                             >
                               <FileText className="w-4 h-4" />
                             </a>
