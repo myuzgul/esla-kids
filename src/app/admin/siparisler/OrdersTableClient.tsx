@@ -924,7 +924,7 @@ export function OrdersTableClient({
                   <div className="space-y-2 pt-2 border-t border-slate-100">
                     {ord.trackingNumber && (
                       <a
-                        href={`/api/admin/stocado/barcode?orderNumber=${encodeURIComponent(ord.orderNumber)}&pdf=1`}
+                        href={`/api/admin/cargo/barcode?orderNumber=${encodeURIComponent(ord.orderNumber)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-full py-2 px-3 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-2xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200"
@@ -1207,7 +1207,7 @@ export function OrdersTableClient({
                         <td className="py-3.5 px-3 text-right space-x-1.5 whitespace-nowrap">
                           {ord.trackingNumber && (
                             <a
-                              href={`/api/admin/stocado/barcode?orderNumber=${encodeURIComponent(ord.orderNumber)}&pdf=1`}
+                              href={`/api/admin/cargo/barcode?orderNumber=${encodeURIComponent(ord.orderNumber)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="p-1.5 rounded-lg inline-block transition-colors text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50"

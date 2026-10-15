@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSettings } from '@/lib/settings';
-import { getNavlungoToken } from '@/lib/navlungo';
+import { getNavlungoToken, getNavlungoBarcode } from '@/lib/navlungo';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -70,24 +70,30 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  if (directPdf) {
-    const baseUrlBarcode = settings.navlungo_test_mode
-      ? 'https://domestic-qa-barcode.navlungo.com'
-      : 'https://domestic-barcode.navlungo.com';
+  // Format HTML istenmemişse ve geçerli bir Navlungo takip kodu varsa doğrudan resmi Navlungo PDF barkodunu sun
+  const wantsHtml = searchParams.get('format') === 'html' || searchParams.get('html') === '1';
 
-    // Sadece gerçek (orderNumber olmayan) bir takip no varsa yönlendir
-    if (postNumber && postNumber !== order.orderNumber) {
-      const targetUrl = `${baseUrlBarcode}/${encodeURIComponent(postNumber)}.pdf`;
-      try {
-        const headRes = await fetch(targetUrl, { method: 'HEAD' });
-        if (headRes.ok) {
-          return NextResponse.redirect(targetUrl);
+  if (!wantsHtml && postNumber && postNumber !== order.orderNumber) {
+    try {
+      const barcodePdfUrl = await getNavlungoBarcode(postNumber, settings);
+      if (barcodePdfUrl) {
+        const pdfRes = await fetch(barcodePdfUrl);
+        if (pdfRes.ok) {
+          const pdfBuffer = await pdfRes.arrayBuffer();
+          return new NextResponse(Buffer.from(pdfBuffer), {
+            headers: {
+              'Content-Type': 'application/pdf',
+              'Content-Disposition': `inline; filename="kargo-${order.orderNumber}-${postNumber}.pdf"`,
+              'Cache-Control': 'public, max-age=3600',
+            },
+          });
+        } else {
+          return NextResponse.redirect(barcodePdfUrl, 307);
         }
-      } catch (e) {
-        console.warn('[Barcode Route] S3 check failed:', e);
       }
+    } catch (e) {
+      console.warn('[Barcode Route] Navlungo PDF barcode error:', e);
     }
-    // PDF yoksa kullanıcıya S3 NoSuchKey XML hatası gösterme; sistemimizin termal HTML etiketine devam et
   }
 
   let shippingAddr: any = {};
@@ -238,7 +244,7 @@ export async function GET(req: NextRequest) {
     <div class="header">
       <div>
         <div class="carrier-title">${carrier}</div>
-        <div class="provider-badge">STOCADO KARGO PANELİ</div>
+        <div class="provider-badge" style="background:#0284c7; color:#ffffff; font-weight: bold; padding: 2px 8px; border-radius: 4px;">NAVLUNGO KARGO ENTEGRASYONU</div>
       </div>
       <div style="text-align: right;">
         <div style="font-size: 14px; font-weight: 900; font-family: monospace;">${order.orderNumber}</div>
@@ -322,7 +328,7 @@ export async function GET(req: NextRequest) {
     <div class="footer">
       <span>İçerik: Bebek & Çocuk Tekstil</span>
       <span>Paket: 1 Desi</span>
-      <span>Navlungo Kargo</span>
+      <span>Navlungo Lojistik & Kargo</span>
     </div>
   </div>
 

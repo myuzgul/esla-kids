@@ -295,6 +295,9 @@ export async function createNavlungoShipment(
     include: { items: true },
   });
 
+  // Navlungo resmi barkod PDF'ini hemen oluştur/önbelleğe al
+  getNavlungoBarcode(postNumber, settings).catch((e) => console.warn('[Navlungo] Pre-generate barcode error:', e));
+
   // Müşteriye "Siparişiniz Kargoya Verildi" e-posta bildirimi gönder
   try {
     const { sendOrderNotificationEmail } = await import('@/lib/email');
@@ -389,3 +392,43 @@ export async function queryNavlungoStatus(
     details: postData,
   };
 }
+
+/**
+ * Navlungo API'sinden gönderinin resmi PDF barkod adresini alır/oluşturur.
+ */
+export async function getNavlungoBarcode(postNumber: string, settings?: SiteSettings): Promise<string | null> {
+  if (!postNumber) return null;
+  const s = settings || (await getSettings());
+  const token = await getNavlungoToken(s);
+  const baseUrl = s.navlungo_test_mode
+    ? 'https://domestic-api-qa.navlungo.com/v2.1'
+    : 'https://domestic-api.navlungo.com/v2.1';
+
+  try {
+    const res = await fetch(`${baseUrl}/barcode/getBarcode`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-localization': 'tr',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        post_number: postNumber,
+        barcode_type: 'pdf',
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (data.status && data.data?.barcode_url) {
+      return data.data.barcode_url;
+    }
+  } catch (e) {
+    console.warn('[Navlungo] getBarcode error:', e);
+  }
+
+  const fallbackUrl = s.navlungo_test_mode
+    ? `https://domestic-qa-barcode.navlungo.com/${encodeURIComponent(postNumber)}.pdf`
+    : `https://domestic-barcode.navlungo.com/${encodeURIComponent(postNumber)}.pdf`;
+  return fallbackUrl;
+}
+

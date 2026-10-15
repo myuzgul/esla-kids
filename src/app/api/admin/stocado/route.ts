@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error('[Stocado Route] API error:', err);
     return NextResponse.json(
-      { error: err.message || 'Stocado kargo işlemi gerçekleştirilemedi.' },
+      { error: err.message || 'Navlungo kargo işlemi gerçekleştirilemedi.' },
       { status: 500 }
     );
   }

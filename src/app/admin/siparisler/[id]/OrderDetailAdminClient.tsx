@@ -359,7 +359,7 @@ export function OrderDetailAdminClient({ order }: Props) {
 
                 <div className="grid grid-cols-2 gap-2">
                   <a
-                    href={`/api/admin/stocado/barcode?orderNumber=${encodeURIComponent(order.orderNumber)}&pdf=1`}
+                    href={`/api/admin/cargo/barcode?orderNumber=${encodeURIComponent(order.orderNumber)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all"
