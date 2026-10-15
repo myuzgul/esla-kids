@@ -44,7 +44,27 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ order });
+    let trackingUrl = null;
+    let carrierDirectUrl = null;
+    if (order.trackingNumber) {
+      trackingUrl = `https://domestic-track.navlungo.com/check/${encodeURIComponent(order.trackingNumber)}`;
+      const c = (order.trackingCompany || '').toLowerCase();
+      if (c.includes('aras')) {
+        carrierDirectUrl = `https://www.araskargo.com.tr/kargo-takip?code=${encodeURIComponent(order.trackingNumber)}`;
+      } else if (c.includes('ptt')) {
+        carrierDirectUrl = `https://gonderitakip.ptt.gov.tr/Track/Verify?q=${encodeURIComponent(order.trackingNumber)}`;
+      } else {
+        carrierDirectUrl = trackingUrl;
+      }
+    }
+
+    return NextResponse.json({ 
+      order: {
+        ...order,
+        trackingUrl,
+        carrierDirectUrl,
+      } 
+    });
   } catch (err: any) {
     console.error('Order track error:', err);
     return NextResponse.json({ error: 'Sorgulama hatası oluştu.' }, { status: 500 });

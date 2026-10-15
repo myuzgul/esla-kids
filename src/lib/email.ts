@@ -112,13 +112,27 @@ export async function sendOrderNotificationEmail(
     // Tracking info HTML
     let trackingHtml = '';
     if (type === 'SHIPPED' && order.trackingNumber) {
+      const carrierName = order.trackingCompany || 'PTT Kargo';
+      const isAras = carrierName.toLowerCase().includes('aras');
+      const carrierDirectUrl = isAras
+        ? `https://www.araskargo.com.tr/kargo-takip?code=${encodeURIComponent(order.trackingNumber)}`
+        : `https://gonderitakip.ptt.gov.tr/Track/Verify?q=${encodeURIComponent(order.trackingNumber)}`;
+
       trackingHtml = `
-        <div style="background:#EFF6FF; border-left:4px solid #3B82F6; padding:16px; margin:20px 0; border-radius:8px;">
-          <h4 style="margin:0 0 8px 0; color:#1E40AF; font-size:14px; font-weight:700;">🚚 Kargo Takip Bilgileri</h4>
-          <p style="margin:0; font-size:13px; color:#1E3A8A; line-height:1.6;">
-            <strong>Kargo Firması:</strong> ${order.trackingCompany || 'Yurtiçi Kargo'}<br>
-            <strong>Takip Kodu:</strong> <span style="font-family:monospace; font-weight:bold; font-size:14px;">${order.trackingNumber}</span>
+        <div style="background:#EFF6FF; border-left:4px solid #3B82F6; padding:18px; margin:20px 0; border-radius:10px;">
+          <h4 style="margin:0 0 8px 0; color:#1E40AF; font-size:15px; font-weight:700;">🚚 Kargo Takip Bilgileri</h4>
+          <p style="margin:0 0 12px 0; font-size:13px; color:#1E3A8A; line-height:1.6;">
+            <strong>Kargo Firması:</strong> ${carrierName}<br>
+            <strong>Takip Kodu:</strong> <span style="font-family:monospace; font-weight:bold; font-size:15px; color:#1E40AF;">${order.trackingNumber}</span>
           </p>
+          <div style="margin-top:10px;">
+            <a href="https://eslakids.com/siparis-takip?orderNumber=${encodeURIComponent(order.orderNumber)}" target="_blank" style="display:inline-block; background:#2563EB; color:#ffffff; font-weight:700; font-size:12px; padding:9px 16px; border-radius:8px; text-decoration:none; margin-right:8px; margin-bottom:6px;">
+              Siparişi Takip Et &rarr;
+            </a>
+            <a href="${carrierDirectUrl}" target="_blank" style="display:inline-block; background:#059669; color:#ffffff; font-weight:700; font-size:12px; padding:9px 16px; border-radius:8px; text-decoration:none; margin-bottom:6px;">
+              ${carrierName} Canlı Takip &rarr;
+            </a>
+          </div>
         </div>
       `;
     }

@@ -282,7 +282,7 @@ export async function createNavlungoShipment(
   const actualCarrierName = item?.post?.carrier_name || carrierInfo.name;
 
   // Veritabanında siparişi güncelle
-  await prisma.order.update({
+  const updatedOrder = await prisma.order.update({
     where: { id: order.id },
     data: {
       status: 'SHIPPED',
@@ -292,7 +292,16 @@ export async function createNavlungoShipment(
         ? `${order.internalNote}\n[Navlungo] ${actualCarrierName} takip no: ${postNumber}`
         : `[Navlungo] ${actualCarrierName} takip no: ${postNumber}`,
     },
+    include: { items: true },
   });
+
+  // Müşteriye "Siparişiniz Kargoya Verildi" e-posta bildirimi gönder
+  try {
+    const { sendOrderNotificationEmail } = await import('@/lib/email');
+    sendOrderNotificationEmail(updatedOrder, 'SHIPPED').catch((e) => console.warn('[Navlungo] Email send error:', e));
+  } catch (emailErr) {
+    console.warn('[Navlungo] Email import error:', emailErr);
+  }
 
   // Sipariş işlem günlüğü oluştur
   try {
