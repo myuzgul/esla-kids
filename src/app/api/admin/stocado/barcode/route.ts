@@ -5,16 +5,29 @@ import { getNavlungoToken } from '@/lib/navlungo';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const orderNumber = searchParams.get('orderNumber');
+  const rawOrderNumber = searchParams.get('orderNumber') || searchParams.get('orderId') || searchParams.get('id');
+  const orderNumber = rawOrderNumber?.trim();
 
   if (!orderNumber) {
     return new NextResponse('Sipariş numarası eksik', { status: 400 });
   }
 
-  const order = await prisma.order.findUnique({
+  let order = await prisma.order.findUnique({
     where: { orderNumber },
     include: { items: true },
   });
+
+  if (!order) {
+    order = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { id: orderNumber },
+          { orderNumber: { equals: orderNumber, mode: 'insensitive' } },
+        ],
+      },
+      include: { items: true },
+    });
+  }
 
   if (!order) {
     return new NextResponse('Sipariş bulunamadı', { status: 404 });
