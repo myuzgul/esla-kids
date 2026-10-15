@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSettings } from '@/lib/settings';
+import { getNavlungoToken } from '@/lib/navlungo';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -23,11 +24,57 @@ export async function GET(req: NextRequest) {
 
   // Eğer doğrudan PDF istenmişse veya redirect istenmişse Navlungo resmi PDF'ine yönlendir
   const directPdf = searchParams.get('pdf') === '1' || searchParams.get('direct') === '1';
-  if (directPdf && order.trackingNumber) {
+
+  let postNumber = order.trackingNumber;
+
+  // Eğer trackingNumber kayıtlı değilse veya orderNumber ile aynıysa (gerçek Navlungo takip no değilse),
+  // Navlungo API'sinden siparişe ait gerçek post_number'ı bulup veritabanını güncelleyelim
+  if (!postNumber || postNumber === order.orderNumber) {
+    try {
+      const token = await getNavlungoToken(settings);
+      const baseUrl = settings.navlungo_test_mode
+        ? 'https://domestic-api-qa.navlungo.com/v2.1'
+        : 'https://domestic-api.navlungo.com/v2.1';
+      const checkRes = await fetch(`${baseUrl}/post/check/${encodeURIComponent(order.orderNumber)}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'X-localization': 'tr' },
+      });
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        const postData = checkData.data;
+        if (postData?.post_number) {
+          postNumber = postData.post_number;
+          await prisma.order.update({
+            where: { id: order.id },
+            data: {
+              trackingNumber: postData.post_number,
+              trackingCompany: postData.post?.carrier_name || order.trackingCompany,
+            },
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[Barcode Route] Check post error:', e);
+    }
+  }
+
+  if (directPdf) {
     const baseUrlBarcode = settings.navlungo_test_mode
       ? 'https://domestic-qa-barcode.navlungo.com'
       : 'https://domestic-barcode.navlungo.com';
-    return NextResponse.redirect(`${baseUrlBarcode}/${encodeURIComponent(order.trackingNumber)}.pdf`);
+
+    // Sadece gerçek (orderNumber olmayan) bir takip no varsa yönlendir
+    if (postNumber && postNumber !== order.orderNumber) {
+      const targetUrl = `${baseUrlBarcode}/${encodeURIComponent(postNumber)}.pdf`;
+      try {
+        const headRes = await fetch(targetUrl, { method: 'HEAD' });
+        if (headRes.ok) {
+          return NextResponse.redirect(targetUrl);
+        }
+      } catch (e) {
+        console.warn('[Barcode Route] S3 check failed:', e);
+      }
+    }
+    // PDF yoksa kullanıcıya S3 NoSuchKey XML hatası gösterme; sistemimizin termal HTML etiketine devam et
   }
 
   let shippingAddr: any = {};

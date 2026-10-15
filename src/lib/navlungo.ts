@@ -201,7 +201,7 @@ export async function createNavlungoShipment(
     ],
   };
 
-  const res = await fetch(`${baseUrl}/post/create`, {
+  let res = await fetch(`${baseUrl}/post/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -211,7 +211,51 @@ export async function createNavlungoShipment(
     body: JSON.stringify(payload),
   });
 
-  const data = await res.json().catch(() => ({}));
+  let data = await res.json().catch(() => ({}));
+
+  // Eğer bu referans numarası zaten mevcuttur hatası alırsak:
+  // 1. Önce Navlungo'da bu referansla oluşturulmuş mevcut gönderiyi kontrol et
+  // 2. Eğer kullanıcı farklı bir kargo seçtiyse veya yeniden oluşturmak istiyorsa benzersiz bir ek ekleyip tekrar dene
+  if (!res.ok || data.status === false) {
+    const errorStr = JSON.stringify(data);
+    if (errorStr.includes('zaten mevcuttur') || errorStr.includes('already exists')) {
+      try {
+        const checkRes = await fetch(`${baseUrl}/post/check/${encodeURIComponent(order.orderNumber)}`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'X-localization': 'tr' }
+        });
+        const checkData = await checkRes.json();
+        const postData = checkData.data;
+        if (postData && postData.post_number) {
+          const existingCarrierId = postData.post?.carrier_id;
+          const isCancelled = postData.status?.status_code === 10 || postData.status?.status_name === 'İptal';
+          if (!isCancelled && (!selectedCarrierId || existingCarrierId === carrierId)) {
+            data = {
+              status: true,
+              data: [postData]
+            };
+            res = { ok: true } as any;
+          }
+        }
+      } catch (checkErr) {
+        console.warn('[Navlungo] Check existing error:', checkErr);
+      }
+
+      // Eğer hala başarılı olmadıysa, referans numarasına benzersiz bir sonek verip yeniden gönder
+      if (!res.ok || data.status === false) {
+        payload.posts[0].reference_id = `${order.orderNumber}-${Math.floor(Date.now() / 1000).toString().slice(-4)}`;
+        res = await fetch(`${baseUrl}/post/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-localization': 'tr',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        data = await res.json().catch(() => ({}));
+      }
+    }
+  }
 
   if (!res.ok || data.status === false) {
     let errMsg = data.message || data.error || 'Navlungo gönderi oluştururken hata verdi.';
@@ -226,10 +270,16 @@ export async function createNavlungoShipment(
     throw new Error(errMsg);
   }
 
-  // Başarılı yanıt
-  const postNumber = data.post_number || data.reference_id || order.orderNumber;
-  const trackingUrl = data.tracking_url || `https://domestic-track.navlungo.com/check/${postNumber}`;
-  const barcodeUrl = data.barcode_url || `https://domestic-barcode.navlungo.com/${postNumber}.pdf`;
+  // Başarılı yanıt (Navlungo yanıtı data.data array içinde veya data nesnesinde döner)
+  const item = Array.isArray(data.data) ? data.data[0] : (data.data || data);
+  const postNumber = item?.post_number || data?.post_number || item?.reference_id;
+  if (!postNumber) {
+    throw new Error('Navlungo takip numarası döndürmedi.');
+  }
+
+  const trackingUrl = item?.tracking_url || data?.tracking_url || `https://domestic-track.navlungo.com/check/${postNumber}`;
+  const barcodeUrl = item?.barcode_url || item?.barcode || data?.barcode_url || `https://domestic-barcode.navlungo.com/${postNumber}.pdf`;
+  const actualCarrierName = item?.post?.carrier_name || carrierInfo.name;
 
   // Veritabanında siparişi güncelle
   await prisma.order.update({
@@ -237,10 +287,10 @@ export async function createNavlungoShipment(
     data: {
       status: 'SHIPPED',
       trackingNumber: postNumber,
-      trackingCompany: carrierInfo.name,
+      trackingCompany: actualCarrierName,
       internalNote: order.internalNote
-        ? `${order.internalNote}\n[Navlungo] ${carrierInfo.name} takip no: ${postNumber}`
-        : `[Navlungo] ${carrierInfo.name} takip no: ${postNumber}`,
+        ? `${order.internalNote}\n[Navlungo] ${actualCarrierName} takip no: ${postNumber}`
+        : `[Navlungo] ${actualCarrierName} takip no: ${postNumber}`,
     },
   });
 
@@ -252,7 +302,7 @@ export async function createNavlungoShipment(
         entity: 'Order',
         entityId: order.id,
         performedBy: 'Yönetici',
-        details: `Navlungo ile kargo gönderisi oluşturuldu: ${postNumber} (${carrierInfo.name})`,
+        details: `Navlungo ile kargo gönderisi oluşturuldu: ${postNumber} (${actualCarrierName})`,
       },
     });
   } catch (e) {
@@ -264,8 +314,8 @@ export async function createNavlungoShipment(
     trackingNumber: postNumber,
     trackingUrl,
     barcodeUrl,
-    carrierName: carrierInfo.name,
-    message: `${carrierInfo.name} kaydı Navlungo üzerinden başarıyla oluşturuldu! Takip No: ${postNumber}`,
+    carrierName: actualCarrierName,
+    message: `${actualCarrierName} kaydı Navlungo üzerinden başarıyla oluşturuldu! Takip No: ${postNumber}`,
   };
 }
 
