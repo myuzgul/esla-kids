@@ -84,6 +84,7 @@ function TrackingContent() {
   const carrierName = order?.trackingCompany || 'PTT Kargo';
   const isAras = carrierName.toLowerCase().includes('aras');
   const isPtt = carrierName.toLowerCase().includes('ptt');
+  const isHepsiJet = carrierName.toLowerCase().includes('hepsi');
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
@@ -271,6 +272,16 @@ function TrackingContent() {
                       className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <span>PTT Kargo Sitesi</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : isHepsiJet ? (
+                    <a
+                      href={`https://hepsijet.com/gonderi-takibi/${encodeURIComponent(order.trackingNumber)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <span>HepsiJET Sitesi</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   ) : null}

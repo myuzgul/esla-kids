@@ -105,7 +105,7 @@ export async function getSettings(forceFresh = false): Promise<SiteSettings> {
       navlungo_username: map['navlungo_username'] || 'eAYkAnMtnxerITZ',
       navlungo_password: map['navlungo_password'] || 'yETzPX[B0K?bL*s.3Wp.',
       navlungo_sender_address_id: map['navlungo_sender_address_id'] || '111945',
-      navlungo_default_carrier: map['navlungo_default_carrier'] || '13', // 13: Aras Kargo, 14: PTT Kargo
+      navlungo_default_carrier: map['navlungo_default_carrier'] || '13', // 13: Aras Kargo, 14: PTT Kargo, 10: HepsiJET
       navlungo_test_mode: map['navlungo_test_mode'] === 'true',
     };
     lastFetch = now;

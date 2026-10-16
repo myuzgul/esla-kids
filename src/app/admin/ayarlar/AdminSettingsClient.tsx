@@ -285,7 +285,7 @@ export function AdminSettingsClient({ initialSettings }: Props) {
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
             <Zap className="w-4 h-4 text-brand-600" />
-            <span>4. Navlungo Kargo Entegrasyonu (Aras & PTT Kargo)</span>
+            <span>4. Navlungo Kargo Entegrasyonu (Aras, PTT & HepsiJET)</span>
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -300,7 +300,7 @@ export function AdminSettingsClient({ initialSettings }: Props) {
         </div>
 
         <p className="text-xs text-slate-500">
-          Navlungo Domestic (domestic.navlungo.com) sistemi ile siparişlerinize <strong>Aras Kargo</strong> ve <strong>PTT Kargo</strong> için tek tıkla kargo fişi oluşturabilir, resmi PDF barkodu yazdırabilir ve anlık kargo takibi yapabilirsiniz.
+          Navlungo Domestic (domestic.navlungo.com) sistemi ile siparişlerinize <strong>Aras Kargo</strong>, <strong>PTT Kargo</strong> ve <strong>HepsiJET</strong> için tek tıkla kargo fişi oluşturabilir, resmi PDF barkodu yazdırabilir ve anlık kargo takibi yapabilirsiniz.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -367,7 +367,7 @@ export function AdminSettingsClient({ initialSettings }: Props) {
               <option value="1">Otomatik Seçim</option>
             </select>
             <p className="text-[11px] text-slate-400 mt-1">
-              Sipariş sayfasında Aras ve PTT arasında serbestçe seçim yapabilirsiniz.
+              Sipariş sayfasında Aras, PTT ve HepsiJET arasında serbestçe seçim yapabilirsiniz.
             </p>
           </div>
 

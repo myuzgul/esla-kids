@@ -47,7 +47,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Navlungo Kargo State
-  const [selectedCarrierId, setSelectedCarrierId] = useState<number>(13); // 13: Aras Kargo, 14: PTT Kargo
+  const [selectedCarrierId, setSelectedCarrierId] = useState<number>(13); // 13: Aras Kargo, 14: PTT Kargo, 10: HepsiJET
   const [isCreatingShipment, setIsCreatingShipment] = useState(false);
   const [isTrackingStocado, setIsTrackingStocado] = useState(false);
   const [stocadoMsg, setStocadoMsg] = useState('');
@@ -1004,7 +1004,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                       ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                       : 'bg-indigo-100 text-indigo-700'
                   }`}>
-                    {isLegacyStocadoShipment ? '📦 Eski PTT Kaydı' : hasTracking ? '🚀 Aktif (Navlungo)' : 'Aras & PTT'}
+                    {isLegacyStocadoShipment ? '📦 Eski PTT Kaydı' : hasTracking ? '🚀 Aktif (Navlungo)' : 'Aras, PTT & HepsiJET'}
                   </span>
                 </div>
 
@@ -1093,22 +1093,30 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                       <span className="text-[11px] font-bold text-slate-500 block mb-1.5">
                         {isLegacyStocadoShipment ? 'Navlungo ile Kargo Kes:' : 'Farklı Kargo ile Yeniden Kes:'}
                       </span>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           type="button"
                           disabled={isCreatingShipment}
                           onClick={() => handleCreateShipment(13)}
-                          className="py-2 px-2 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                          className="py-2 px-1 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
                         >
-                          <span>📦 Aras Kargo</span>
+                          <span>📦 Aras</span>
                         </button>
                         <button
                           type="button"
                           disabled={isCreatingShipment}
                           onClick={() => handleCreateShipment(14)}
-                          className="py-2 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                          className="py-2 px-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
                         >
-                          <span>📮 PTT Kargo</span>
+                          <span>📮 PTT</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isCreatingShipment}
+                          onClick={() => handleCreateShipment(10)}
+                          className="py-2 px-1 bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <span>🚀 HepsiJET</span>
                         </button>
                       </div>
                     </div>
@@ -1119,30 +1127,42 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                       <label className="text-xs font-bold text-slate-700 uppercase mb-1.5 block">
                         Kargo Firmasını Seçin:
                       </label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           type="button"
                           onClick={() => setSelectedCarrierId(13)}
-                          className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                          className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
                             selectedCarrierId === 13
                               ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                               : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                           }`}
                         >
                           <span className="text-sm">📦</span>
-                          <span>Aras Kargo</span>
+                          <span>Aras</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => setSelectedCarrierId(14)}
-                          className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                          className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
                             selectedCarrierId === 14
                               ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
                               : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                           }`}
                         >
                           <span className="text-sm">📮</span>
-                          <span>PTT Kargo</span>
+                          <span>PTT</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedCarrierId(10)}
+                          className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
+                            selectedCarrierId === 10
+                              ? 'bg-orange-600 text-white border-orange-600 shadow-sm'
+                              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span className="text-sm">🚀</span>
+                          <span>HepsiJET</span>
                         </button>
                       </div>
                     </div>
@@ -1158,6 +1178,8 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                       className={`w-full py-3 px-4 disabled:opacity-50 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer ${
                         selectedCarrierId === 13
                           ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/25'
+                          : selectedCarrierId === 10
+                          ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-500/25'
                           : 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25'
                       }`}
                     >
@@ -1170,7 +1192,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                         <>
                           <Zap className="w-4 h-4" />
                           <span>
-                            {selectedCarrierId === 13 ? 'Aras Kargo' : 'PTT Kargo'} ile Kargo Kes & Fiş Al
+                            {selectedCarrierId === 13 ? 'Aras Kargo' : selectedCarrierId === 10 ? 'HepsiJET' : 'PTT Kargo'} ile Kargo Kes & Fiş Al
                           </span>
                         </>
                       )}

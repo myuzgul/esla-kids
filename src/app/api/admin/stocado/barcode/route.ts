@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
   } catch (e) {}
 
   const trackingNum = order.trackingNumber || `KP${Math.floor(1000000000 + Math.random() * 9000000000)}TR`;
-  const carrier = order.trackingCompany || (settings.navlungo_default_carrier === '14' ? 'PTT Kargo' : 'Aras Kargo');
+  const carrier = order.trackingCompany || (settings.navlungo_default_carrier === '10' ? 'HepsiJET' : settings.navlungo_default_carrier === '14' ? 'PTT Kargo' : 'Aras Kargo');
   const paymentMethodUpper = (order.paymentMethod || '').toUpperCase();
   const isCod = paymentMethodUpper === 'COD' || paymentMethodUpper.includes('KAPIDA') || paymentMethodUpper.includes('CASH');
   const codAmount = Number((order as any).totalAmount || (order as any).total || 0);
