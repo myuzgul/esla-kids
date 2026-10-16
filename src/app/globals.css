@@ -24,9 +24,20 @@
 
 /* Custom Print Styles for High-Speed Physical Slips */
 @media print {
-  body {
-    background: transparent !important;
-    color: black !important;
+  html, body {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-width: none !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   header, footer, nav, .no-print, button {
     display: none !important;
@@ -34,7 +45,12 @@
   .print-only {
     display: block !important;
   }
-  .page-break {
-    page-break-after: always;
+  .page-break:not(:last-child) {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+  .page-break:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
   }
 }

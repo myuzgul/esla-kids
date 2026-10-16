@@ -219,17 +219,19 @@ export function OrdersTableClient({
 
   const handleBatchStatus = async (status?: string, isPrinted?: boolean) => {
     if (selectedIds.length === 0) return;
-    for (const id of selectedIds) {
-      await fetch('/api/admin/orders/status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: id,
-          ...(status ? { status } : {}),
-          ...(isPrinted !== undefined ? { isPrinted } : {}),
-        }),
-      });
-    }
+    await Promise.all(
+      selectedIds.map((id) =>
+        fetch('/api/admin/orders/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: id,
+            ...(status ? { status } : {}),
+            ...(isPrinted !== undefined ? { isPrinted } : {}),
+          }),
+        }).catch((err) => console.error('Batch status update failed for order:', id, err))
+      )
+    );
     setOrders((prev) =>
       prev.map((ord) => {
         if (selectedIds.includes(ord.id)) {
