@@ -75,22 +75,6 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
         },
         orderBy: { createdAt: 'desc' },
       });
-    } else {
-      const orderIds = orders.map((o) => o.id);
-      await prisma.order.updateMany({
-        where: { id: { in: orderIds } },
-        data: {
-          isPrinted: true,
-          printedAt: new Date(),
-        },
-      });
-      await prisma.order.updateMany({
-        where: {
-          id: { in: orderIds },
-          status: { in: ['NEW', 'CONFIRMED', 'APPROVED'] },
-        },
-        data: { status: 'PACKED' },
-      });
     }
   }
 
