@@ -5,8 +5,9 @@ import { formatPrice, formatDate, ORDER_STATUS_MAP } from '@/lib/utils';
 import { 
   TrendingUp, ShoppingCart, Clock, CheckCircle2, 
   Package, AlertTriangle, ArrowRight, Printer, CheckSquare,
-  PackageCheck
+  PackageCheck, Truck, Gift, Wallet
 } from 'lucide-react';
+import { getSettings } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,8 @@ export default async function AdminDashboardPage() {
     topProducts,
     totalItemsSoldAgg,
     todayItemsSoldAgg,
+    allShippingOrders,
+    siteSettings,
   ] = await Promise.all([
     prisma.order.findMany({ 
       where: { 
@@ -73,12 +76,54 @@ export default async function AdminDashboardPage() {
         },
       },
     }),
+    // Kargo ve kapıda ödeme analizi (İptal/iade edilmemiş tüm siparişler)
+    prisma.order.findMany({
+      where: {
+        status: { notIn: ['CANCELLED', 'REFUNDED'] },
+      },
+      select: {
+        paymentMethod: true,
+        paymentStatus: true,
+        shippingFee: true,
+        codFee: true,
+      },
+    }),
+    getSettings(),
   ]);
 
   const totalItemsSold = totalItemsSoldAgg._sum.quantity || 0;
   const todayItemsSold = todayItemsSoldAgg._sum.quantity || 0;
   const todayRevenue = todayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
   const monthRevenue = monthOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+
+  // Kargo & Kapıda Ödeme Hesaplamaları (Kredi kartında ödenmemiş olanlar filtrelenir)
+  const isCreditCard = (method: string) => {
+    const m = (method || '').toUpperCase();
+    return m.includes('PAYTR') || m.includes('KREDİ') || m.includes('KREDI') || m.includes('KART') || m.includes('CARD');
+  };
+
+  const validShippingOrders = allShippingOrders.filter((o) => {
+    if (isCreditCard(o.paymentMethod)) {
+      return o.paymentStatus === 'PAID' || o.paymentStatus === 'COMPLETED';
+    }
+    return true;
+  });
+
+  // 1. Müşteriden Alınan Kargo Ücreti
+  const customerPaidShippingOrders = validShippingOrders.filter((o) => (o.shippingFee || 0) > 0);
+  const totalCustomerShippingFee = customerPaidShippingOrders.reduce((sum, o) => sum + (o.shippingFee || 0), 0);
+  const customerShippingCount = customerPaidShippingOrders.length;
+
+  // 2. Bizim Karşıladığımız Kargo (Ücretsiz Kargo)
+  const freeShippingOrders = validShippingOrders.filter((o) => (o.shippingFee || 0) === 0);
+  const freeShippingCount = freeShippingOrders.length;
+  const currentShippingFeeSetting = Number(siteSettings.shipping_fee) || 130;
+  const totalCoveredShippingEstimated = freeShippingCount * currentShippingFeeSetting;
+
+  // 3. Alınan Kapıda Ödeme Ek Ücreti
+  const codOrders = validShippingOrders.filter((o) => (o.codFee || 0) > 0);
+  const totalCodFee = codOrders.reduce((sum, o) => sum + (o.codFee || 0), 0);
+  const codCount = codOrders.length;
 
   return (
     <div className="space-y-6">
@@ -190,6 +235,74 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="text-xs text-slate-500">
             Tükenen veya kritik stoklu ürünler
+          </div>
+        </div>
+      </div>
+
+      {/* Shipping & COD Stats Section */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-slate-100">
+          <div>
+            <h2 className="font-heading font-bold text-base text-slate-900 flex items-center gap-2">
+              <Truck className="w-5 h-5 text-brand-600" />
+              <span>Kargo ve Kapıda Ödeme Analizi</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Tüm zamanlar kargo ve kapıda ödeme tahsilatları (İptal/iade ve ödenmemiş kredi kartları hariç)
+            </p>
+          </div>
+          <div className="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 self-start sm:self-auto">
+            Toplam {validShippingOrders.length} geçerli sipariş
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Müşteriden Alınan Kargo Ücreti */}
+          <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 space-y-2">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase">
+              <span>Müşteriden Alınan Kargo</span>
+              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <Truck className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-heading font-black text-slate-900">
+              {formatPrice(totalCustomerShippingFee)}
+            </div>
+            <div className="text-xs text-slate-500">
+              Toplam <strong>{customerShippingCount}</strong> siparişte kargo müşteriden tahsil edildi
+            </div>
+          </div>
+
+          {/* Bizim Karşıladığımız Kargo */}
+          <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 space-y-2">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase">
+              <span>Bizim Karşıladığımız Kargo</span>
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <Gift className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-heading font-black text-emerald-700">
+              {freeShippingCount} <span className="text-sm font-semibold text-slate-600">Sipariş</span>
+            </div>
+            <div className="text-xs text-slate-500">
+              Müşteriye ücretsiz kargo sağlandı (Tahmini bedel: ~<strong>{formatPrice(totalCoveredShippingEstimated)}</strong>)
+            </div>
+          </div>
+
+          {/* Alınan Kapıda Ödeme Ek Ücreti */}
+          <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 space-y-2">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase">
+              <span>Alınan Kapıda Ödeme Bedeli</span>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Wallet className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-heading font-black text-amber-800">
+              {formatPrice(totalCodFee)}
+            </div>
+            <div className="text-xs text-slate-500">
+              Toplam <strong>{codCount}</strong> kapıda ödemeli siparişten tahsil edildi
+            </div>
           </div>
         </div>
       </div>
