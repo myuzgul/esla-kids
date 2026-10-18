@@ -110,6 +110,26 @@ export function numberToWordsTurkish(amount: number): string {
   return `#${finalStr}#`;
 }
 
+// Bien İnternet Satışı Ödeme Tipi eşleştirme
+// Bien Sadece: KREDIKARTI/BANKAKARTI, EFT/HAVALE, KAPIDAODEME, ODEMEARACISI veya DIGER - ... kabul eder
+export function mapToBienPaymentType(method: string | null | undefined): { paymentType: string; paymentMeansCode: string } {
+  if (!method) {
+    return { paymentType: 'KREDIKARTI/BANKAKARTI', paymentMeansCode: '48' };
+  }
+  const m = method.toUpperCase().replace(/\s+/g, ' ').trim();
+
+  if (m.includes('KAPIDA') || m.includes('COD') || m.includes('TESLIMAT')) {
+    return { paymentType: 'KAPIDAODEME', paymentMeansCode: '10' };
+  }
+  if (m.includes('HAVALE') || m.includes('EFT') || m.includes('BANKA')) {
+    return { paymentType: 'EFT/HAVALE', paymentMeansCode: '42' };
+  }
+  if (m.includes('PAYTR') || m.includes('KREDI') || m.includes('KARTI') || m.includes('CARD') || m.includes('CREDIT')) {
+    return { paymentType: 'KREDIKARTI/BANKAKARTI', paymentMeansCode: '48' };
+  }
+  return { paymentType: 'ODEMEARACISI', paymentMeansCode: '48' };
+}
+
 // 1. Bien API Bağlantı Testi
 export async function testBienConnection(settings?: SiteSettings): Promise<{ success: boolean; message: string }> {
   const s = settings || (await getSettings());
@@ -219,6 +239,9 @@ export async function createBienInvoice(
   const profileId = isEInvoice ? 'TICARIFATURA' : 'EARSIVFATURA';
   const scenario = isEInvoice ? 'eInvoice' : 'eArchive';
 
+  // Bien Ödeme Tipi eşleştirme (KREDIKARTI/BANKAKARTI, EFT/HAVALE, KAPIDAODEME, ODEMEARACISI)
+  const bienPayment = mapToBienPaymentType(order.paymentMethod);
+
   // Kalemler ve %10 KDV hesaplaması
   let lineCount = 0;
   let lineExtensionTotal = 0; // Matrah toplamı (KDV hariç)
@@ -244,7 +267,7 @@ export async function createBienInvoice(
     invoiceLinesXml.push(`
       <InvoiceLine xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
         <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${lineCount}</ID>
-        <InvoicedQuantity unitCode="NIU" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${quantity}.00000</InvoicedQuantity>
+        <InvoicedQuantity unitCode="C62" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${quantity}.00000</InvoicedQuantity>
         <LineExtensionAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${lineNetTotal.toFixed(2)}</LineExtensionAmount>
         <TaxTotal>
           <TaxAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${lineKdv.toFixed(2)}</TaxAmount>
@@ -284,7 +307,7 @@ export async function createBienInvoice(
     invoiceLinesXml.push(`
       <InvoiceLine xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
         <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${lineCount}</ID>
-        <InvoicedQuantity unitCode="NIU" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">1.00000</InvoicedQuantity>
+        <InvoicedQuantity unitCode="C62" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">1.00000</InvoicedQuantity>
         <LineExtensionAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${shippingNet.toFixed(2)}</LineExtensionAmount>
         <TaxTotal>
           <TaxAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${shippingKdv.toFixed(2)}</TaxAmount>
@@ -324,7 +347,7 @@ export async function createBienInvoice(
     invoiceLinesXml.push(`
       <InvoiceLine xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
         <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${lineCount}</ID>
-        <InvoicedQuantity unitCode="NIU" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">1.00000</InvoicedQuantity>
+        <InvoicedQuantity unitCode="C62" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">1.00000</InvoicedQuantity>
         <LineExtensionAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${codNet.toFixed(2)}</LineExtensionAmount>
         <TaxTotal>
           <TaxAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${codKdv.toFixed(2)}</TaxAmount>
@@ -391,6 +414,13 @@ export async function createBienInvoice(
             <DocumentCurrencyCode xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">TRY</DocumentCurrencyCode>
             <LineCountNumeric xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${lineCount}</LineCountNumeric>
             
+            <AdditionalDocumentReference xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
+              <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">0</ID>
+              <IssueDate xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${dateStr}</IssueDate>
+              <DocumentTypeCode xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">SendingType</DocumentTypeCode>
+              <DocumentType xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">ELEKTRONIK</DocumentType>
+            </AdditionalDocumentReference>
+
             <AccountingSupplierParty xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
               <Party>
                 <PartyIdentification>
@@ -438,6 +468,11 @@ export async function createBienInvoice(
                 ${customerPartyXml}
               </Party>
             </AccountingCustomerParty>
+ 
+            <PaymentMeans xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
+              <PaymentMeansCode xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${bienPayment.paymentMeansCode}</PaymentMeansCode>
+              <PaymentDueDate xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${dateStr}</PaymentDueDate>
+            </PaymentMeans>
 
             <TaxTotal xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
               <TaxAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${taxTotalAmount.toFixed(2)}</TaxAmount>
@@ -458,8 +493,6 @@ export async function createBienInvoice(
               <LineExtensionAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${lineExtensionTotal.toFixed(2)}</LineExtensionAmount>
               <TaxExclusiveAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${lineExtensionTotal.toFixed(2)}</TaxExclusiveAmount>
               <TaxInclusiveAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${payableAmount.toFixed(2)}</TaxInclusiveAmount>
-              <AllowanceTotalAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">0.00</AllowanceTotalAmount>
-              <ChargeTotalAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">0.00</ChargeTotalAmount>
               <PayableAmount currencyID="TRY" xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${payableAmount.toFixed(2)}</PayableAmount>
             </LegalMonetaryTotal>
 
@@ -473,7 +506,7 @@ export async function createBienInvoice(
           <EArchiveInvoiceInfo DeliveryType="Electronic">
             <InternetSalesInfo>
               <WebAddress>https://eslakids.com</WebAddress>
-              <PaymentType>${escapeXml(order.paymentMethod || 'Kredi Karti')}</PaymentType>
+              <PaymentType>${bienPayment.paymentType}</PaymentType>
               <PaymentDate>${dateStr}T${timeStr}Z</PaymentDate>
             </InternetSalesInfo>
           </EArchiveInvoiceInfo>
