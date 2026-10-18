@@ -357,15 +357,15 @@ export async function createBienInvoice(
   // Müşteri XML bloğu
   const customerPartyXml = isCompany
     ? `
-      <cac:PartyName>
-        <cbc:Name>${escapeXml(customerTitle)}</cbc:Name>
-      </cac:PartyName>
+      <PartyName>
+        <Name xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${escapeXml(customerTitle)}</Name>
+      </PartyName>
     `
     : `
-      <cac:Person>
-        <cbc:FirstName>${escapeXml(firstName)}</cbc:FirstName>
-        <cbc:FamilyName>${escapeXml(familyName)}</cbc:FamilyName>
-      </cac:Person>
+      <Person>
+        <FirstName xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${escapeXml(firstName)}</FirstName>
+        <FamilyName xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">${escapeXml(familyName)}</FamilyName>
+      </Person>
     `;
 
   const operation = options?.isDraft ? 'SaveAsDraft' : 'SendInvoice';
@@ -474,7 +474,7 @@ export async function createBienInvoice(
             <InternetSalesInfo>
               <WebAddress>https://eslakids.com</WebAddress>
               <PaymentType>${escapeXml(order.paymentMethod || 'Kredi Karti')}</PaymentType>
-              <PaymentDate>${dateStr}T${timeStr}</PaymentDate>
+              <PaymentDate>${dateStr}T${timeStr}Z</PaymentDate>
             </InternetSalesInfo>
           </EArchiveInvoiceInfo>
           `
