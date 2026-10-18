@@ -621,7 +621,7 @@ export function CheckoutClient({ settings }: Props) {
                           )}
                         </div>
                         <div className="text-xs text-charcoal-500 mt-0.5 leading-snug">
-                          Kargonuz kapınıza geldiğinde nakit olarak teslimat anında ödeme yapabilirsiniz. ({settings.shipping_company || 'PTT Kargo'})
+                          Kargonuz kapınıza geldiğinde nakit olarak teslimat anında ödeme yapabilirsiniz.
                         </div>
                       </div>
                     </div>
