@@ -134,6 +134,11 @@ model Order {
   printedAt       DateTime?
   couponCode      String?
   wooOrderId      Int?        @unique
+  invoiceStatus   String      @default("NOT_INVOICED")
+  invoiceNumber   String?
+  invoiceUuid     String?
+  invoicedAt      DateTime?
+  invoiceError    String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 

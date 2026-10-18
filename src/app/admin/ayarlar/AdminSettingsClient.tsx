@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, Check, ShieldCheck, Truck, CreditCard, Mail, Store, Zap, Package } from 'lucide-react';
+import { Save, Check, ShieldCheck, Truck, CreditCard, Mail, Store, Zap, Package, FileText, Loader2 } from 'lucide-react';
 
 interface Props {
   initialSettings: any;
@@ -13,6 +13,8 @@ export function AdminSettingsClient({ initialSettings }: Props) {
   const [form, setForm] = useState(initialSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [isTestingBien, setIsTestingBien] = useState(false);
+  const [bienTestResult, setBienTestResult] = useState<any>(null);
 
   useEffect(() => {
     if (initialSettings) {
@@ -50,6 +52,24 @@ export function AdminSettingsClient({ initialSettings }: Props) {
       alert('Hata: ' + e.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleTestBien = async () => {
+    setIsTestingBien(true);
+    setBienTestResult(null);
+    try {
+      const res = await fetch('/api/admin/bien/invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'test_connection' }),
+      });
+      const data = await res.json();
+      setBienTestResult(data);
+    } catch (e: any) {
+      setBienTestResult({ success: false, error: e.message });
+    } finally {
+      setIsTestingBien(false);
     }
   };
 
@@ -396,6 +416,137 @@ export function AdminSettingsClient({ initialSettings }: Props) {
               </div>
             </label>
           </div>
+        </div>
+      </div>
+
+      {/* 6. Bien Teknoloji e-Fatura / e-Arşiv Entegrasyonu */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
+            <FileText className="w-4 h-4 text-blue-600" />
+            <span>6. Bien Teknoloji e-Fatura / e-Arşiv Entegrasyonu</span>
+          </div>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+            form.bien_enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+          }`}>
+            {form.bien_enabled ? 'Aktif' : 'Devre Dışı'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
+            <label className="flex items-center gap-2 cursor-pointer bg-blue-50/60 p-3 rounded-xl border border-blue-200">
+              <input
+                type="checkbox"
+                name="bien_enabled"
+                checked={Boolean(form.bien_enabled)}
+                onChange={handleChange}
+                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+              />
+              <div>
+                <span className="text-xs font-bold text-slate-900 block">Bien e-Fatura / e-Arşiv Sistemini Etkinleştir</span>
+                <span className="text-[11px] text-slate-500">
+                  Sipariş detay sayfasından tek tıkla resmi e-Fatura ve e-Arşiv kesilmesini ve PDF alınmasını sağlar.
+                </span>
+              </div>
+            </label>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Bien Kullanıcı Adı (E-Posta)</label>
+            <input
+              type="text"
+              name="bien_username"
+              placeholder="info@eslakids.com"
+              value={form.bien_username || ''}
+              onChange={handleChange}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-brand-500"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Bien Şifresi</label>
+            <input
+              type="password"
+              name="bien_password"
+              placeholder="••••••••"
+              value={form.bien_password || ''}
+              onChange={handleChange}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-brand-500"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Fatura Ön Eki (Prefix)</label>
+            <input
+              type="text"
+              name="bien_prefix"
+              placeholder="EAR"
+              value={form.bien_prefix || 'EAR'}
+              onChange={handleChange}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono font-bold focus:outline-none focus:border-brand-500"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              e-Arşiv için standart seri ön eki (Varsayılan: EAR)
+            </p>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Varsayılan KDV Oranı</label>
+            <div className="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800">
+              %10 (Tekstil / Çocuk Giyim - Yasal Sabit)
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Esla Kids ürünleri için yasal KDV oranı %10 olarak kurgulanmıştır.
+            </p>
+          </div>
+
+          <div className="sm:col-span-2 pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div>
+              <div className="text-xs font-bold text-slate-800">Bien API Bağlantı Testi</div>
+              <div className="text-[11px] text-slate-500">
+                Bien Teknoloji WCF web servislerine bağlantıyı doğrular.
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={isTestingBien}
+              onClick={handleTestBien}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-900 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+            >
+              {isTestingBien ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Test Ediliyor...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Bağlantıyı Test Et</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {bienTestResult && (
+            <div className={`sm:col-span-2 p-3 rounded-xl border text-xs font-medium flex items-center gap-2 ${
+              bienTestResult.success
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : 'bg-rose-50 border-rose-200 text-rose-800'
+            }`}>
+              {bienTestResult.success ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  <span>
+                    Bağlantı Başarılı: {bienTestResult.companyName || 'Kemal Bostan'} (VKN/TCKN: {bienTestResult.vkn || '15622806404'}) - e-Fatura & e-Arşiv Yetkili
+                  </span>
+                </>
+              ) : (
+                <span>Hata: {bienTestResult.error || 'Bağlantı sağlanamadı.'}</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </form>

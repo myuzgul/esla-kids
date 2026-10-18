@@ -12,7 +12,7 @@ import {
   CheckCircle, Save, AlertCircle, Trash2, AlertTriangle, 
   Loader2, Zap, RefreshCw, PackageCheck, Landmark, Edit, 
   Phone, Mail, Minus, Plus, X, Check, RefreshCcw, Banknote,
-  MessageCircle, Package, ExternalLink
+  MessageCircle, Package, ExternalLink, FileText
 } from 'lucide-react';
 
 interface Props {
@@ -51,6 +51,15 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
   const [isCreatingShipment, setIsCreatingShipment] = useState(false);
   const [isTrackingStocado, setIsTrackingStocado] = useState(false);
   const [stocadoMsg, setStocadoMsg] = useState('');
+
+  // Bien e-Fatura / e-Arşiv State
+  const [invoiceStatus, setInvoiceStatus] = useState(order.invoiceStatus || 'NOT_INVOICED');
+  const [invoiceNumber, setInvoiceNumber] = useState(order.invoiceNumber || '');
+  const [invoiceUuid, setInvoiceUuid] = useState(order.invoiceUuid || '');
+  const [invoicedAt, setInvoicedAt] = useState(order.invoicedAt || null);
+  const [invoiceError, setInvoiceError] = useState(order.invoiceError || '');
+  const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
+  const [bienMsg, setBienMsg] = useState('');
 
   // 1. ADRES DÜZENLEME MODALI STATE
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -499,6 +508,60 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
     }
   };
 
+  // --- BIEN E-FATURA KES / TASLAK OLUŞTUR ---
+  const handleCreateInvoice = async (asDraft = false) => {
+    if (!confirm(asDraft 
+      ? 'Faturayı Bien Portal’da TASLAK olarak oluşturmak istiyor musunuz?' 
+      : 'Bu sipariş için resmi e-Fatura / e-Arşiv faturası kesilecektir. Onaylıyor musunuz?')) {
+      return;
+    }
+
+    setIsCreatingInvoice(true);
+    setBienMsg('');
+
+    try {
+      const res = await fetch('/api/admin/bien/invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.id,
+          isDraft: asDraft,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Fatura oluşturulamadı.');
+      }
+
+      setInvoiceStatus(data.invoiceStatus);
+      setInvoiceNumber(data.invoiceNumber || '');
+      setInvoiceUuid(data.invoiceUuid || '');
+      setInvoicedAt(new Date().toISOString());
+      setInvoiceError('');
+      setOrder((prev: any) => ({
+        ...prev,
+        invoiceStatus: data.invoiceStatus,
+        invoiceNumber: data.invoiceNumber,
+        invoiceUuid: data.invoiceUuid,
+        invoicedAt: new Date().toISOString(),
+        invoiceError: null,
+      }));
+
+      const msg = asDraft
+        ? `Taslak fatura oluşturuldu (${data.invoiceNumber || 'Taslak'})`
+        : `Resmi fatura başarıyla kesildi! Fatura No: ${data.invoiceNumber}`;
+      setBienMsg(msg);
+      showToast('✓ ' + msg);
+      router.refresh();
+    } catch (err: any) {
+      alert('Fatura Hatası: ' + err.message);
+      setInvoiceError(err.message);
+    } finally {
+      setIsCreatingInvoice(false);
+    }
+  };
+
   const hasTracking = Boolean(trackingNumber || order.trackingNumber);
 
   return (
@@ -585,6 +648,32 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
                   <span>Yazdırılmadı</span>
                 </span>
               )}
+
+              {/* Invoice Status Badge */}
+              {invoiceStatus === 'INVOICED' ? (
+                <span
+                  title={invoiceNumber ? `Fatura No: ${invoiceNumber}` : 'Faturalandı'}
+                  className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1"
+                >
+                  <FileText className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Fatura Kesildi ({invoiceNumber})</span>
+                </span>
+              ) : invoiceStatus === 'DRAFT' ? (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
+                  <FileText className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Taslak Fatura ({invoiceNumber || 'Bien'})</span>
+                </span>
+              ) : invoiceStatus === 'FAILED' ? (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Fatura Hatası</span>
+                </span>
+              ) : (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 flex items-center gap-1">
+                  <FileText className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Faturasız</span>
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
               Sipariş Tarihi: {formatDate(order.createdAt)}
@@ -592,7 +681,18 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {(invoiceUuid || invoiceNumber) && (
+            <a
+              href={`/api/admin/bien/invoice?orderId=${order.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-colors text-center"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Faturayı Aç (PDF)</span>
+            </a>
+          )}
           <a
             href={`/admin/siparis-cikti?ids=${order.id}`}
             target="_blank"
@@ -1214,6 +1314,161 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
               </div>
             );
           })()}
+
+          {/* Bien e-Fatura / e-Arşiv Entegrasyon Kartı */}
+          <div className="rounded-2xl border-2 border-blue-200/90 bg-gradient-to-br from-blue-50/70 via-white to-sky-50/60 shadow-sm p-5 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <h3 className="font-heading font-black text-sm text-slate-900">
+                  Bien e-Fatura / e-Arşiv
+                </h3>
+              </div>
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                invoiceStatus === 'INVOICED'
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  : invoiceStatus === 'DRAFT'
+                  ? 'bg-purple-100 text-purple-800 border border-purple-300'
+                  : invoiceStatus === 'FAILED'
+                  ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                  : 'bg-slate-100 text-slate-700 border border-slate-200'
+              }`}>
+                {invoiceStatus === 'INVOICED'
+                  ? '✓ Fatura Kesildi'
+                  : invoiceStatus === 'DRAFT'
+                  ? '📝 Taslak Fatura'
+                  : invoiceStatus === 'FAILED'
+                  ? '✕ Hata'
+                  : 'Faturasız'}
+              </span>
+            </div>
+
+            {/* Bilgilendirme Rozeti */}
+            <div className="bg-blue-50/60 p-2.5 rounded-xl border border-blue-100 text-xs space-y-1 text-slate-700">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">KDV Oranı:</span>
+                <strong className="text-blue-950 font-black">%10 (Tekstil / Çocuk Giyim)</strong>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Fatura Tutarı:</span>
+                <strong className="text-blue-950 font-black">{formatPrice(order.totalAmount)}</strong>
+              </div>
+              {order.tckn && (
+                <div className="flex justify-between items-center pt-1 border-t border-blue-100/60">
+                  <span className="text-slate-500">Müşteri TCKN/VKN:</span>
+                  <strong className="text-slate-800 font-mono">{order.tckn}</strong>
+                </div>
+              )}
+            </div>
+
+            {bienMsg && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2 font-medium">
+                <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>{bienMsg}</span>
+              </div>
+            )}
+
+            {invoiceError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl flex items-start gap-2 font-medium">
+                <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold">Fatura Kesme Hatası:</div>
+                  <div className="text-[11px] mt-0.5">{invoiceError}</div>
+                </div>
+              </div>
+            )}
+
+            {(invoiceStatus === 'INVOICED' || invoiceStatus === 'DRAFT' || invoiceNumber) ? (
+              <div className="space-y-3">
+                <div className="bg-white p-3.5 rounded-xl border border-blue-100 space-y-1">
+                  <div className="text-[11px] text-slate-400 font-bold uppercase flex items-center justify-between">
+                    <span>Fatura Bilgileri</span>
+                    <span className="text-[10px] font-bold text-slate-500">
+                      {invoicedAt ? formatDate(invoicedAt) : 'Bien Portal'}
+                    </span>
+                  </div>
+                  <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                    <span className="px-2 py-0.5 rounded font-black bg-blue-50 text-blue-700">
+                      {invoiceStatus === 'DRAFT' ? 'Taslak No' : 'Fatura No'}
+                    </span>
+                    <span className="font-mono text-blue-700 font-black text-sm">
+                      {invoiceNumber || invoiceUuid || 'Oluşturuldu'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <a
+                    href={`/api/admin/bien/invoice?orderId=${order.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>Faturayı Görüntüle (PDF)</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+                {invoiceStatus === 'DRAFT' && (
+                  <button
+                    type="button"
+                    disabled={isCreatingInvoice}
+                    onClick={() => handleCreateInvoice(false)}
+                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                  >
+                    {isCreatingInvoice ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Fatura Kesiliyor...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>Taslağı Resmi Faturaya Dönüştür</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Bien Portal üzerinden resmi e-Arşiv / e-Fatura oluşturun. TCKN girilmediyse yasal standart olarak 11111111111 ile %10 KDV uygulanarak kesilir.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    disabled={isCreatingInvoice}
+                    onClick={() => handleCreateInvoice(false)}
+                    className="py-3 px-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-md shadow-emerald-600/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    {isCreatingInvoice ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Kesiliyor...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Resmi Fatura Kes</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isCreatingInvoice}
+                    onClick={() => handleCreateInvoice(true)}
+                    className="py-3 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <span>📝 Taslak Oluştur</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* 3. Standart Sipariş Durumu Formu */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
