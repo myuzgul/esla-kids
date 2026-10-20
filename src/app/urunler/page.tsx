@@ -19,14 +19,36 @@ export default async function AllProductsPage() {
   const inStockWhere: any = {
     isActive: true,
     stockStatus: { not: 'OUT_OF_STOCK' },
-    stock: { gt: 0 },
+    OR: [
+      {
+        variations: {
+          some: {
+            stock: { gt: 0 },
+            isActive: true,
+          },
+        },
+      },
+      {
+        variations: { none: {} },
+        stock: { gt: 0 },
+      },
+    ],
   };
 
   const outOfStockWhere: any = {
     isActive: true,
     OR: [
       { stockStatus: 'OUT_OF_STOCK' },
-      { stock: { lte: 0 } },
+      {
+        variations: { none: {} },
+        stock: { lte: 0 },
+      },
+      {
+        variations: {
+          some: {},
+          none: { stock: { gt: 0 }, isActive: true },
+        },
+      },
     ],
   };
 

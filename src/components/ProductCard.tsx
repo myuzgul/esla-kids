@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { formatPrice, addTax } from '@/lib/utils';
+import { formatPrice, addTax, isProductOutOfStock } from '@/lib/utils';
 import { Eye, ShoppingBag } from 'lucide-react';
 
 export interface ProductCardProps {
@@ -58,7 +58,7 @@ export function ProductCard({ product }: ProductCardProps) {
       ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
       : 0;
 
-  const isOutOfStock = product.stockStatus === 'OUT_OF_STOCK' || (product.stock !== undefined && product.stock <= 0);
+  const isOutOfStock = useMemo(() => isProductOutOfStock(product), [product]);
 
   return (
     <div className="group relative bg-white rounded-2xl border border-cream-200/80 overflow-hidden hover:shadow-lg transition-all duration-200 flex flex-col">

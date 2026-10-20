@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ProductCard } from '@/components/ProductCard';
+import { isProductOutOfStock } from '@/lib/utils';
 import { CategoryFilterClient, DesktopSortSelect } from '@/components/CategoryFilterClient';
 import { ChevronRight } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -104,8 +105,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   // Stoğu biten ürünleri en sona atma sıralaması (Stokta olanlar önce, bitenler en sonda)
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    const aOutOfStock = a.stockStatus === 'OUT_OF_STOCK' || (a.stock !== undefined && a.stock <= 0);
-    const bOutOfStock = b.stockStatus === 'OUT_OF_STOCK' || (b.stock !== undefined && b.stock <= 0);
+    const aOutOfStock = isProductOutOfStock(a);
+    const bOutOfStock = isProductOutOfStock(b);
     if (aOutOfStock && !bOutOfStock) return 1;
     if (!aOutOfStock && bOutOfStock) return -1;
     return 0;

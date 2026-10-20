@@ -179,3 +179,29 @@ export function formatVariationLabel(raw: any): string {
   return parts.join(' ');
 }
 
+/**
+ * Ürünün tükenip tükenmediğini (tüm varyantlar dahil) belirler.
+ * - stockStatus === 'OUT_OF_STOCK' ise -> true (Tükendi)
+ * - Ürünün varyasyonları varsa: Eğer aktif ve stoğu > 0 olan en az bir varyant yoksa -> true (Tükendi)
+ * - Basit ürünse ve stock <= 0 ise -> true (Tükendi)
+ */
+export function isProductOutOfStock(product: {
+  stockStatus?: string | null;
+  stock?: number | null;
+  variations?: Array<{ stock?: number | null; isActive?: boolean | null; stockStatus?: string | null }> | null;
+}): boolean {
+  if (!product) return false;
+  if (product.stockStatus === 'OUT_OF_STOCK') return true;
+
+  if (product.variations && product.variations.length > 0) {
+    const hasInStockVariation = product.variations.some((v) => {
+      const isActive = v.isActive !== false;
+      const isStatusOk = v.stockStatus !== 'OUT_OF_STOCK';
+      const stock = typeof v.stock === 'number' ? v.stock : 0;
+      return isActive && isStatusOk && stock > 0;
+    });
+    return !hasInStockVariation;
+  }
+
+  return product.stock !== undefined && product.stock !== null && product.stock <= 0;
+}

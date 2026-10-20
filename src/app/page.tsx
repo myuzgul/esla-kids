@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { ProductCard } from '@/components/ProductCard';
 import { HomeWideBanner } from '@/components/HomeWideBanner';
+import { isProductOutOfStock } from '@/lib/utils';
 import { ArrowRight, Sparkles, Star, ShieldCheck, Heart, Truck, RefreshCw } from 'lucide-react';
 
 export const revalidate = 60;
@@ -48,8 +49,8 @@ export default async function HomePage() {
   // In-stock first, out-of-stock last helper
   const sortByStock = (list: any[]) => {
     return [...list].sort((a, b) => {
-      const aOut = a.stockStatus === 'OUT_OF_STOCK' || (a.stock !== undefined && a.stock <= 0);
-      const bOut = b.stockStatus === 'OUT_OF_STOCK' || (b.stock !== undefined && b.stock <= 0);
+      const aOut = isProductOutOfStock(a);
+      const bOut = isProductOutOfStock(b);
       if (aOut && !bOut) return 1;
       if (!aOut && bOut) return -1;
       return 0;

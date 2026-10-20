@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { ProductCard } from '@/components/ProductCard';
+import { isProductOutOfStock } from '@/lib/utils';
 import { Search, ChevronRight, Sparkles, SlidersHorizontal, PackageX, ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
 
@@ -78,12 +79,12 @@ export default async function SearchPage({ searchParams }: Props) {
     } catch (e) {}
   }
 
-  // Helper to prioritize in-stock products
+  // Helper to prioritize in-stock products (tükenenler en sona)
   const sortedProducts = [...products].sort((a, b) => {
-    const aIn = a.stockStatus === 'IN_STOCK' || a.stock > 0 || (a.variations && a.variations.some((v: any) => v.stock > 0));
-    const bIn = b.stockStatus === 'IN_STOCK' || b.stock > 0 || (b.variations && b.variations.some((v: any) => v.stock > 0));
-    if (aIn && !bIn) return -1;
-    if (!aIn && bIn) return 1;
+    const aOut = isProductOutOfStock(a);
+    const bOut = isProductOutOfStock(b);
+    if (aOut && !bOut) return 1;
+    if (!aOut && bOut) return -1;
     return 0;
   });
 
