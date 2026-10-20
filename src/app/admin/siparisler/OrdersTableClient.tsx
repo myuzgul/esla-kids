@@ -213,7 +213,7 @@ export function OrdersTableClient({
   // Batch Operations
   const handleBatchPrint = async () => {
     if (selectedIds.length === 0) return;
-    window.open(`/admin/siparis-cikti?ids=${selectedIds.join(',')}`, '_blank');
+    window.open(`/admin/siparis-cikti?ids=${selectedIds.join(',')}&autoprint=1`, '_blank');
     await handleBatchStatus('PACKED', true);
   };
 
@@ -945,7 +945,7 @@ export function OrdersTableClient({
                     </Link>
 
                     <a
-                      href={`/admin/siparis-cikti?ids=${ord.id}`}
+                      href={`/admin/siparis-cikti?ids=${ord.id}&autoprint=1`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors"
@@ -1219,7 +1219,7 @@ export function OrdersTableClient({
                             </a>
                           )}
                           <a
-                            href={`/admin/siparis-cikti?ids=${ord.id}`}
+                            href={`/admin/siparis-cikti?ids=${ord.id}&autoprint=1`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg inline-block transition-colors"

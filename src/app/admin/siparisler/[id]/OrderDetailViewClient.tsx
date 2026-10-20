@@ -412,7 +412,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
 
   // --- FİŞ YAZDIR & PAKETE SEVK ET ---
   const handlePrintAndPack = async () => {
-    window.open(`/admin/siparis-cikti?ids=${order.id}`, '_blank');
+    window.open(`/admin/siparis-cikti?ids=${order.id}&autoprint=1`, '_blank');
     await handleSave('PACKED', true);
   };
 
@@ -694,7 +694,7 @@ export function OrderDetailViewClient({ initialOrder }: Props) {
             </a>
           )}
           <a
-            href={`/admin/siparis-cikti?ids=${order.id}`}
+            href={`/admin/siparis-cikti?ids=${order.id}&autoprint=1`}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto justify-center bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-colors text-center"

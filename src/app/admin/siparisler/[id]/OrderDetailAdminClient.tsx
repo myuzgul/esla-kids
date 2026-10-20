@@ -137,7 +137,7 @@ export function OrderDetailAdminClient({ order }: Props) {
   // 2. Yazdır & Pakete Sevk Et
   const handlePrintAndPack = async () => {
     // Open print window
-    window.open(`/admin/siparis-cikti?ids=${order.id}`, '_blank');
+    window.open(`/admin/siparis-cikti?ids=${order.id}&autoprint=1`, '_blank');
     // Transition status to PACKED and mark as printed
     await handleSave('PACKED', true);
   };

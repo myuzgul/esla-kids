@@ -8,31 +8,34 @@ import Link from 'next/link';
 import { PrintButton } from '@/components/PrintButton';
 
 interface Props {
-  searchParams: { ids?: string; filter?: string };
+  searchParams: { ids?: string; filter?: string; preview?: string };
 }
 
 export default async function OrderPrintSlipPage({ searchParams }: Props) {
   const ids = searchParams.ids ? searchParams.ids.split(',').filter(Boolean) : [];
+  const isPreview = searchParams.preview === '1' || searchParams.preview === 'true';
 
   let orders: any[] = [];
   if (ids.length > 0) {
-    // Mark as printed
-    await prisma.order.updateMany({
-      where: { id: { in: ids } },
-      data: {
-        isPrinted: true,
-        printedAt: new Date(),
-      },
-    });
+    if (!isPreview) {
+      // Mark as printed
+      await prisma.order.updateMany({
+        where: { id: { in: ids } },
+        data: {
+          isPrinted: true,
+          printedAt: new Date(),
+        },
+      });
 
-    // Automatically transition printed orders to PACKED ("Pakete Sevk Edildi")
-    await prisma.order.updateMany({
-      where: {
-        id: { in: ids },
-        status: { in: ['NEW', 'CONFIRMED', 'APPROVED'] },
-      },
-      data: { status: 'PACKED' },
-    });
+      // Automatically transition printed orders to PACKED ("Pakete Sevk Edildi")
+      await prisma.order.updateMany({
+        where: {
+          id: { in: ids },
+          status: { in: ['NEW', 'CONFIRMED', 'APPROVED'] },
+        },
+        data: { status: 'PACKED' },
+      });
+    }
 
     orders = await prisma.order.findMany({
       where: { id: { in: ids } },
@@ -162,6 +165,10 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
         }
 
         @media print {
+          *, *:before, *:after {
+            box-sizing: border-box !important;
+          }
+
           html, body {
             margin: 0 !important;
             padding: 0 !important;
@@ -169,8 +176,24 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
             color: #000000 !important;
             overflow: visible !important;
             overflow-x: visible !important;
+            overflow-y: visible !important;
+            height: auto !important;
+            min-height: auto !important;
+            max-height: none !important;
+            width: 100% !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+          }
+
+          /* Ensure parent containers never constrain print height or overflow */
+          #__next, [data-nextjs-scroll-focus-boundary], main {
+            overflow: visible !important;
+            overflow-x: visible !important;
+            overflow-y: visible !important;
+            height: auto !important;
+            min-height: auto !important;
+            max-height: none !important;
+            display: block !important;
           }
 
           .no-print {
@@ -180,9 +203,11 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
           .print-page-wrapper {
             background: transparent !important;
             min-height: auto !important;
+            height: auto !important;
             padding: 0 !important;
             margin: 0 !important;
             max-width: 100% !important;
+            display: block !important;
           }
 
           .print-slips-container {
@@ -190,6 +215,12 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
             margin: 0 !important;
             padding: 0 !important;
             gap: 0 !important;
+            display: block !important;
+          }
+
+          .print-slips-container > * + * {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
           }
 
           .print-order-slip {
@@ -200,6 +231,8 @@ export default async function OrderPrintSlipPage({ searchParams }: Props) {
             box-shadow: none !important;
             margin: 0 !important;
             padding: 2mm 0mm !important;
+            display: block !important;
+            width: 100% !important;
             page-break-inside: auto !important;
             break-inside: auto !important;
           }

@@ -356,7 +356,7 @@ export default async function AdminDashboardPage() {
                     </td>
                     <td className="py-3 text-right space-x-1">
                       <Link
-                        href={`/admin/siparis-cikti?ids=${ord.id}`}
+                        href={`/admin/siparis-cikti?ids=${ord.id}&autoprint=1`}
                         target="_blank"
                         className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 inline-block"
                         title="Fiş / QR Çıktısı Al"

@@ -19,6 +19,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   const isLoginPage = pathname === '/admin/login';
+  const isPrintSlipPage = pathname.startsWith('/admin/siparis-cikti');
 
   useEffect(() => {
     if (!loading) {
@@ -34,8 +35,8 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, isLoginPage, router]);
 
-  // If on login page, render clean full-screen login without sidebar/header
-  if (isLoginPage) {
+  // If on login page or print slip page, render clean full-width without sidebar/header/overflow-y container
+  if (isLoginPage || isPrintSlipPage) {
     return <>{children}</>;
   }
 
